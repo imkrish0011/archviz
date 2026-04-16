@@ -10,7 +10,7 @@ import {
   Code2, Gauge, Network,
   Webhook, Container, HardDrive, Radio, CircuitBoard, Flame,
   FileCode, ShieldAlert, Target, Mail, Leaf,
-  Warehouse, PackageOpen, LayoutDashboard, ArrowLeftRight, FileText
+  Warehouse, PackageOpen, LayoutDashboard, ArrowLeftRight, FileText, Play, X
 } from 'lucide-react';
 import '../styles/landing.css';
 import { famousSystemTemplates } from '../data/templates/famousSystemTemplates';
@@ -290,28 +290,45 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
               <div className="lp-mock-workspace">
                 {/* Mock TopBar */}
                 <div className="lp-mock-topbar">
-                  <div className="lp-mock-topbar-logo">
-                    <BrainCircuit size={13} />
-                    ArchViz
+                  <div className="lp-mock-topbar-left">
+                    <div className="lp-mock-topbar-logo">
+                      <BrainCircuit size={14} /> ArchViz
+                    </div>
+                    <div className="lp-mock-topbar-title">e-commerce-blue-green</div>
                   </div>
-                  <div style={{ flex: 1 }} />
-                  <div className="lp-mock-topbar-btns">
-                    <button className="lp-mock-topbar-btn" style={{ padding: '0 8px', width: 'auto', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', color: '#fff', border: '1px solid #312e3d' }}><Code2 size={12} />IaC Export</button>
-                    <button className="lp-mock-topbar-btn" style={{ padding: '0 8px', width: 'auto', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', color: '#fff', border: '1px solid #312e3d' }}><ShieldAlert size={12} />Security Scan</button>
+                  <div className="lp-mock-topbar-center">
+                    <div className="lp-mock-simulation-controls">
+                      <button className="lp-mock-sim-btn"><Play size={10} fill="currentColor" /> Play Simulation</button>
+                    </div>
+                  </div>
+                  <div className="lp-mock-topbar-right">
+                    <button className="lp-mock-btn-icon"><Code2 size={13} /></button>
+                    <button className="lp-mock-btn-icon"><Download size={13} /></button>
+                    <button className="lp-mock-btn-primary">Share</button>
+                    <div className="lp-mock-avatar"></div>
                   </div>
                 </div>
 
                 {/* Mock Left Sidebar */}
                 <div className="lp-mock-sidebar">
-                  <div style={{ gridColumn: '1 / -1', fontSize: '0.6rem', fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Components</div>
-                  <div className="lp-mock-sidebar-item" />
-                  <div className="lp-mock-sidebar-item" />
-                  <div className="lp-mock-sidebar-item" />
-                  <div className="lp-mock-sidebar-item" />
-                  <div className="lp-mock-sidebar-item" />
-                  <div className="lp-mock-sidebar-item" />
-                  <div className="lp-mock-sidebar-item" />
-                  <div className="lp-mock-sidebar-item" />
+                  <div className="lp-mock-sidebar-tabs">
+                    <span className="lp-mock-tab active">Cloud</span>
+                    <span className="lp-mock-tab">Icons</span>
+                  </div>
+                  <div className="lp-mock-sidebar-category">Compute</div>
+                  <div className="lp-mock-sidebar-grid">
+                    <div className="lp-mock-sidebar-item"><Server size={14}/><span>EC2</span></div>
+                    <div className="lp-mock-sidebar-item"><Container size={14}/><span>Docker</span></div>
+                    <div className="lp-mock-sidebar-item"><Zap size={14}/><span>Lambda</span></div>
+                    <div className="lp-mock-sidebar-item"><LayoutTemplate size={14}/><span>Fargate</span></div>
+                  </div>
+                  <div className="lp-mock-sidebar-category">Networking</div>
+                  <div className="lp-mock-sidebar-grid">
+                    <div className="lp-mock-sidebar-item"><Network size={14}/><span>ALB</span></div>
+                    <div className="lp-mock-sidebar-item"><Globe size={14}/><span>CDN</span></div>
+                    <div className="lp-mock-sidebar-item"><Shield size={14}/><span>WAF</span></div>
+                    <div className="lp-mock-sidebar-item"><Webhook size={14}/><span>API Gateway</span></div>
+                  </div>
                 </div>
 
                 {/* Mock Canvas */}
@@ -319,94 +336,111 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
                   <div className="lp-mock-canvas-grid" />
                   {/* SVG Edges */}
                   <svg className="lp-mock-edges" viewBox="0 0 800 500" preserveAspectRatio="none">
-                    <line x1="160" y1="80" x2="320" y2="160" />
-                    <line x1="320" y1="160" x2="520" y2="120" />
-                    <line x1="320" y1="160" x2="520" y2="260" />
-                    <line x1="520" y1="120" x2="680" y2="200" />
-                    <line x1="520" y1="260" x2="680" y2="340" />
-                    <line x1="160" y1="80" x2="160" y2="300" />
-                    <line x1="160" y1="300" x2="320" y2="380" />
+                    <path d="M 170 110 C 250 110, 250 160, 310 160" />
+                    <path d="M 170 290 C 250 290, 250 160, 310 160" />
+                    <path d="M 330 160 C 420 160, 420 120, 500 120" />
+                    <path d="M 330 160 C 420 160, 420 260, 500 260" />
+                    <path d="M 520 120 C 600 120, 600 190, 690 190" />
+                    <path d="M 520 260 C 600 260, 600 320, 690 320" />
                   </svg>
-                  {/* Mock Nodes */}
-                  {/* Mock Nodes with realistic styles */}
-                  <div className="lp-mock-node" style={{ top: '10%', left: '12%', borderLeft: '3px solid #f2901a' }}>
-                    <Network size={14} color="#f2901a" />
-                    <span>Load Balancer</span>
+
+                  {/* Mock Nodes with realistic ArchNode styles */}
+                  <div className="lp-mock-node real-look" style={{ top: '16%', left: '12%' }}>
+                    <div className="lp-mock-node-header">
+                      <div className="lp-mock-node-icon" style={{ color: '#f2901a', background: 'rgba(242,144,26,0.1)' }}><Network size={12} /></div>
+                      <div className="lp-mock-node-title"><span className="lp-mock-node-name">Load Balancer</span><span className="lp-mock-node-tier">t3.small</span></div>
+                    </div>
+                    <div className="lp-mock-node-body"><div className="lp-mock-health-ring healthy"></div><span>Load 34%</span></div>
                   </div>
-                  <div className="lp-mock-node" style={{ top: '28%', left: '35%', borderLeft: '3px solid #f2901a' }}>
-                    <Server size={14} color="#f2901a" />
-                    <span>API Server ×3</span>
+                  
+                  <div className="lp-mock-node real-look" style={{ top: '56%', left: '12%' }}>
+                    <div className="lp-mock-node-header">
+                      <div className="lp-mock-node-icon" style={{ color: '#f2901a', background: 'rgba(242,144,26,0.1)' }}><Globe size={12} /></div>
+                      <div className="lp-mock-node-title"><span className="lp-mock-node-name">CloudFront CDN</span><span className="lp-mock-node-tier">global</span></div>
+                    </div>
+                    <div className="lp-mock-node-body"><div className="lp-mock-health-ring healthy"></div><span>Load 12%</span></div>
                   </div>
-                  <div className="lp-mock-node" style={{ top: '14%', left: '58%', borderLeft: '3px solid #d62828' }}>
-                    <Database size={14} color="#d62828" />
-                    <span>Redis Cache</span>
+
+                  <div className="lp-mock-node real-look selected" style={{ top: '27%', left: '38%' }}>
+                    <div className="lp-mock-node-header">
+                      <div className="lp-mock-node-icon" style={{ color: '#f2901a', background: 'rgba(242,144,26,0.1)' }}><Server size={12} /></div>
+                      <div className="lp-mock-node-title"><span className="lp-mock-node-name">API Server ×3</span><span className="lp-mock-node-tier">c6g.xlarge</span></div>
+                    </div>
+                    <div className="lp-mock-node-body"><div className="lp-mock-health-ring warning"></div><span style={{color: '#eab308'}}>Load 82%</span></div>
                   </div>
-                  <div className="lp-mock-node" style={{ top: '45%', left: '58%', borderLeft: '3px solid #336791' }}>
-                    <Database size={14} color="#336791" />
-                    <span>PostgreSQL</span>
+
+                  <div className="lp-mock-node real-look" style={{ top: '16%', left: '62%' }}>
+                    <div className="lp-mock-node-header">
+                      <div className="lp-mock-node-icon" style={{ color: '#d62828', background: 'rgba(214,40,40,0.1)' }}><Database size={12} /></div>
+                      <div className="lp-mock-node-title"><span className="lp-mock-node-name">Redis Cache</span><span className="lp-mock-node-tier">r6g.large</span></div>
+                    </div>
+                    <div className="lp-mock-node-body"><div className="lp-mock-health-ring healthy"></div><span>Load 45%</span></div>
                   </div>
-                  <div className="lp-mock-node" style={{ top: '30%', left: '78%', borderLeft: '3px solid #7B42BC' }}>
-                    <Globe size={14} color="#7B42BC" />
-                    <span>CDN</span>
+
+                  <div className="lp-mock-node real-look" style={{ top: '48%', left: '62%' }}>
+                    <div className="lp-mock-node-header">
+                      <div className="lp-mock-node-icon" style={{ color: '#336791', background: 'rgba(51,103,145,0.1)' }}><Database size={12} /></div>
+                      <div className="lp-mock-node-title"><span className="lp-mock-node-name">PostgreSQL</span><span className="lp-mock-node-tier">db.r6g.2x</span></div>
+                    </div>
+                    <div className="lp-mock-node-body"><div className="lp-mock-health-ring healthy"></div><span>Load 60%</span></div>
                   </div>
-                  <div className="lp-mock-node" style={{ top: '60%', left: '78%', borderLeft: '3px solid #E34F26' }}>
-                    <HardDrive size={14} color="#E34F26" />
-                    <span>S3 Storage</span>
+
+                  <div className="lp-mock-node real-look" style={{ top: '34%', left: '80%' }}>
+                    <div className="lp-mock-node-header">
+                      <div className="lp-mock-node-icon" style={{ color: '#E34F26', background: 'rgba(227,79,38,0.1)' }}><HardDrive size={12} /></div>
+                      <div className="lp-mock-node-title"><span className="lp-mock-node-name">S3 Storage</span><span className="lp-mock-node-tier">standard</span></div>
+                    </div>
+                    <div className="lp-mock-node-body"><div className="lp-mock-health-ring healthy"></div><span>Load 5%</span></div>
                   </div>
-                  <div className="lp-mock-node" style={{ top: '55%', left: '12%', borderLeft: '3px solid #f2901a' }}>
-                    <Globe size={14} color="#f2901a" />
-                    <span>DNS</span>
-                  </div>
-                  <div className="lp-mock-node" style={{ top: '70%', left: '35%', borderLeft: '3px solid #d62828' }}>
-                    <Activity size={14} color="#d62828" />
-                    <span>Message Queue</span>
+
+                  <div className="lp-mock-node real-look" style={{ top: '65%', left: '80%' }}>
+                    <div className="lp-mock-node-header">
+                      <div className="lp-mock-node-icon" style={{ color: '#d62828', background: 'rgba(214,40,40,0.1)' }}><Activity size={12} /></div>
+                      <div className="lp-mock-node-title"><span className="lp-mock-node-name">Message Queue</span><span className="lp-mock-node-tier">sqs.fifo</span></div>
+                    </div>
+                    <div className="lp-mock-node-body"><div className="lp-mock-health-ring critical"></div><span style={{color: '#ef4444'}}>Load 95%</span></div>
                   </div>
                 </div>
 
                 {/* Mock Right Panel */}
                 <div className="lp-mock-right-panel">
+                  <div className="lp-mock-rp-header">
+                    <div className="lp-mock-rp-icon"><Server size={14} color="#f2901a" /></div>
+                    <div className="lp-mock-rp-title">API Server ×3</div>
+                    <div className="lp-mock-rp-close"><X size={12}/></div>
+                  </div>
                   <div className="lp-mock-config-block">
-                    <div className="lp-mock-config-title">Configuration</div>
+                    <div className="lp-mock-config-title">Properties</div>
                     <div className="lp-mock-config-row">
                       <span className="lp-mock-config-label">Tier</span>
-                      <span className="lp-mock-config-value">m5.xlarge</span>
+                      <span className="lp-mock-config-value select-look">c6g.xlarge</span>
                     </div>
                     <div className="lp-mock-config-row">
                       <span className="lp-mock-config-label">Instances</span>
-                      <span className="lp-mock-config-value">3</span>
+                      <span className="lp-mock-config-value range-look"><div className="range-track"><div className="range-fill" style={{width:'30%'}}></div></div><span className="range-num">3</span></span>
                     </div>
                     <div className="lp-mock-config-row">
-                      <span className="lp-mock-config-label">Region</span>
-                      <span className="lp-mock-config-value">us-east-1</span>
+                      <span className="lp-mock-config-label">Multi-AZ</span>
+                      <span className="lp-mock-config-value toggle-look active"></span>
                     </div>
                   </div>
-                  <div className="lp-mock-config-block">
-                    <div className="lp-mock-config-title">Performance</div>
+                  
+                  <div className="lp-mock-config-block section-cost">
+                    <div className="lp-mock-config-title" style={{marginBottom: 4}}>Cost Breakdown</div>
                     <div className="lp-mock-config-row">
-                      <span className="lp-mock-config-label">CPU Load</span>
-                      <span className="lp-mock-config-value">42%</span>
-                    </div>
-                    <div className="lp-mock-bar">
-                      <div className="lp-mock-bar-fill" style={{ width: '42%' }} />
+                      <span className="lp-mock-config-label" style={{color: '#fff', fontWeight: 600}}>Total Monthly Cost</span>
+                      <span className="lp-mock-cost-value">$438.00<span className="mo">/mo</span></span>
                     </div>
                     <div className="lp-mock-config-row">
-                      <span className="lp-mock-config-label">Memory</span>
-                      <span className="lp-mock-config-value">68%</span>
-                    </div>
-                    <div className="lp-mock-bar">
-                      <div className="lp-mock-bar-fill" style={{ width: '68%' }} />
+                      <span className="lp-mock-config-label">CPU / RAM</span>
+                      <span className="lp-mock-config-value" style={{color: 'rgba(255,255,255,0.7)'}}>4 vCPU / 8GB</span>
                     </div>
                   </div>
+
                   <div className="lp-mock-config-block">
-                    <div className="lp-mock-config-title">Cost</div>
-                    <div className="lp-mock-config-row">
-                      <span className="lp-mock-config-label">Monthly</span>
-                      <span className="lp-mock-config-value" style={{ color: 'rgba(255,255,255,0.7)' }}>$847/mo</span>
-                    </div>
-                    <div className="lp-mock-config-row">
-                      <span className="lp-mock-config-label">Per request</span>
-                      <span className="lp-mock-config-value">$0.00024</span>
-                    </div>
+                    <div className="lp-mock-config-title">Live Deployment Visualizer</div>
+                    <p className="lp-mock-rp-desc">Simulate a Blue/Green or Canary deployment. Traffic will seamlessly shift from v1 to v2 directly on the canvas.</p>
+                    <div className="lp-mock-btn-deploy"><GitBranch size={12}/> Launch Blue/Green Deployment</div>
                   </div>
                 </div>
 
