@@ -700,6 +700,38 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
                 instance redundancy, Multi-AZ boosts, and DR strategies. Displays availability in "nines" notation with downtime estimates.
               </p>
             </AnimatedSection>
+
+            {/* ── Professionalization Sprint ── */}
+            <AnimatedSection className="lp-feature-card" delay={0.8}>
+              <div className="lp-feature-icon" style={{ color: '#818cf8' }}><Sparkles size={24} /></div>
+              <h3>Spring-Physics Micro-Interactions</h3>
+              <p>
+                Every node entrance, selection, and state change is animated with Framer Motion spring physics.
+                The canvas feels alive — components pop into existence and transition smoothly between
+                healthy, warning, and critical states.
+              </p>
+            </AnimatedSection>
+
+            <AnimatedSection className="lp-feature-card" delay={0.85}>
+              <div className="lp-feature-badge-new" style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171', borderColor: 'rgba(239,68,68,0.2)' }}>SECURITY</div>
+              <div className="lp-feature-icon" style={{ color: '#f87171' }}><ShieldAlert size={24} /></div>
+              <h3>Actionable Security Findings</h3>
+              <p>
+                Security vulnerabilities are now directly actionable. Click "Fix Node" on any finding
+                and the canvas automatically pans and zooms to the affected component, opening its
+                config panel so you can remediate without hunting manually.
+              </p>
+            </AnimatedSection>
+
+            <AnimatedSection className="lp-feature-card" delay={0.9}>
+              <div className="lp-feature-icon" style={{ color: '#fbbf24' }}><Download size={24} /></div>
+              <h3>3× Retina-Quality Export</h3>
+              <p>
+                Upgraded export engine renders diagrams at 3× pixel density for pixel-perfect
+                PNG output on Retina displays and in presentations. Controls, minimap, and
+                overlays are automatically excluded from the export frame.
+              </p>
+            </AnimatedSection>
           </div>
         </section>
 
@@ -819,7 +851,7 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
         <AnimatedSection>
           <div className="lp-stats-bar">
             <div className="lp-stat">
-              <div className="lp-stat-value">40+</div>
+              <div className="lp-stat-value">90+</div>
               <div className="lp-stat-label">Cloud Components</div>
             </div>
             <div className="lp-stat">
@@ -827,12 +859,12 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
               <div className="lp-stat-label">Simulation Engines</div>
             </div>
             <div className="lp-stat">
-              <div className="lp-stat-value">5</div>
-              <div className="lp-stat-label">Chaos Events</div>
+              <div className="lp-stat-value">25+</div>
+              <div className="lp-stat-label">Security Rules</div>
             </div>
             <div className="lp-stat">
-              <div className="lp-stat-value">∞</div>
-              <div className="lp-stat-label">Canvas Size</div>
+              <div className="lp-stat-value">3×</div>
+              <div className="lp-stat-label">Retina Export</div>
             </div>
           </div>
         </AnimatedSection>
@@ -955,6 +987,20 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
                   </tr>
                   <tr>
                     <td className="lp-feature-name">SLA / SLO Calculator</td>
+                    <td className="lp-col-highlight"><span className="lp-check">✓</span></td>
+                    <td><span className="lp-cross">✕</span></td>
+                    <td><span className="lp-cross">✕</span></td>
+                    <td><span className="lp-cross">✕</span></td>
+                  </tr>
+                  <tr>
+                    <td className="lp-feature-name">Framer Motion micro-animations</td>
+                    <td className="lp-col-highlight"><span className="lp-check">✓</span></td>
+                    <td><span className="lp-cross">✕</span></td>
+                    <td><span className="lp-cross">✕</span></td>
+                    <td><span className="lp-cross">✕</span></td>
+                  </tr>
+                  <tr>
+                    <td className="lp-feature-name">Actionable security fix workflow</td>
                     <td className="lp-col-highlight"><span className="lp-check">✓</span></td>
                     <td><span className="lp-cross">✕</span></td>
                     <td><span className="lp-cross">✕</span></td>
@@ -1161,11 +1207,11 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
               </p>
               <div className="lp-free-features">
                 <div className="lp-free-feature"><Check size={14} /> Unlimited designs</div>
-                <div className="lp-free-feature"><Check size={14} /> All 40+ components</div>
+                <div className="lp-free-feature"><Check size={14} /> All 90+ components</div>
                 <div className="lp-free-feature"><Check size={14} /> Full simulation engine</div>
                 <div className="lp-free-feature"><Check size={14} /> All templates included</div>
-                <div className="lp-free-feature"><Check size={14} /> PNG & JSON export</div>
-                <div className="lp-free-feature"><Check size={14} /> No tracking</div>
+                <div className="lp-free-feature"><Check size={14} /> PNG 3× Retina export</div>
+                <div className="lp-free-feature"><Check size={14} /> Security scanner</div>
                 <div className="lp-free-feature"><Check size={14} /> Local-first storage</div>
                 <div className="lp-free-feature"><Check size={14} /> Version history</div>
               </div>
