@@ -819,9 +819,9 @@
   display: flex; align-items: center; gap: 6px; padding: 6px 8px; font-size: 0.6rem; color: var(--lp-text-muted);
 }
 .lp-mock-health-ring { width: 6px; height: 6px; border-radius: 50%; }
-.healthy { background: #10b981; box-shadow: 0 0 6px rgba(16, 185, 129, 0.5); }
-.warning { background: #eab308; box-shadow: 0 0 6px rgba(234, 179, 8, 0.5); }
-.critical { background: #ef4444; box-shadow: 0 0 6px rgba(239, 68, 68, 0.5); }
+.lp-mock-health-ring.healthy { background: #10b981; box-shadow: 0 0 6px rgba(16, 185, 129, 0.5); }
+.lp-mock-health-ring.warning { background: #eab308; box-shadow: 0 0 6px rgba(234, 179, 8, 0.5); }
+.lp-mock-health-ring.critical { background: #ef4444; box-shadow: 0 0 6px rgba(239, 68, 68, 0.5); }
 
 .lp-mock-right-panel {
   background: #000;

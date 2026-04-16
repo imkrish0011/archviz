@@ -1068,22 +1068,7 @@ const componentLibrary: ComponentDefinition[] = [
     defaultTierIndex: 0,
   },
   {
-    type: 'dynamodb',
-    label: 'DynamoDB',
-    category: 'storage',
-    icon: 'Database',
-    description: 'Fast, flexible NoSQL database service for single-digit ms latency',
-    scalingType: 'horizontal',
-    reliability: 0.99999,
-    scalingFactor: 1.0,
-    baseLatency: 5,
-    tiers: [
-      { id: 'ddb-ondemand', label: 'Pay-per-request', monthlyCost: 25.00, capacity: 50000, latency: 5 },
-      { id: 'ddb-provisioned', label: 'Provisioned 10k WCU', monthlyCost: 500.00, capacity: 500000, latency: 3 },
-    ],
-    defaultTierIndex: 0,
-  },
-  {
+
     type: 'neo4j',
     label: 'Neo4j / Graph',
     category: 'storage',
@@ -1297,22 +1282,7 @@ const componentLibrary: ComponentDefinition[] = [
     defaultTierIndex: 0,
   },
   {
-    type: 'datadog',
-    label: 'Datadog Agent',
-    category: 'observability',
-    icon: 'Activity',
-    description: 'Enterprise full-stack observability and monitoring',
-    scalingType: 'horizontal',
-    reliability: 0.9999,
-    scalingFactor: 1.0,
-    baseLatency: 5,
-    tiers: [
-      { id: 'dd-pro', label: 'Pro Host', monthlyCost: 15.00, capacity: 10000, latency: 5 },
-      { id: 'dd-ent', label: 'Enterprise Host', monthlyCost: 23.00, capacity: 25000, latency: 5 },
-    ],
-    defaultTierIndex: 0,
-  },
-  {
+
     type: 'github-actions',
     label: 'GitHub Actions',
     category: 'deployment',
