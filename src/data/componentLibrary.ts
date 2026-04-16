@@ -228,9 +228,9 @@ const componentLibrary: ComponentDefinition[] = [
   {
     type: 'kubernetes-cluster',
     label: 'Kubernetes Cluster (EKS)',
-    category: 'compute',
+    category: 'boundary',
     icon: 'Blocks',
-    description: 'Managed Kubernetes control plane supporting massive microservice auto-scaling',
+    description: 'Group node for orchestrating containerized apps and supporting massive microservice auto-scaling.',
     scalingType: 'horizontal',
     reliability: 0.9995,
     scalingFactor: 0.98,
@@ -1406,6 +1406,182 @@ const componentLibrary: ComponentDefinition[] = [
       { id: 'p4d.24xlarge', label: 'p4d.24xlarge (8x A100)', monthlyCost: 23925.12, capacity: 20000, latency: 20, ram: '1152 GB' },
     ],
     defaultTierIndex: 1,
+  },
+
+  // ═══════════════════════════════════════════════════
+  // ADDITIONAL COMPUTE — Containers & Proxies
+  // ═══════════════════════════════════════════════════
+  {
+    type: 'docker-container',
+    label: 'Docker Container',
+    category: 'compute',
+    icon: 'Box',
+    description: 'Isolated application container environment — lightweight, portable runtime',
+    scalingType: 'horizontal',
+    reliability: 0.995,
+    scalingFactor: 1.0,
+    baseLatency: 8,
+    tiers: [
+      { id: 'docker-sm', label: 'Small (1 vCPU / 1 GB)', monthlyCost: 10.00, capacity: 500, latency: 12, cpu: '1 vCPU', ram: '1 GB' },
+      { id: 'docker-md', label: 'Medium (2 vCPU / 4 GB)', monthlyCost: 35.00, capacity: 2000, latency: 8, cpu: '2 vCPU', ram: '4 GB' },
+      { id: 'docker-lg', label: 'Large (4 vCPU / 16 GB)', monthlyCost: 120.00, capacity: 8000, latency: 5, cpu: '4 vCPU', ram: '16 GB' },
+    ],
+    defaultTierIndex: 1,
+  },
+  {
+    type: 'reverse-proxy',
+    label: 'Reverse Proxy',
+    category: 'network',
+    icon: 'ArrowLeftRight',
+    description: 'Nginx / HAProxy — sits in front of web servers for TLS termination, routing, and load distribution',
+    scalingType: 'horizontal',
+    reliability: 0.9995,
+    scalingFactor: 1.0,
+    baseLatency: 1,
+    tiers: [
+      { id: 'nginx-sm', label: 'Nginx (t3.small)', monthlyCost: 16.79, capacity: 10000, latency: 1, cpu: '1 vCPU', ram: '2 GB' },
+      { id: 'nginx-lg', label: 'Nginx (m5.xlarge)', monthlyCost: 140.16, capacity: 80000, latency: 0.5, cpu: '4 vCPU', ram: '16 GB' },
+      { id: 'haproxy', label: 'HAProxy Enterprise', monthlyCost: 500.00, capacity: 200000, latency: 0.3, cpu: '8 vCPU', ram: '32 GB' },
+    ],
+    defaultTierIndex: 0,
+  },
+  {
+    type: 'vpn-gateway',
+    label: 'VPN / VPC Gateway',
+    category: 'network',
+    icon: 'Lock',
+    description: 'Secure encrypted tunnel connecting on-premises or remote networks to cloud VPCs',
+    scalingType: 'vertical',
+    reliability: 0.9999,
+    scalingFactor: 1.0,
+    baseLatency: 10,
+    tiers: [
+      { id: 'site-to-site', label: 'Site-to-Site VPN', monthlyCost: 36.50, capacity: 500000, latency: 15 },
+      { id: 'client-vpn', label: 'Client VPN', monthlyCost: 75.00, capacity: 250000, latency: 20 },
+      { id: 'dx-gateway', label: 'Direct Connect GW', monthlyCost: 250.00, capacity: 2000000, latency: 5 },
+    ],
+    defaultTierIndex: 0,
+  },
+
+  // ═══════════════════════════════════════════════════
+  // ADDITIONAL STORAGE — Data Lake & Block Storage
+  // ═══════════════════════════════════════════════════
+  {
+    type: 'data-lake',
+    label: 'Data Lake',
+    category: 'storage',
+    icon: 'Warehouse',
+    description: 'Raw, unstructured data storage at massive scale (S3 / HDFS / GCS)',
+    scalingType: 'horizontal',
+    reliability: 0.99999,
+    scalingFactor: 1.0,
+    baseLatency: 80,
+    tiers: [
+      { id: 'lake-1tb', label: '1 TB Standard', monthlyCost: 23.00, capacity: 10000, latency: 100 },
+      { id: 'lake-10tb', label: '10 TB Standard', monthlyCost: 220.00, capacity: 50000, latency: 80 },
+      { id: 'lake-100tb', label: '100 TB Intelligent', monthlyCost: 1800.00, capacity: 200000, latency: 60 },
+    ],
+    defaultTierIndex: 0,
+  },
+  {
+    type: 'block-storage',
+    label: 'Block Storage (EBS)',
+    category: 'storage',
+    icon: 'HardDrive',
+    description: 'Persistent block-level storage volumes attached to compute instances',
+    scalingType: 'vertical',
+    reliability: 0.9999,
+    scalingFactor: 1.5,
+    baseLatency: 1,
+    tiers: [
+      { id: 'gp3-100gb', label: 'gp3 100 GB', monthlyCost: 8.00, capacity: 3000, latency: 1 },
+      { id: 'gp3-1tb', label: 'gp3 1 TB', monthlyCost: 80.00, capacity: 3000, latency: 1 },
+      { id: 'io2-500gb', label: 'io2 500 GB (IOPS)', monthlyCost: 312.50, capacity: 64000, latency: 0.5 },
+    ],
+    defaultTierIndex: 0,
+  },
+
+  // ═══════════════════════════════════════════════════
+  // ADDITIONAL MESSAGING — Webhook Handler
+  // ═══════════════════════════════════════════════════
+  {
+    type: 'webhook-handler',
+    label: 'Webhook Handler',
+    category: 'messaging',
+    icon: 'Webhook',
+    description: 'Receives and processes push events from external services and SaaS providers',
+    scalingType: 'horizontal',
+    reliability: 0.999,
+    scalingFactor: 1.0,
+    baseLatency: 20,
+    tiers: [
+      { id: 'wh-lambda', label: 'Serverless Handler', monthlyCost: 5.00, capacity: 50000, latency: 25 },
+      { id: 'wh-dedicated', label: 'Dedicated Handler', monthlyCost: 35.00, capacity: 200000, latency: 10 },
+    ],
+    defaultTierIndex: 0,
+  },
+
+  // ═══════════════════════════════════════════════════
+  // ADDITIONAL OBSERVABILITY — Log Aggregator
+  // ═══════════════════════════════════════════════════
+  {
+    type: 'log-aggregator',
+    label: 'Log Aggregator',
+    category: 'observability',
+    icon: 'FileText',
+    description: 'Centralized logging platform (ELK Stack / Datadog Logs / Splunk)',
+    scalingType: 'horizontal',
+    reliability: 0.999,
+    scalingFactor: 1.0,
+    baseLatency: 0,
+    tiers: [
+      { id: 'elk-basic', label: 'ELK Basic (3 nodes)', monthlyCost: 180.00, capacity: 1000000, latency: 0 },
+      { id: 'elk-prod', label: 'ELK Production', monthlyCost: 650.00, capacity: 5000000, latency: 0 },
+      { id: 'splunk-cloud', label: 'Splunk Cloud', monthlyCost: 1500.00, capacity: 20000000, latency: 0 },
+    ],
+    defaultTierIndex: 0,
+  },
+
+  // ═══════════════════════════════════════════════════
+  // ADDITIONAL DEPLOYMENT — Container Registry
+  // ═══════════════════════════════════════════════════
+  {
+    type: 'container-registry',
+    label: 'Container Registry',
+    category: 'deployment',
+    icon: 'PackageOpen',
+    description: 'Storage for container images (Docker Hub / ECR / GCR / ACR)',
+    scalingType: 'horizontal',
+    reliability: 0.9999,
+    scalingFactor: 1.0,
+    baseLatency: 50,
+    tiers: [
+      { id: 'ecr-basic', label: 'ECR (per GB stored)', monthlyCost: 10.00, capacity: 10000, latency: 50 },
+      { id: 'ecr-ha', label: 'ECR Cross-Region', monthlyCost: 50.00, capacity: 50000, latency: 30 },
+      { id: 'dockerhub-team', label: 'Docker Hub Teams', monthlyCost: 9.00, capacity: 5000, latency: 80 },
+    ],
+    defaultTierIndex: 0,
+  },
+
+  // ═══════════════════════════════════════════════════
+  // THIRD-PARTY SaaS — Headless CMS
+  // ═══════════════════════════════════════════════════
+  {
+    type: 'headless-cms',
+    label: 'Headless CMS',
+    category: 'client',
+    icon: 'LayoutDashboard',
+    description: 'API-first content management system (Contentful / Sanity / Strapi)',
+    scalingType: 'horizontal',
+    reliability: 0.999,
+    scalingFactor: 1.0,
+    baseLatency: 60,
+    tiers: [
+      { id: 'cms-starter', label: 'Starter (2 users)', monthlyCost: 0, capacity: 5000, latency: 80 },
+      { id: 'cms-team', label: 'Team (10 users)', monthlyCost: 300.00, capacity: 50000, latency: 50 },
+      { id: 'cms-enterprise', label: 'Enterprise', monthlyCost: 2500.00, capacity: 500000, latency: 30 },
+    ],
+    defaultTierIndex: 0,
   },
 
   // ── Boundary / Group Nodes ──

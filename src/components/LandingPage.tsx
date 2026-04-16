@@ -238,7 +238,7 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
 
           <div className="lp-hero-trust">
             <div className="lp-trust-item">
-              <span className="lp-trust-value">40+</span>
+              <span className="lp-trust-value">90+</span>
               <span className="lp-trust-label">Components</span>
             </div>
             <div className="lp-trust-divider" />
@@ -438,10 +438,10 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
                 <Box size={13} />
                 Component Library
               </div>
-              <h2 className="lp-section-title" style={{ fontSize: '2.5rem' }}>40+ Cloud Modules</h2>
+              <h2 className="lp-section-title" style={{ fontSize: '2.5rem' }}>90+ Cloud Modules</h2>
             </div>
           </AnimatedSection>
-          
+
           <AnimatedSection delay={0.1}>
             <div className="lp-category-title">Compute & Microservices</div>
             <div className="lp-marquee-wrap" style={{ padding: '20px 0', maskImage: 'linear-gradient(90deg, transparent, black 15%, black 85%, transparent)', WebkitMaskImage: 'linear-gradient(90deg, transparent, black 15%, black 85%, transparent)' }}>
@@ -506,7 +506,7 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
                 <Sparkles size={13} />
                 Features
               </div>
-              <h2 className="lp-section-title">Everything you need to<br/>architect at scale</h2>
+              <h2 className="lp-section-title">Everything you need to<br />architect at scale</h2>
               <p className="lp-section-desc">
                 From drag-and-drop design to real-time failure simulation — ArchViz is the
                 complete toolkit for modern system design.
@@ -556,7 +556,7 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
               <div className="lp-feature-icon"><Gauge size={24} /></div>
               <h3>Real-Time Metrics Engine</h3>
               <p>
-                The bottom insight bar calculates and displays 5 critical metrics in real-time: 
+                The bottom insight bar calculates and displays 5 critical metrics in real-time:
                 monthly cost, P95 latency, health score with letter grade, throughput (rps),
                 and availability percentage. Warnings are surfaced automatically.
               </p>
@@ -593,7 +593,7 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
               <div className="lp-feature-icon"><LayoutTemplate size={24} /></div>
               <h3>10+ Pre-built Templates</h3>
               <p>
-                Learn from reverse-engineered architectures of Netflix, Instagram, Uber, Spotify, 
+                Learn from reverse-engineered architectures of Netflix, Instagram, Uber, Spotify,
                 and more. Or start with proven architectural patterns.
               </p>
             </AnimatedSection>
@@ -671,7 +671,7 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
                 <Zap size={13} />
                 Enterprise Simulations
               </div>
-              <h2 className="lp-section-title">Enterprise-Grade<br/>System Simulations</h2>
+              <h2 className="lp-section-title">Enterprise-Grade<br />System Simulations</h2>
               <p className="lp-section-desc">
                 Go beyond static diagrams. ArchViz simulates real-world failure scenarios,
                 environmental impact, and deployment strategies — all in real-time on the canvas.
@@ -731,7 +731,7 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
                 <Workflow size={13} />
                 How It Works
               </div>
-              <h2 className="lp-section-title">From zero to architecture<br/>in 60 seconds</h2>
+              <h2 className="lp-section-title">From zero to architecture<br />in 60 seconds</h2>
               <p className="lp-section-desc">
                 Four simple steps to design, validate, and optimize your system.
               </p>
@@ -1138,7 +1138,7 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
          * ═══════════════════════════════════════ */}
         <section className="lp-cta-section">
           <AnimatedSection>
-            <h2>Ready to architect<br/>your next system?</h2>
+            <h2>Ready to architect<br />your next system?</h2>
             <p>
               Join thousands of developers who design, simulate, and optimize
               their systems before writing code.
@@ -1165,17 +1165,17 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
               <BrainCircuit size={24} />
               <span>ArchViz</span>
             </div>
-            
+
             <div className="lp-footer-copyright">
               © {new Date().getFullYear()} ArchViz Simulator. All rights reserved. Built for elite system designers.
             </div>
 
             <div className="lp-footer-socials">
               <a href="https://github.com/imkrish0011" target="_blank" rel="noopener noreferrer" className="lp-social-link" aria-label="GitHub">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" /></svg>
               </a>
               <a href="https://twitter.com/signin_as_krish" target="_blank" rel="noopener noreferrer" className="lp-social-link" aria-label="Twitter">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
               </a>
               <a href="mailto:krish.qcai@gmail.com" className="lp-social-link" aria-label="Email">
                 <Mail size={18} />
