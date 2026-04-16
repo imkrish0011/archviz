@@ -1615,6 +1615,333 @@ const componentLibrary: ComponentDefinition[] = [
     ],
     defaultTierIndex: 0,
   },
+
+  // ═══════════════════════════════════════════════════
+  // AI / ML INFRASTRUCTURE
+  // ═══════════════════════════════════════════════════
+  {
+    type: 'aws-sagemaker',
+    label: 'AWS SageMaker',
+    category: 'compute',
+    icon: 'BrainCircuit',
+    description: 'Fully managed ML platform for building, training, and deploying models at scale',
+    scalingType: 'horizontal',
+    reliability: 0.999,
+    scalingFactor: 1.0,
+    baseLatency: 100,
+    tiers: [
+      { id: 'smkr-studio', label: 'Studio (ml.t3.medium)', monthlyCost: 47.00, capacity: 100, latency: 200, cpu: '2 vCPU', ram: '4 GB' },
+      { id: 'smkr-real-time', label: 'Real-time Endpoint', monthlyCost: 380.00, capacity: 1000, latency: 80, cpu: '4 vCPU', ram: '16 GB' },
+      { id: 'smkr-serverless', label: 'Serverless Inference', monthlyCost: 60.00, capacity: 5000, latency: 150, ram: '6 GB' },
+    ],
+    defaultTierIndex: 0,
+  },
+  {
+    type: 'vertex-ai',
+    label: 'Vertex AI',
+    category: 'compute',
+    icon: 'Sparkles',
+    description: 'Google Cloud unified ML platform for training, deploying, and monitoring ML models',
+    scalingType: 'horizontal',
+    reliability: 0.999,
+    scalingFactor: 1.0,
+    baseLatency: 120,
+    tiers: [
+      { id: 'vertex-pred', label: 'Prediction Endpoint', monthlyCost: 200.00, capacity: 500, latency: 120, ram: '16 GB' },
+      { id: 'vertex-dedicated', label: 'Dedicated Serving', monthlyCost: 1200.00, capacity: 10000, latency: 30, ram: '64 GB' },
+    ],
+    defaultTierIndex: 0,
+  },
+  {
+    type: 'huggingface',
+    label: 'Hugging Face Hub',
+    category: 'client',
+    icon: 'Bot',
+    description: 'Model hub and Inference API for open-source transformer models',
+    scalingType: 'horizontal',
+    reliability: 0.98,
+    scalingFactor: 1.0,
+    baseLatency: 600,
+    tiers: [
+      { id: 'hf-free', label: 'Free Inference API', monthlyCost: 0, capacity: 1000, latency: 1500 },
+      { id: 'hf-pro', label: 'Dedicated Endpoint', monthlyCost: 300.00, capacity: 20000, latency: 200, ram: '16 GB' },
+    ],
+    defaultTierIndex: 0,
+  },
+  {
+    type: 'feature-store',
+    label: 'Feature Store',
+    category: 'storage',
+    icon: 'Table2',
+    description: 'Centralized ML feature repository for training and online serving (Feast / SageMaker FS)',
+    scalingType: 'horizontal',
+    reliability: 0.999,
+    scalingFactor: 1.0,
+    baseLatency: 10,
+    tiers: [
+      { id: 'feast-managed', label: 'Managed (online + offline)', monthlyCost: 180.00, capacity: 10000, latency: 10 },
+    ],
+    defaultTierIndex: 0,
+  },
+
+  // ═══════════════════════════════════════════════════
+  // EDGE / CDN
+  // ═══════════════════════════════════════════════════
+  {
+    type: 'fastly-cdn',
+    label: 'Fastly CDN',
+    category: 'network',
+    icon: 'Gauge',
+    description: 'Real-time CDN with instant cache purging and VCL edge logic',
+    scalingType: 'horizontal',
+    reliability: 0.9999,
+    scalingFactor: 1.0,
+    baseLatency: 3,
+    tiers: [
+      { id: 'fastly-starter', label: 'Usage-based (1TB)', monthlyCost: 50.00, capacity: 500000, latency: 3 },
+      { id: 'fastly-enterprise', label: 'Enterprise SLA', monthlyCost: 3000.00, capacity: 5000000, latency: 1 },
+    ],
+    defaultTierIndex: 0,
+  },
+  {
+    type: 'cloudflare-zero-trust',
+    label: 'Cloudflare Zero Trust',
+    category: 'network',
+    icon: 'ShieldCheck',
+    description: 'ZTNA platform replacing VPN for secure, identity-aware app access',
+    scalingType: 'horizontal',
+    reliability: 0.9999,
+    scalingFactor: 1.0,
+    baseLatency: 8,
+    tiers: [
+      { id: 'zt-free', label: 'Free (50 users)', monthlyCost: 0, capacity: 50000, latency: 10 },
+      { id: 'zt-team', label: 'Teams Plan', monthlyCost: 200.00, capacity: 500000, latency: 8 },
+    ],
+    defaultTierIndex: 0,
+  },
+
+  // ═══════════════════════════════════════════════════
+  // OBSERVABILITY — Error & Alerting
+  // ═══════════════════════════════════════════════════
+  {
+    type: 'sentry',
+    label: 'Sentry',
+    category: 'observability',
+    icon: 'BugOff',
+    description: 'Application performance monitoring and error tracking platform',
+    scalingType: 'horizontal',
+    reliability: 0.999,
+    scalingFactor: 1.0,
+    baseLatency: 0,
+    tiers: [
+      { id: 'sentry-team', label: 'Team Plan', monthlyCost: 26.00, capacity: 1000000, latency: 0 },
+      { id: 'sentry-business', label: 'Business Plan', monthlyCost: 80.00, capacity: 5000000, latency: 0 },
+    ],
+    defaultTierIndex: 0,
+  },
+  {
+    type: 'pagerduty',
+    label: 'PagerDuty',
+    category: 'observability',
+    icon: 'BellRing',
+    description: 'Incident response and on-call scheduling platform for SRE/DevOps teams',
+    scalingType: 'horizontal',
+    reliability: 0.9999,
+    scalingFactor: 1.0,
+    baseLatency: 0,
+    tiers: [
+      { id: 'pd-professional', label: 'Professional', monthlyCost: 21.00, capacity: 1000000, latency: 0 },
+    ],
+    defaultTierIndex: 0,
+  },
+  {
+    type: 'opentelemetry',
+    label: 'OpenTelemetry',
+    category: 'observability',
+    icon: 'GitMerge',
+    description: 'Vendor-neutral observability framework for traces, metrics, and logs',
+    scalingType: 'horizontal',
+    reliability: 0.999,
+    scalingFactor: 1.0,
+    baseLatency: 0,
+    tiers: [
+      { id: 'otel-collector', label: 'Self-hosted Collector', monthlyCost: 30.00, capacity: 10000000, latency: 0 },
+    ],
+    defaultTierIndex: 0,
+  },
+
+  // ═══════════════════════════════════════════════════
+  // SECURITY
+  // ═══════════════════════════════════════════════════
+  {
+    type: 'aws-kms',
+    label: 'AWS KMS',
+    category: 'network',
+    icon: 'KeyRound',
+    description: 'AWS Key Management Service for encryption key creation and control',
+    scalingType: 'horizontal',
+    reliability: 0.9999,
+    scalingFactor: 1.0,
+    baseLatency: 5,
+    tiers: [
+      { id: 'kms-standard', label: 'Customer Managed Keys', monthlyCost: 1.00, capacity: 100000, latency: 5 },
+    ],
+    defaultTierIndex: 0,
+  },
+  {
+    type: 'okta',
+    label: 'Okta SSO',
+    category: 'client',
+    icon: 'UserCheck',
+    description: 'Enterprise identity and single sign-on (SSO) provider',
+    scalingType: 'horizontal',
+    reliability: 0.9999,
+    scalingFactor: 1.0,
+    baseLatency: 100,
+    tiers: [
+      { id: 'okta-workforce', label: 'Workforce SSO (per user)', monthlyCost: 200.00, capacity: 10000, latency: 100 },
+      { id: 'okta-customer', label: 'Customer Identity (CIAM)', monthlyCost: 800.00, capacity: 100000, latency: 80 },
+    ],
+    defaultTierIndex: 0,
+  },
+
+  // ═══════════════════════════════════════════════════
+  // DEVOPS / DEPLOYMENT
+  // ═══════════════════════════════════════════════════
+  {
+    type: 'argocd',
+    label: 'Argo CD',
+    category: 'deployment',
+    icon: 'Repeat2',
+    description: 'Declarative GitOps continuous delivery tool for Kubernetes',
+    scalingType: 'horizontal',
+    reliability: 0.999,
+    scalingFactor: 1.0,
+    baseLatency: 500,
+    tiers: [
+      { id: 'argocd-oss', label: 'Open Source (self-hosted)', monthlyCost: 35.00, capacity: 100, latency: 1000 },
+    ],
+    defaultTierIndex: 0,
+  },
+  {
+    type: 'terraform',
+    label: 'Terraform Cloud',
+    category: 'deployment',
+    icon: 'Layers2',
+    description: 'Infrastructure as Code orchestration via HashiCorp Terraform Cloud',
+    scalingType: 'horizontal',
+    reliability: 0.999,
+    scalingFactor: 1.0,
+    baseLatency: 2000,
+    tiers: [
+      { id: 'tf-free', label: 'Free (up to 500 resources)', monthlyCost: 0, capacity: 500, latency: 3000 },
+      { id: 'tf-plus', label: 'Plus Plan', monthlyCost: 20.00, capacity: 5000, latency: 1500 },
+    ],
+    defaultTierIndex: 0,
+  },
+
+  // ═══════════════════════════════════════════════════
+  // DATA ENGINEERING
+  // ═══════════════════════════════════════════════════
+  {
+    type: 'apache-airflow',
+    label: 'Apache Airflow',
+    category: 'compute',
+    icon: 'Wind',
+    description: 'Platform for programmatically authoring, scheduling, and monitoring data workflows',
+    scalingType: 'horizontal',
+    reliability: 0.99,
+    scalingFactor: 1.0,
+    baseLatency: 1000,
+    tiers: [
+      { id: 'mwaa-small', label: 'MWAA Small (2 xLarge)', monthlyCost: 560.00, capacity: 200, latency: 2000 },
+      { id: 'mwaa-large', label: 'MWAA Large (10 xLarge)', monthlyCost: 2800.00, capacity: 2000, latency: 500 },
+    ],
+    defaultTierIndex: 0,
+  },
+  {
+    type: 'clickhouse',
+    label: 'ClickHouse',
+    category: 'storage',
+    icon: 'DatabaseZap',
+    description: 'Column-oriented OLAP database for blazing-fast analytical queries',
+    scalingType: 'horizontal',
+    reliability: 0.999,
+    scalingFactor: 1.0,
+    baseLatency: 10,
+    tiers: [
+      { id: 'ch-cloud-dev', label: 'Cloud Dev (3-node)', monthlyCost: 200.00, capacity: 50000, latency: 15 },
+      { id: 'ch-cloud-prod', label: 'Cloud Production', monthlyCost: 1500.00, capacity: 500000, latency: 5 },
+    ],
+    defaultTierIndex: 0,
+  },
+  {
+    type: 'supabase',
+    label: 'Supabase',
+    category: 'storage',
+    icon: 'Database',
+    description: 'Open-source Firebase alternative with Postgres, Auth, Storage, and Realtime APIs',
+    scalingType: 'horizontal',
+    reliability: 0.999,
+    scalingFactor: 1.0,
+    baseLatency: 8,
+    tiers: [
+      { id: 'sb-free', label: 'Free Tier', monthlyCost: 0, capacity: 500, latency: 20 },
+      { id: 'sb-pro', label: 'Pro Plan', monthlyCost: 25.00, capacity: 5000, latency: 8, cpu: '2 vCPU', ram: '8 GB' },
+      { id: 'sb-team', label: 'Team Plan', monthlyCost: 599.00, capacity: 50000, latency: 5, cpu: '8 vCPU', ram: '32 GB' },
+    ],
+    defaultTierIndex: 1,
+  },
+  {
+    type: 'cockroachdb',
+    label: 'CockroachDB',
+    category: 'storage',
+    icon: 'Globe',
+    description: 'Distributed SQL database with global consistency and zero-downtime scaling',
+    scalingType: 'horizontal',
+    reliability: 0.9999,
+    scalingFactor: 1.0,
+    baseLatency: 15,
+    tiers: [
+      { id: 'crdb-serverless', label: 'Serverless (usage-based)', monthlyCost: 25.00, capacity: 5000, latency: 20 },
+      { id: 'crdb-dedicated', label: 'Dedicated Cluster', monthlyCost: 900.00, capacity: 50000, latency: 10 },
+    ],
+    defaultTierIndex: 0,
+  },
+
+  // ═══════════════════════════════════════════════════
+  // COMMUNICATION
+  // ═══════════════════════════════════════════════════
+  {
+    type: 'firebase-fcm',
+    label: 'Firebase Cloud Messaging',
+    category: 'messaging',
+    icon: 'Bell',
+    description: 'Free cross-platform push notifications for web and mobile (FCM)',
+    scalingType: 'horizontal',
+    reliability: 0.999,
+    scalingFactor: 1.0,
+    baseLatency: 100,
+    tiers: [
+      { id: 'fcm-free', label: 'Free (unlimited msgs)', monthlyCost: 0, capacity: 10000000, latency: 100 },
+    ],
+    defaultTierIndex: 0,
+  },
+  {
+    type: 'slack-api',
+    label: 'Slack / Teams API',
+    category: 'client',
+    icon: 'MessageSquare',
+    description: 'Webhook and API integration for Slack / Microsoft Teams notifications',
+    scalingType: 'horizontal',
+    reliability: 0.9995,
+    scalingFactor: 1.0,
+    baseLatency: 200,
+    tiers: [
+      { id: 'slack-free', label: 'Webhook (free)', monthlyCost: 0, capacity: 10000, latency: 200 },
+    ],
+    defaultTierIndex: 0,
+  },
 ];
 
 export function getComponentDefinition(type: string): ComponentDefinition | undefined {

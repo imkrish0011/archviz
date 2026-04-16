@@ -10,7 +10,7 @@ import {
   Code2, Gauge, Network,
   Webhook, Container, HardDrive, Radio, CircuitBoard, Flame,
   FileCode, ShieldAlert, Target, Mail, Leaf,
-  Warehouse, PackageOpen, LayoutDashboard, ArrowLeftRight, FileText, Play, X
+  Warehouse, PackageOpen, LayoutDashboard, ArrowLeftRight, FileText, Play, X, Cog
 } from 'lucide-react';
 import '../styles/landing.css';
 import { famousSystemTemplates } from '../data/templates/famousSystemTemplates';
@@ -52,6 +52,11 @@ const computeItems = [
   { label: 'Container Registry', icon: PackageOpen },
   { label: 'Log Aggregator', icon: FileText },
   { label: 'Headless CMS', icon: LayoutDashboard },
+  { label: 'AWS SageMaker', icon: BrainCircuit },
+  { label: 'Vertex AI', icon: Sparkles },
+  { label: 'Apache Airflow', icon: Clock },
+  { label: 'Argo CD', icon: RefreshCcw },
+  { label: 'Terraform Cloud', icon: Layers },
 ];
 
 const dataItems = [
@@ -71,6 +76,12 @@ const dataItems = [
   { label: 'AWS Athena', icon: Search },
   { label: 'Data Lake', icon: Warehouse },
   { label: 'Block Storage', icon: HardDrive },
+  { label: 'ClickHouse', icon: Database },
+  { label: 'Supabase', icon: Database },
+  { label: 'CockroachDB', icon: Globe },
+  { label: 'Feature Store', icon: Layers },
+  { label: 'Snowflake DW', icon: Database },
+  { label: 'Vector DB', icon: Database },
 ];
 
 const networkItems = [
@@ -92,6 +103,16 @@ const networkItems = [
   { label: 'Reverse Proxy', icon: ArrowLeftRight },
   { label: 'VPN Gateway', icon: Lock },
   { label: 'Webhook Handler', icon: Webhook },
+  { label: 'Fastly CDN', icon: Gauge },
+  { label: 'Cloudflare ZT', icon: Shield },
+  { label: 'AWS KMS', icon: Lock },
+  { label: 'Okta SSO', icon: Fingerprint },
+  { label: 'Sentry APM', icon: Activity },
+  { label: 'PagerDuty', icon: Zap },
+  { label: 'OpenTelemetry', icon: Eye },
+  { label: 'Hugging Face', icon: Sparkles },
+  { label: 'Firebase FCM', icon: Zap },
+  { label: 'Slack API', icon: MessageSquare },
 ];
 
 interface LandingPageProps {
@@ -248,7 +269,7 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
 
           <div className="lp-hero-trust">
             <div className="lp-trust-item">
-              <span className="lp-trust-value">90+</span>
+              <span className="lp-trust-value">130+</span>
               <span className="lp-trust-label">Components</span>
             </div>
             <div className="lp-trust-divider" />
@@ -482,7 +503,7 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
                 <Box size={13} />
                 Component Library
               </div>
-              <h2 className="lp-section-title" style={{ fontSize: '2.5rem' }}>90+ Cloud Modules</h2>
+              <h2 className="lp-section-title" style={{ fontSize: '2.5rem' }}>130+ Cloud Modules</h2>
             </div>
           </AnimatedSection>
 
@@ -521,6 +542,61 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
           </AnimatedSection>
 
           <AnimatedSection delay={0.3}>
+            <div className="lp-category-title">AI / ML & DevOps</div>
+            <div className="lp-marquee-wrap" style={{ padding: '20px 0', maskImage: 'linear-gradient(90deg, transparent, black 15%, black 85%, transparent)', WebkitMaskImage: 'linear-gradient(90deg, transparent, black 15%, black 85%, transparent)' }}>
+              <div className="lp-marquee-track reverse">
+                {[...[
+                  { label: 'AWS SageMaker', icon: BrainCircuit },
+                  { label: 'Vertex AI', icon: Sparkles },
+                  { label: 'Hugging Face', icon: Sparkles },
+                  { label: 'OpenAI API', icon: Sparkles },
+                  { label: 'Anthropic', icon: Sparkles },
+                  { label: 'GitHub Actions', icon: RefreshCcw },
+                  { label: 'Argo CD', icon: RefreshCcw },
+                  { label: 'Terraform', icon: Layers },
+                  { label: 'Jenkins CI', icon: Cog },
+                  { label: 'CodePipeline', icon: Layers },
+                  { label: 'Sentry', icon: Eye },
+                  { label: 'PagerDuty', icon: Zap },
+                  { label: 'OpenTelemetry', icon: Activity },
+                  { label: 'Okta SSO', icon: Fingerprint },
+                  { label: 'AWS KMS', icon: Lock },
+                  { label: 'Cloudflare ZT', icon: Shield },
+                  { label: 'Apache Airflow', icon: Clock },
+                  { label: 'Feature Store', icon: Database },
+                ], ...[
+                  { label: 'AWS SageMaker', icon: BrainCircuit },
+                  { label: 'Vertex AI', icon: Sparkles },
+                  { label: 'Hugging Face', icon: Sparkles },
+                  { label: 'OpenAI API', icon: Sparkles },
+                  { label: 'Anthropic', icon: Sparkles },
+                  { label: 'GitHub Actions', icon: RefreshCcw },
+                  { label: 'Argo CD', icon: RefreshCcw },
+                  { label: 'Terraform', icon: Layers },
+                  { label: 'Jenkins CI', icon: Cog },
+                  { label: 'CodePipeline', icon: Layers },
+                  { label: 'Sentry', icon: Eye },
+                  { label: 'PagerDuty', icon: Zap },
+                  { label: 'OpenTelemetry', icon: Activity },
+                  { label: 'Okta SSO', icon: Fingerprint },
+                  { label: 'AWS KMS', icon: Lock },
+                  { label: 'Cloudflare ZT', icon: Shield },
+                  { label: 'Apache Airflow', icon: Clock },
+                  { label: 'Feature Store', icon: Database },
+                ]].map((item, i) => {
+                  const Icon = item.icon;
+                  return (
+                    <div className="lp-catalog-card" key={`ai-${i}`}>
+                      <div className="lp-catalog-icon"><Icon size={24} strokeWidth={1.5} /></div>
+                      <span className="lp-catalog-label">{item.label}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </AnimatedSection>
+
+          <AnimatedSection delay={0.4}>
             <div className="lp-category-title">Networking & Security</div>
             <div className="lp-marquee-wrap" style={{ padding: '20px 0', maskImage: 'linear-gradient(90deg, transparent, black 15%, black 85%, transparent)', WebkitMaskImage: 'linear-gradient(90deg, transparent, black 15%, black 85%, transparent)' }}>
               <div className="lp-marquee-track">
@@ -851,7 +927,7 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
         <AnimatedSection>
           <div className="lp-stats-bar">
             <div className="lp-stat">
-              <div className="lp-stat-value">90+</div>
+              <div className="lp-stat-value">130+</div>
               <div className="lp-stat-label">Cloud Components</div>
             </div>
             <div className="lp-stat">
@@ -1207,7 +1283,7 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
               </p>
               <div className="lp-free-features">
                 <div className="lp-free-feature"><Check size={14} /> Unlimited designs</div>
-                <div className="lp-free-feature"><Check size={14} /> All 90+ components</div>
+                <div className="lp-free-feature"><Check size={14} /> All 130+ components</div>
                 <div className="lp-free-feature"><Check size={14} /> Full simulation engine</div>
                 <div className="lp-free-feature"><Check size={14} /> All templates included</div>
                 <div className="lp-free-feature"><Check size={14} /> PNG 3× Retina export</div>
