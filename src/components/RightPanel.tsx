@@ -5,7 +5,7 @@ import componentLibrary from '../data/componentLibrary';
 import { getAllCategories, getCategoryLabel } from '../data/componentLibrary';
 import { getComponentCost, formatCostFull } from '../engine/costEngine';
 import { useSimulation } from '../hooks/useSimulation';
-import { X, Trash2, Info, Copy, ChevronDown, ChevronRight, Power, PowerOff, RefreshCw, Link2, Lock, Unlock, ArrowRight } from 'lucide-react';
+import { X, Trash2, Info, Copy, ChevronDown, ChevronRight, Power, PowerOff, RefreshCw, Link2, Lock, Unlock, ArrowRight, GitBranch } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import type { ArchNode, EdgeConfig } from '../types';
 import { validateField, connectionTimeoutSchema, backupRetentionSchema, cooldownPeriodSchema } from '../utils/validationSchemas';
@@ -252,6 +252,8 @@ export default function RightPanel() {
   const removeEdge = useArchStore(s => s.removeEdge);
   const selectNode = useArchStore(s => s.selectNode);
   const changeNodeType = useArchStore(s => s.changeNodeType);
+  const startDeployment = useArchStore(s => s.startDeployment);
+  const deploymentState = useArchStore(s => s.deploymentState);
   const { nodeHealth } = useSimulation();
 
   // If an edge is selected, show edge config
@@ -1348,6 +1350,34 @@ export default function RightPanel() {
           </div>
         )}
       </Section>
+
+      {/* ═══════════════════════════════════════════════════ */}
+      {/* ENTERPRISE SIMULATIONS */}
+      {/* ═══════════════════════════════════════════════════ */}
+      {(isCompute || node.type === 'groupNode') && (
+        <Section title="Live Deployment Visualizer" defaultOpen>
+          <div className="form-group" style={{ marginTop: 4 }}>
+            <p style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.5, margin: '0 0 10px 0' }}>
+              Simulate a Blue/Green or Canary deployment. Traffic will seamlessly shift from v1 to v2 over a 10s window.
+            </p>
+            <button
+              className="btn"
+              style={{
+                width: '100%', justifyContent: 'center',
+                background: deploymentState.isActive ? 'rgba(99,102,241,0.05)' : 'rgba(99,102,241,0.1)',
+                color: deploymentState.isActive ? 'var(--text-disabled)' : '#818cf8',
+                borderColor: deploymentState.isActive ? 'var(--border-default)' : 'rgba(99,102,241,0.25)',
+                pointerEvents: deploymentState.isActive ? 'none' : 'auto',
+                fontWeight: 600,
+              }}
+              onClick={() => startDeployment(node.id)}
+            >
+              <GitBranch size={14} />
+              {deploymentState.isActive ? 'Deployment In Progress...' : 'Launch Blue/Green Deployment'}
+            </button>
+          </div>
+        </Section>
+      )}
 
       {/* ── Actions ── */}
       <div className="right-panel-section" style={{ borderBottom: 'none', display: 'flex', gap: '8px', paddingTop: 16, paddingBottom: 20 }}>

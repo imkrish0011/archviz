@@ -17,6 +17,7 @@ import './styles/reactflow.css';
 import { useArchStore } from './store/useArchStore';
 import { useSimulation } from './hooks/useSimulation';
 import { useSimulationEvents } from './hooks/useSimulationEvents';
+import { useDeploymentSimulator } from './hooks/useDeploymentSimulator';
 
 import ArchNodeComponent from './components/nodes/ArchNode';
 import GroupNode from './components/nodes/GroupNode';
@@ -340,6 +341,7 @@ function WorkspaceView() {
   
   // Initialize simulation events
   useSimulationEvents();
+  useDeploymentSimulator();
   
   // Load saved state on mount
   useEffect(() => {

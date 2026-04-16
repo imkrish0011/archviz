@@ -8,6 +8,8 @@ import { toastBus } from '../components/ToastSystem';
 import { validateConnection } from '../engine/connectionValidator';
 import { applyAutoLayout } from '../engine/autoLayout';
 import type { LayoutDirection } from '../engine/autoLayout';
+import { INITIAL_DEPLOYMENT_STATE, createDeploymentClones } from '../engine/deploymentSimulator';
+import type { DeploymentState } from '../engine/deploymentSimulator';
 
 interface HistoryEntry {
   nodes: ArchNode[];
@@ -40,6 +42,9 @@ interface ArchStore {
   // ── Snapshots ──
   snapshots: Snapshot[];
   compareSnapshots: [string, string] | null;
+  
+  // ── Deployment ──
+  deploymentState: DeploymentState;
   
   // ── Undo/Redo ──
   undoStack: HistoryEntry[];
@@ -75,6 +80,12 @@ interface ArchStore {
   dismissOnboarding: () => void;
   setActiveSimulationEvent: (event: SimulationEvent | null) => void;
   setCompareSnapshots: (ids: [string, string] | null) => void;
+  
+  // Deployment actions
+  startDeployment: (sourceNodeId: string) => void;
+  updateDeploymentState: (state: Partial<DeploymentState>) => void;
+  completeDeployment: () => void;
+  cancelDeployment: () => void;
   
   // Snapshot actions
   takeSnapshot: (label?: string) => void;
@@ -140,6 +151,7 @@ export const useArchStore = create<ArchStore>((set, get) => ({
   alignmentLines: null,
   greenOpsHeatmap: false,
   outageRegionId: null,
+  deploymentState: INITIAL_DEPLOYMENT_STATE,
   
   // ── React Flow handlers ──
   onNodesChange: (changes) => {
@@ -487,11 +499,172 @@ export const useArchStore = create<ArchStore>((set, get) => ({
       nodes: JSON.parse(JSON.stringify(snapshot.nodes)),
       edges: JSON.parse(JSON.stringify(snapshot.edges)),
       simulationConfig: { ...snapshot.simulationConfig },
-      selectedNodeId: null,
+        selectedNodeId: null,
       rightPanelOpen: false,
     });
   },
   
+  // ── Deployment Logic ──
+  startDeployment: (sourceNodeId: string) => {
+    const state = get();
+    const sourceNode = state.nodes.find(n => n.id === sourceNodeId);
+    if (!sourceNode) return;
+    
+    // If it's a boundary node, get inner nodes if needed, or just clone the node.
+    const nodesToClone = sourceNode.type === 'groupNode' || sourceNode.data.isGroup 
+      ? state.nodes.filter(n => n.parentId === sourceNodeId || n.id === sourceNodeId)
+      : [sourceNode];
+      
+    const { updatedSources, clones } = createDeploymentClones(nodesToClone);
+    
+    // Update existing nodes with the modified sources
+    const newNodes = state.nodes.map(n => {
+      const up = updatedSources.find(u => u.id === n.id);
+      return up ? up : n;
+    });
+    
+    // Create new edges targeting clones
+    const sourceIds = nodesToClone.map(n => n.id);
+    const cloneIds = clones.map(c => c.id);
+    const newEdges = [...state.edges];
+    
+    state.edges.forEach(edge => {
+      if (sourceIds.includes(edge.target)) {
+        // incoming edge, clone it to point to green node
+        const targetIndex = sourceIds.indexOf(edge.target);
+        if (targetIndex !== -1) {
+          const greenTargetId = clones[targetIndex].id;
+          newEdges.push({
+            ...edge,
+            id: `edge_v2_${edge.id}_${Date.now()}`,
+            target: greenTargetId,
+            data: {
+              ...edge.data,
+              config: {
+                ...((edge.data as any)?.config || {}),
+                trafficWeight: 0,
+                edgeLabel: undefined,
+              }
+            }
+          });
+        }
+      }
+    });
+    
+    set({
+      nodes: [...newNodes, ...clones],
+      edges: newEdges,
+      deploymentState: {
+        isActive: true,
+        phase: 'canary',
+        trafficWeightV2: 0,
+        sourceNodeIds: sourceIds,
+        cloneNodeIds: cloneIds,
+        startedAt: Date.now(),
+        targetNodeType: sourceNode.data.componentType
+      }
+    });
+  },
+  
+  updateDeploymentState: (partial) => {
+    set({ deploymentState: { ...get().deploymentState, ...partial } });
+  },
+  
+  completeDeployment: () => {
+    const { nodes, edges, deploymentState } = get();
+    if (!deploymentState.isActive) return;
+    
+    // Make clones permanent, remove Blue nodes
+    const finalNodes = nodes
+      .filter(n => !deploymentState.sourceNodeIds.includes(n.id))
+      .map(n => {
+        if (deploymentState.cloneNodeIds.includes(n.id)) {
+          return {
+            ...n,
+            data: {
+              ...n.data,
+              isDeploymentClone: false,
+              appVersion: undefined,
+              label: n.data.label.replace(' (Green)', ''),
+            }
+          };
+        }
+        return n;
+      });
+      
+    // Keep edges targeting clones, remove edges targeting original blue nodes
+    const finalEdges = edges.filter(e => !deploymentState.sourceNodeIds.includes(e.target));
+    
+    // Clear trafficWeight overrides
+    const cleanEdges = finalEdges.map(e => {
+      if (deploymentState.cloneNodeIds.includes(e.target)) {
+        const config = { ...((e.data as any)?.config || {}) };
+        delete config.trafficWeight;
+        return {
+          ...e,
+          data: {
+            ...e.data,
+            config,
+          }
+        };
+      }
+      return e;
+    });
+    
+    set({
+      nodes: finalNodes,
+      edges: cleanEdges,
+      deploymentState: INITIAL_DEPLOYMENT_STATE,
+    });
+    
+    toastBus.emit('Deployment Successful: Cutover complete', 'success');
+  },
+  
+  cancelDeployment: () => {
+    const { nodes, edges, deploymentState } = get();
+    if (!deploymentState.isActive) return;
+    
+    // Reset to before: remove clones, restore Blue nodes label
+    const finalNodes = nodes
+      .filter(n => !deploymentState.cloneNodeIds.includes(n.id))
+      .map(n => {
+        if (deploymentState.sourceNodeIds.includes(n.id)) {
+          return {
+            ...n,
+            data: {
+              ...n.data,
+              appVersion: undefined,
+              label: n.data.label.replace(' (Blue)', ''),
+            }
+          };
+        }
+        return n;
+      });
+      
+    // remove edges targeting clones, reset traffic weights on original
+    const finalEdges = edges
+      .filter(e => !deploymentState.cloneNodeIds.includes(e.target))
+      .map(e => {
+        if (deploymentState.sourceNodeIds.includes(e.target)) {
+          const config = { ...((e.data as any)?.config || {}) };
+          delete config.trafficWeight;
+          return {
+            ...e,
+            data: { ...e.data, config }
+          };
+        }
+        return e;
+      });
+      
+    set({
+      nodes: finalNodes,
+      edges: finalEdges,
+      deploymentState: INITIAL_DEPLOYMENT_STATE,
+    });
+    
+    toastBus.emit('Deployment Cancelled: Rolled back to v1', 'info');
+  },
+
   // ── Templates ──
   loadTemplate: (nodes, edges) => {
     set({
