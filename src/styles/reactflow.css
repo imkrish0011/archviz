@@ -295,6 +295,53 @@
   height: 24px;
 }
 
+/* Carbon Footprint Badge (GreenOps) */
+.arch-node-carbon-badge {
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  padding: 1px 6px;
+  border-radius: 8px;
+  white-space: nowrap;
+  z-index: 4;
+  letter-spacing: 0.02em;
+}
+
+/* Blue/Green Deployment Version Badge */
+.arch-node-version-badge {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  padding: 1px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  z-index: 6;
+  letter-spacing: 0.05em;
+  animation: deployBadgePulse 2s ease-in-out infinite;
+}
+.arch-node-version-badge.blue {
+  background: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+.arch-node-version-badge.green {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+@keyframes deployBadgePulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.65; }
+}
+
 /* Edge animated particles & traffic health */
 .react-flow__edge.edge-healthy .react-flow__edge-path {
   stroke: var(--success) !important;

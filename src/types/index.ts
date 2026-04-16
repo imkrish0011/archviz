@@ -50,6 +50,10 @@ export interface ArchNodeData {
   isFailed?: boolean;
   isDisabled?: boolean;
   
+  // Blue/Green Deployment
+  appVersion?: 'v1' | 'v2';
+  isDeploymentClone?: boolean;
+  
   // Group / Boundary
   isGroup?: boolean;
   
@@ -90,6 +94,7 @@ export interface EdgeConfig {
   edgeLabel?: string;
   payloadSizeBytes?: number;
   isCrossAZ?: boolean;
+  trafficWeight?: number; // 0-100, used during Blue/Green deployments
 }
 
 export type ArchEdge = Edge & { config?: EdgeConfig };
@@ -106,7 +111,8 @@ export type SimulationEvent =
   | 'removeCache' 
   | 'trafficSpike' 
   | 'cdnFailure' 
-  | 'dbFailover';
+  | 'dbFailover'
+  | 'regionOutage';
 
 export interface Bottleneck {
   nodeId: string;

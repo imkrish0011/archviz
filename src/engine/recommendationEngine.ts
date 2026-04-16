@@ -1,4 +1,5 @@
 import type { ArchNode, ArchEdge, Recommendation, Warning } from '../types';
+import { calculateCarbonFootprints } from './carbonEngine';
 
 /**
  * Recommendation Engine
@@ -164,6 +165,23 @@ export function generateRecommendations(
       costImpact: '+$1.60/mo (SQS Standard)',
       severity: 'medium',
       componentToAdd: 'sqs',
+    });
+  }
+  
+  // ── Rule 7: GreenOps — High carbon footprint nodes ──
+  const footprints = calculateCarbonFootprints(nodes);
+  const highCarbonNodes = footprints.filter(f => f.rating === 'high' && f.potentialSavingsKg && f.potentialSavingsKg > 1);
+  
+  if (highCarbonNodes.length > 0) {
+    const worst = highCarbonNodes.sort((a, b) => (b.potentialSavingsKg || 0) - (a.potentialSavingsKg || 0))[0];
+    recommendations.push({
+      id: `greenops-${worst.nodeId}`,
+      reason: `${worst.label} in ${worst.regionLabel} (${worst.region}) emits ${worst.monthlyCO2kg}kg CO₂/month. Migrating to ${worst.suggestedRegion} could save ~${worst.potentialSavingsKg}kg CO₂/month.`,
+      expectedImprovement: `${Math.round((worst.potentialSavingsKg! / worst.monthlyCO2kg) * 100)}% carbon reduction for this component`,
+      costImpact: 'Similar cost (same tier)',
+      severity: 'medium',
+      solution: `Move ${worst.label} from ${worst.region} to ${worst.suggestedRegion} to reduce environmental impact. Cross-region latency impact: +20-40ms.`,
+      insight: `Your architecture emits approximately ${footprints.reduce((s, f) => s + f.monthlyCO2kg, 0).toFixed(1)}kg CO₂/month. ${highCarbonNodes.length} component${highCarbonNodes.length > 1 ? 's are' : ' is'} in high-carbon grid regions.`,
     });
   }
   

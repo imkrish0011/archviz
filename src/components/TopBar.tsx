@@ -5,7 +5,7 @@ import {
   Save, Upload, Clock, LayoutTemplate, Play, ChevronDown,
   Zap, ServerCrash, Trash2, CloudOff, DatabaseZap, XCircle,
   PanelLeft, Undo2, Redo2, Download, Image, Maximize, Keyboard,
-  BrainCircuit, ShieldAlert, FileCode, LayoutGrid,
+  BrainCircuit, ShieldAlert, FileCode, LayoutGrid, Leaf, MapPin,
 } from 'lucide-react';
 import { downloadTerraform, downloadCloudFormation } from '../engine/terraformGenerator';
 import { toastBus } from './ToastSystem';
@@ -29,6 +29,9 @@ export default function TopBar() {
   const undoStack = useArchStore(s => s.undoStack);
   const redoStack = useArchStore(s => s.redoStack);
   const toggleSecurityPanel = useArchStore(s => s.toggleSecurityPanel);
+  const toggleGreenOpsHeatmap = useArchStore(s => s.toggleGreenOpsHeatmap);
+  const greenOpsHeatmap = useArchStore(s => s.greenOpsHeatmap);
+  const setOutageRegionId = useArchStore(s => s.setOutageRegionId);
   const runAutoLayout = useArchStore(s => s.runAutoLayout);
   const navigate = useNavigate();
   
@@ -80,9 +83,18 @@ export default function TopBar() {
     }
   }, [nodes.length, showClearConfirm, clearCanvas]);
   
-  const triggerEvent = (event: 'serverCrash' | 'removeCache' | 'trafficSpike' | 'cdnFailure' | 'dbFailover') => {
+  const triggerEvent = (event: 'serverCrash' | 'removeCache' | 'trafficSpike' | 'cdnFailure' | 'dbFailover' | 'regionOutage') => {
     setActiveSimulationEvent(event);
     setShowSimDropdown(false);
+  };
+  
+  const triggerRegionOutage = () => {
+    // Find group nodes that could be regions
+    const groupNodes = nodes.filter(n => n.type === 'groupNode' || n.data.isGroup);
+    if (groupNodes.length > 0) {
+      setOutageRegionId(groupNodes[0].id);
+    }
+    triggerEvent('regionOutage');
   };
   
   const rps = Math.round(simulationConfig.concurrentUsers * simulationConfig.rpsMultiplier);
@@ -204,6 +216,11 @@ export default function TopBar() {
                 <DatabaseZap size={16} />
                 Database Failover
               </button>
+              <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
+              <button className="sim-dropdown-item" onClick={triggerRegionOutage} style={{ color: '#ef4444' }}>
+                <MapPin size={16} />
+                Regional Outage (DR)
+              </button>
             </div>
           )}
         </div>
@@ -255,6 +272,17 @@ export default function TopBar() {
         <button className="btn" onClick={toggleSecurityPanel} title="Security Scanner">
           <ShieldAlert size={14} />
           Security
+        </button>
+        
+        {/* GreenOps Heatmap */}
+        <button 
+          className={`btn ${greenOpsHeatmap ? 'btn-active-green' : ''}`}
+          onClick={toggleGreenOpsHeatmap} 
+          title="GreenOps Carbon Heatmap"
+          style={greenOpsHeatmap ? { background: 'rgba(16,185,129,0.12)', borderColor: 'rgba(16,185,129,0.3)', color: '#10b981' } : {}}
+        >
+          <Leaf size={14} />
+          GreenOps
         </button>
         
         <div className="topbar-divider" />

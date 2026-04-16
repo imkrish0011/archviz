@@ -34,6 +34,8 @@ interface ArchStore {
   leftSidebarOpen: boolean;
   securityPanelOpen: boolean;
   projectName: string;
+  greenOpsHeatmap: boolean;
+  outageRegionId: string | null;
   
   // ── Snapshots ──
   snapshots: Snapshot[];
@@ -68,6 +70,8 @@ interface ArchStore {
   toggleTemplatePicker: () => void;
   toggleLeftSidebar: () => void;
   toggleSecurityPanel: () => void;
+  toggleGreenOpsHeatmap: () => void;
+  setOutageRegionId: (id: string | null) => void;
   dismissOnboarding: () => void;
   setActiveSimulationEvent: (event: SimulationEvent | null) => void;
   setCompareSnapshots: (ids: [string, string] | null) => void;
@@ -134,6 +138,8 @@ export const useArchStore = create<ArchStore>((set, get) => ({
   undoStack: [],
   redoStack: [],
   alignmentLines: null,
+  greenOpsHeatmap: false,
+  outageRegionId: null,
   
   // ── React Flow handlers ──
   onNodesChange: (changes) => {
@@ -442,6 +448,8 @@ export const useArchStore = create<ArchStore>((set, get) => ({
   toggleTemplatePicker: () => set({ templatePickerOpen: !get().templatePickerOpen }),
   toggleLeftSidebar: () => set({ leftSidebarOpen: !get().leftSidebarOpen }),
   toggleSecurityPanel: () => set({ securityPanelOpen: !get().securityPanelOpen }),
+  toggleGreenOpsHeatmap: () => set({ greenOpsHeatmap: !get().greenOpsHeatmap }),
+  setOutageRegionId: (id) => set({ outageRegionId: id }),
   dismissOnboarding: () => {
     localStorage.setItem('archviz-onboarded', 'true');
     set({ showOnboarding: false });

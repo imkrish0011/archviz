@@ -13,6 +13,8 @@ export function useSimulationEvents() {
   const updateNodeData = useArchStore(s => s.updateNodeData);
   const simulationConfig = useArchStore(s => s.simulationConfig);
   const setSimulationConfig = useArchStore(s => s.setSimulationConfig);
+  const outageRegionId = useArchStore(s => s.outageRegionId);
+  const setOutageRegionId = useArchStore(s => s.setOutageRegionId);
   
   const originalStateRef = useRef<{
     nodeStates: Map<string, Partial<ArchNode['data']>>;
@@ -29,7 +31,8 @@ export function useSimulationEvents() {
       originalStateRef.current = null;
     }
     setActiveEvent(null);
-  }, [updateNodeData, setSimulationConfig, setActiveEvent]);
+    setOutageRegionId(null);
+  }, [updateNodeData, setSimulationConfig, setActiveEvent, setOutageRegionId]);
   
   useEffect(() => {
     if (!activeEvent) return;
@@ -46,6 +49,14 @@ export function useSimulationEvents() {
       nodeStates,
       config: { ...simulationConfig },
     };
+    
+    const computeAndDbTypes = [
+      'api-server', 'web-server', 'websocket-server', 'worker',
+      'lambda', 'kubernetes-cluster', 'ecs-fargate', 'app-runner',
+      'postgresql', 'mysql', 'mongodb', 'cassandra', 'dynamodb',
+      'aurora-serverless', 'redis', 'memcached', 'elasticsearch',
+      'gpu-instance',
+    ];
     
     const eventHandlers: Record<SimulationEvent, () => void> = {
       serverCrash: () => {
@@ -78,6 +89,40 @@ export function useSimulationEvents() {
         );
         if (dbs.length > 0) {
           updateNodeData(dbs[0].id, { isFailed: true });
+        }
+      },
+      regionOutage: () => {
+        // Fail all compute/DB nodes inside the outage region
+        if (!outageRegionId) return;
+        
+        // Find all nodes that are children of the outage region group
+        const affectedNodes = nodes.filter(n => {
+          if (n.id === outageRegionId) return false;
+          // Check parentNode property (React Flow) or parentId in data
+          const parentNode = (n as Record<string, unknown>).parentNode as string | undefined;
+          return (
+            parentNode === outageRegionId ||
+            n.data.parentId === outageRegionId ||
+            // Also check if the node label contains the region group label
+            false
+          ) && computeAndDbTypes.includes(n.data.componentType);
+        });
+        
+        // If no parented nodes found, fail a percentage of all compute/db nodes
+        // to simulate a regional outage affecting ~half the infrastructure
+        if (affectedNodes.length === 0) {
+          const allCompute = nodes.filter(n => 
+            computeAndDbTypes.includes(n.data.componentType) && !n.data.isFailed
+          );
+          const halfCount = Math.max(1, Math.ceil(allCompute.length / 2));
+          const shuffled = [...allCompute].sort(() => Math.random() - 0.5);
+          for (let i = 0; i < halfCount; i++) {
+            updateNodeData(shuffled[i].id, { isFailed: true });
+          }
+        } else {
+          for (const node of affectedNodes) {
+            updateNodeData(node.id, { isFailed: true });
+          }
         }
       },
     };

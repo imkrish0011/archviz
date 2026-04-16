@@ -31,6 +31,7 @@ export default function ArchEdge({
   const edgeData = data as ArchEdgeData | undefined;
   const config = edgeData?.config || {};
   const connectionType = config.connectionType || 'default';
+  const trafficWeight = config.trafficWeight;
   
   // Base styling
   const edgeStyle = { ...style };
@@ -54,11 +55,21 @@ export default function ArchEdge({
     default:
       break;
   }
-
-  // Preserve external classNames (like edge-healthy from simulation) passed via the container,
-  // but we apply our own classes to the path directly here for specific animations.
+  
+  // Dim the edge based on traffic weight during deployments
+  if (trafficWeight !== undefined && trafficWeight !== null) {
+    edgeStyle.opacity = Math.max(0.15, trafficWeight / 100);
+    if (trafficWeight === 0) {
+      edgeStyle.strokeDasharray = '3 6';
+    }
+  }
 
   const label = config.edgeLabel;
+  
+  // Traffic weight badge color
+  const weightColor = trafficWeight !== undefined && trafficWeight !== null
+    ? (trafficWeight >= 50 ? '#10b981' : trafficWeight > 0 ? '#3b82f6' : '#666')
+    : null;
 
   return (
     <>
@@ -69,25 +80,25 @@ export default function ArchEdge({
         className={className}
         id={id}
       />
-      {label && (
+      {(label || (trafficWeight !== undefined && trafficWeight !== null)) && (
         <EdgeLabelRenderer>
           <div
             style={{
               position: 'absolute',
               transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
-              background: 'var(--bg-surface)',
+              background: weightColor ? `${weightColor}18` : 'var(--bg-surface)',
               padding: '2px 6px',
               borderRadius: '4px',
               fontSize: '10px',
-              fontWeight: 500,
+              fontWeight: 600,
               fontFamily: 'var(--font-mono)',
-              color: 'var(--text-secondary)',
+              color: weightColor || 'var(--text-secondary)',
               pointerEvents: 'all',
-              border: '1px solid var(--border-subtle)',
+              border: `1px solid ${weightColor ? `${weightColor}40` : 'var(--border-subtle)'}`,
             }}
             className="nodrag nopan"
           >
-            {label}
+            {label || `${trafficWeight}%`}
           </div>
         </EdgeLabelRenderer>
       )}

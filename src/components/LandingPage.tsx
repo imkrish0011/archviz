@@ -9,7 +9,7 @@ import {
   Workflow, Sparkles, Monitor, Palette, Keyboard,
   Code2, Gauge, Network,
   Webhook, Container, HardDrive, Radio, CircuitBoard, Flame,
-  FileCode, ShieldAlert, Target, Mail
+  FileCode, ShieldAlert, Target, Mail, Leaf
 } from 'lucide-react';
 import '../styles/landing.css';
 import { famousSystemTemplates } from '../data/templates/famousSystemTemplates';
@@ -654,6 +654,66 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
               <p>
                 Advanced math-driven composite SLA calculator. Analyzes serial and parallel dependency paths,
                 instance redundancy, Multi-AZ boosts, and DR strategies. Displays availability in "nines" notation with downtime estimates.
+              </p>
+            </AnimatedSection>
+          </div>
+        </section>
+
+        <div className="lp-divider" />
+
+        {/* ═══════════════════════════════════════
+         *  ENTERPRISE SIMULATIONS
+         * ═══════════════════════════════════════ */}
+        <section className="lp-section">
+          <AnimatedSection>
+            <div className="lp-section-header">
+              <div className="lp-section-label">
+                <Zap size={13} />
+                Enterprise Simulations
+              </div>
+              <h2 className="lp-section-title">Enterprise-Grade<br/>System Simulations</h2>
+              <p className="lp-section-desc">
+                Go beyond static diagrams. ArchViz simulates real-world failure scenarios,
+                environmental impact, and deployment strategies — all in real-time on the canvas.
+              </p>
+            </div>
+          </AnimatedSection>
+
+          <div className="lp-features-grid" style={{ maxWidth: 960 }}>
+            <AnimatedSection className="lp-feature-card lp-feature-card-enterprise" delay={0.1}>
+              <div className="lp-feature-badge-new" style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', borderColor: 'rgba(239,68,68,0.2)' }}>CHAOS ENGINEERING</div>
+              <div className="lp-feature-icon" style={{ color: '#ef4444' }}><MapPin size={24} /></div>
+              <h3>Chaos Engineering &amp; Disaster Recovery</h3>
+              <p>
+                Simulate region-wide outages and test your multi-AZ failover strategies in real-time.
+                Watch traffic automatically reroute to healthy regions, view latency penalties, and validate
+                your DR runbook — all without touching production. Trigger server crashes, CDN failures,
+                database failovers, and 10x traffic spikes from the simulation menu.
+              </p>
+            </AnimatedSection>
+
+            <AnimatedSection className="lp-feature-card lp-feature-card-enterprise" delay={0.2}>
+              <div className="lp-feature-badge-new" style={{ background: 'rgba(16,185,129,0.1)', color: '#10b981', borderColor: 'rgba(16,185,129,0.2)' }}>GREENOPS</div>
+              <div className="lp-feature-icon" style={{ color: '#10b981' }}><Leaf size={24} /></div>
+              <h3>GreenOps Carbon Heatmap</h3>
+              <p>
+                Visualize your architecture's environmental impact with the carbon heatmap overlay.
+                Each node is tinted based on its estimated CO₂ footprint — green for serverless/clean-grid regions,
+                yellow for standard compute, and red for GPU instances in high-carbon grids. Get AI-powered
+                recommendations to migrate workloads to greener regions.
+              </p>
+            </AnimatedSection>
+
+            <AnimatedSection className="lp-feature-card lp-feature-card-large lp-feature-card-enterprise" delay={0.3}>
+              <div className="lp-feature-badge-new" style={{ background: 'rgba(99,102,241,0.1)', color: '#818cf8', borderColor: 'rgba(99,102,241,0.2)' }}>LIVE DEPLOYMENT</div>
+              <div className="lp-feature-icon" style={{ color: '#818cf8' }}><GitBranch size={24} /></div>
+              <h3>Live Deployment Visualizer</h3>
+              <p>
+                Watch Blue/Green and Canary deployments unfold in real-time on the canvas. Trigger a deployment
+                on any compute cluster and watch traffic shift from v1 (Blue) to v2 (Green) over a 10-second
+                rollout — edges animate with traffic weight percentages (100/0 → 50/50 → 0/100), nodes display
+                version badges, and a "Deployment Successful" toast fires on completion. Understand deployment
+                strategies visually, not theoretically.
               </p>
             </AnimatedSection>
           </div>
