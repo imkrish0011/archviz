@@ -199,7 +199,13 @@ function FlowCanvas() {
   }, [handleNodeDragStop]);
 
   return (
-    <div className="canvas-wrapper" style={{ position: 'relative' }}>
+    <div 
+      className="canvas-wrapper" 
+      style={{ position: 'relative' }}
+      tabIndex={0}
+      role="application"
+      aria-label="Architecture Canvas. Use arrow keys to navigate nodes when selected."
+    >
       <CanvasErrorBoundary>
         <ReactFlow
           nodes={nodes}
@@ -272,7 +278,8 @@ function exportCanvasAsPNG() {
     // We explicitly set font embed options to prevent font-loading from hiding nodes.
     mod.toPng(rfContainer, { 
       backgroundColor: '#0a0a0a',
-      pixelRatio: 2,
+      pixelRatio: 3,
+      quality: 1.0,
       skipFonts: true, // Prevents html-to-image from failing on system fonts
       filter: (node: HTMLElement) => {
         // Only safely check elements
@@ -338,6 +345,7 @@ function WorkspaceView() {
   const rightPanelOpen = useArchStore(s => s.rightPanelOpen);
   const leftSidebarOpen = useArchStore(s => s.leftSidebarOpen);
   const loadFromLocalStorage = useArchStore(s => s.loadFromLocalStorage);
+  const selectedNodeId = useArchStore(s => s.selectedNodeId);
   
   // Initialize simulation events
   useSimulationEvents();
@@ -372,6 +380,11 @@ function WorkspaceView() {
       <ContextMenu />
       <SearchOverlay />
       <ShortcutsOverlay />
+      
+      {/* A11y Live Region for screen readers */}
+      <div aria-live="polite" className="sr-only" style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', border: 0 }}>
+        {selectedNodeId ? `Node selected.` : ''}
+      </div>
     </div>
   );
 }

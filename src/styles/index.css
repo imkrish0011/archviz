@@ -2167,3 +2167,17 @@ html, body, #root {
   letter-spacing: 0.03em;
   background: rgba(0, 0, 0, 0.15);
 }
+
+/* ─── Standardized Transitions (Professionalization) ─── */
+.btn, .btn-icon, .form-input, .form-select, .form-range, .right-panel-section {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn:active, .btn-icon:active {
+  transform: scale(0.96);
+}
+
+.btn-icon:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-sm);
+}

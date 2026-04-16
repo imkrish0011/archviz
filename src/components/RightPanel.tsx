@@ -1,14 +1,19 @@
-import { useState } from 'react';
 import { useArchStore } from '../store/useArchStore';
-import { getComponentDefinition } from '../data/componentLibrary';
+import { getComponentDefinition, getAllCategories, getCategoryLabel } from '../data/componentLibrary';
 import componentLibrary from '../data/componentLibrary';
-import { getAllCategories, getCategoryLabel } from '../data/componentLibrary';
 import { getComponentCost, formatCostFull } from '../engine/costEngine';
 import { useSimulation } from '../hooks/useSimulation';
-import { X, Trash2, Info, Copy, ChevronDown, ChevronRight, Power, PowerOff, RefreshCw, Link2, Lock, Unlock, ArrowRight, GitBranch } from 'lucide-react';
+import { X, Trash2, Info, Copy, RefreshCw, Power, PowerOff, GitBranch } from 'lucide-react';
 import * as Icons from 'lucide-react';
-import type { ArchNode, EdgeConfig } from '../types';
-import { validateField, connectionTimeoutSchema, backupRetentionSchema, cooldownPeriodSchema } from '../utils/validationSchemas';
+import type { ArchNode } from '../types';
+
+import EdgeConfigPanel from './panels/EdgeConfigPanel';
+import ComputeConfigPanel from './panels/ComputeConfigPanel';
+import AuthConfigPanel from './panels/AuthConfigPanel';
+import DatabaseConfigPanel from './panels/DatabaseConfigPanel';
+import ScalingConfigPanel from './panels/ScalingConfigPanel';
+import { StorageConfigPanel, CacheConfigPanel, LBConfigPanel, NetworkConfigPanel, MessagingConfigPanel, ReliabilityConfigPanel } from './panels/MiscPanels';
+import PanelSection from './panels/PanelSection';
 
 /* ── Helpers ── */
 const dbTypes = ['postgresql', 'mysql', 'mongodb', 'cassandra', 'dynamodb', 'aurora-serverless', 'bigtable'];
@@ -28,220 +33,6 @@ const regions = [
   'sa-east-1 (São Paulo)',
 ];
 
-const evictionPolicies = ['allkeys-lru', 'volatile-lru', 'allkeys-random', 'volatile-ttl', 'noeviction'];
-const lbAlgorithms = ['round-robin', 'least-connections', 'ip-hash', 'weighted-round-robin'];
-const retryStrategies = ['exponential-backoff', 'linear', 'fixed-delay', 'none'];
-const healthCheckTypes = ['TCP', 'HTTP', 'HTTPS', 'gRPC'];
-
-const protocols: EdgeConfig['protocol'][] = ['HTTPS', 'gRPC', 'WebSocket', 'TCP', 'AMQP', 'Custom'];
-const dataFlows: EdgeConfig['dataFlow'][] = ['request', 'response', 'bidirectional', 'event'];
-const connectionTypes = [
-  { value: 'default', label: 'Default (Smooth)' },
-  { value: 'sync-http', label: 'Synchronous (Solid)' },
-  { value: 'async-event', label: 'Asynchronous (Dashed)' },
-  { value: 'firewall-boundary', label: 'Firewall / Boundary (Red Dotted)' },
-];
-
-/* ── Collapsible Section ── */
-function Section({
-  title,
-  defaultOpen = true,
-  children,
-}: {
-  title: string;
-  defaultOpen?: boolean;
-  children: React.ReactNode;
-}) {
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <div className="right-panel-section">
-      <div
-        className="right-panel-section-title"
-        style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, userSelect: 'none' }}
-        onClick={() => setOpen(!open)}
-      >
-        {open ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
-        {title}
-      </div>
-      {open && children}
-    </div>
-  );
-}
-
-/* ═══════════════════════════════════════════════════
-   Edge Configuration Panel
-   ═══════════════════════════════════════════════════ */
-function EdgeConfigPanel() {
-  const selectedEdgeId = useArchStore(s => s.selectedEdgeId);
-  const edges = useArchStore(s => s.edges);
-  const nodes = useArchStore(s => s.nodes);
-  const selectEdge = useArchStore(s => s.selectEdge);
-  const removeEdge = useArchStore(s => s.removeEdge);
-  const updateEdgeConfig = useArchStore(s => s.updateEdgeConfig);
-
-  const edge = edges.find(e => e.id === selectedEdgeId);
-  if (!edge) return null;
-
-  const config: EdgeConfig = (edge as any).config || {};
-  const sourceNode = nodes.find(n => n.id === edge.source);
-  const targetNode = nodes.find(n => n.id === edge.target);
-
-  return (
-    <div className="right-panel">
-      {/* Header */}
-      <div className="right-panel-header" style={{ background: 'linear-gradient(180deg, rgba(99, 102, 241, 0.08) 0%, rgba(15, 14, 18, 0.95) 100%)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Link2 size={16} style={{ color: 'var(--accent)' }} />
-          <span style={{ color: 'var(--text-primary)', fontSize: '0.95rem', fontWeight: 600 }}>Connection</span>
-        </div>
-        <button className="btn-icon" onClick={() => selectEdge(null)}><X size={16} /></button>
-      </div>
-
-      {/* Source → Target */}
-      <Section title="Route" defaultOpen={true}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0' }}>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
-            {sourceNode?.data.label || 'Source'}
-          </span>
-          <ArrowRight size={14} style={{ color: 'var(--text-disabled)' }} />
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
-            {targetNode?.data.label || 'Target'}
-          </span>
-        </div>
-      </Section>
-
-      {/* Label */}
-      <Section title="Edge Label" defaultOpen={true}>
-        <div className="form-group">
-          <label className="form-label">Display Label</label>
-          <input
-            className="form-input"
-            placeholder="e.g. REST API, gRPC call..."
-            value={config.edgeLabel || ''}
-            onChange={e => updateEdgeConfig(edge.id, { edgeLabel: e.target.value })}
-          />
-        </div>
-      </Section>
-
-      {/* Protocol & Style */}
-      <Section title="Connection Style & Protocol" defaultOpen={true}>
-        <div className="form-group">
-          <label className="form-label">Connection Style</label>
-          <select
-            className="form-select"
-            value={config.connectionType || 'default'}
-            onChange={e => updateEdgeConfig(edge.id, { connectionType: (e.target.value || undefined) as any })}
-          >
-            {connectionTypes.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-          </select>
-        </div>
-        <div className="form-group">
-          <label className="form-label">Protocol</label>
-          <select
-            className="form-select"
-            value={config.protocol || ''}
-            onChange={e => updateEdgeConfig(edge.id, { protocol: (e.target.value || undefined) as any })}
-          >
-            <option value="">— Select —</option>
-            {protocols.map(p => <option key={p} value={p}>{p}</option>)}
-          </select>
-        </div>
-        <div className="form-group">
-          <label className="form-label">Data Flow Direction</label>
-          <select
-            className="form-select"
-            value={config.dataFlow || ''}
-            onChange={e => updateEdgeConfig(edge.id, { dataFlow: (e.target.value || undefined) as any })}
-          >
-            <option value="">— Select —</option>
-            {dataFlows.map(d => <option key={d} value={d}>{d}</option>)}
-          </select>
-        </div>
-      </Section>
-
-      {/* Security */}
-      <Section title="Security" defaultOpen={true}>
-        <div className="form-group">
-          <label className="form-label">IAM Action / Permission</label>
-          <input
-            className="form-input"
-            placeholder="e.g. s3:GetObject, dynamodb:PutItem"
-            value={config.iamAction || ''}
-            onChange={e => updateEdgeConfig(edge.id, { iamAction: e.target.value })}
-          />
-        </div>
-        <div className="form-group" style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <label className="form-label" style={{ marginBottom: 0 }}>Encrypted (TLS)</label>
-          <button
-            className="btn-icon"
-            onClick={() => updateEdgeConfig(edge.id, { encrypted: !config.encrypted })}
-            style={{ color: config.encrypted ? '#34d399' : 'var(--text-disabled)' }}
-            title={config.encrypted ? 'Encrypted' : 'Not encrypted'}
-          >
-            {config.encrypted ? <Lock size={14} /> : <Unlock size={14} />}
-          </button>
-          <span style={{ fontSize: '0.75rem', color: config.encrypted ? '#34d399' : 'var(--text-disabled)' }}>
-            {config.encrypted ? 'Enabled' : 'Disabled'}
-          </span>
-        </div>
-      </Section>
-
-      {/* Bandwidth & Tuning */}
-      <Section title="Egress & Performance" defaultOpen={true}>
-        <div className="form-group">
-          <label className="form-label">Avg. Payload Size (Bytes)</label>
-          <input
-            className="form-input"
-            type="number"
-            min={0}
-            placeholder="e.g. 1024"
-            value={config.payloadSizeBytes || ''}
-            onChange={e => updateEdgeConfig(edge.id, { payloadSizeBytes: Number(e.target.value) || undefined })}
-          />
-        </div>
-        <div className="form-group" style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 }}>
-          <input
-            type="checkbox"
-            checked={!!config.isCrossAZ}
-            onChange={e => updateEdgeConfig(edge.id, { isCrossAZ: e.target.checked })}
-            style={{ accentColor: 'var(--accent)', cursor: 'pointer' }}
-          />
-          <label className="form-label" style={{ marginBottom: 0, cursor: 'pointer' }} onClick={() => updateEdgeConfig(edge.id, { isCrossAZ: !config.isCrossAZ })}>
-            Cross-AZ Traffic (Incurs Egress Cost)
-          </label>
-        </div>
-        <div className="form-group" style={{ marginTop: 8 }}>
-          <label className="form-label">Bandwidth Requirement</label>
-          <input
-            className="form-input"
-            placeholder="e.g. 100 Mbps, 1 Gbps"
-            value={config.bandwidth || ''}
-            onChange={e => updateEdgeConfig(edge.id, { bandwidth: e.target.value })}
-          />
-        </div>
-      </Section>
-
-      {/* Actions */}
-      <div className="right-panel-section" style={{ borderBottom: 'none' }}>
-        <button
-          style={{
-            width: '100%', padding: '8px', border: '1px solid rgba(239,68,68,0.3)',
-            borderRadius: 6, background: 'rgba(239,68,68,0.08)', color: '#f87171',
-            fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-          }}
-          onClick={() => { removeEdge(edge.id); selectEdge(null); }}
-        >
-          <Trash2 size={13} /> Remove Connection
-        </button>
-      </div>
-    </div>
-  );
-}
-
-/* ═══════════════════════════════════════════════════
-   Main Right Panel (Node Config)
-   ═══════════════════════════════════════════════════ */
 export default function RightPanel() {
   const selectedNodeId = useArchStore(s => s.selectedNodeId);
   const selectedEdgeId = useArchStore(s => s.selectedEdgeId);
@@ -256,7 +47,6 @@ export default function RightPanel() {
   const deploymentState = useArchStore(s => s.deploymentState);
   const { nodeHealth } = useSimulation();
 
-  // If an edge is selected, show edge config
   if (selectedEdgeId && !selectedNodeId) {
     return <EdgeConfigPanel />;
   }
@@ -278,7 +68,6 @@ export default function RightPanel() {
   const isLB = node.data.componentType === 'load-balancer';
   const isAuth = ['auth0', 'aws-cognito'].includes(node.data.componentType);
 
-  /* ── Updaters ── */
   const handleTierChange = (tierIndex: number) => {
     const tier = def.tiers[tierIndex];
     if (tier) updateNodeData(node.id, { tier, tierIndex });
@@ -308,13 +97,10 @@ export default function RightPanel() {
     selectNode(newNodeId);
   };
 
-
   const data = node.data as any;
-
   const catColor = `var(--cat-${def.category})`;
   const catMuted = `var(--cat-${def.category}-muted)`;
 
-  // Count connections
   const connectedEdges = edges.filter(e => e.source === node.id || e.target === node.id);
   const healthColor = health?.status === 'critical' ? '#f87171' : health?.status === 'warning' ? '#fbbf24' : '#34d399';
   const healthLabel = health?.status === 'critical' ? 'Critical' : health?.status === 'warning' ? 'Warning' : 'Healthy';
@@ -438,10 +224,8 @@ export default function RightPanel() {
         </div>
       )}
 
-      {/* ═══════════════════════════════════════════════════ */}
       {/* CHANGE COMPONENT TYPE */}
-      {/* ═══════════════════════════════════════════════════ */}
-      <Section title="Change Component" defaultOpen={false}>
+      <PanelSection title="Change Component" defaultOpen={false}>
         <div className="form-group">
           <label className="form-label">
             <RefreshCw size={11} style={{ marginRight: 4, verticalAlign: -1 }} />
@@ -468,13 +252,11 @@ export default function RightPanel() {
             Keeps position & connections. Resets tier to default.
           </span>
         </div>
-      </Section>
+      </PanelSection>
 
-      {/* ═══════════════════════════════════════════════════ */}
       {/* CONNECTIONS — Edge Management */}
-      {/* ═══════════════════════════════════════════════════ */}
       {connectedEdges.length > 0 && (
-        <Section title={`Connections (${connectedEdges.length})`} defaultOpen={false}>
+        <PanelSection title={`Connections (${connectedEdges.length})`} defaultOpen={false}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
             {connectedEdges.map(edge => {
                 const otherNodeId = edge.source === node.id ? edge.target : edge.source;
@@ -521,14 +303,11 @@ export default function RightPanel() {
                 );
               })}
           </div>
-        </Section>
+        </PanelSection>
       )}
 
-      {/* ═══════════════════════════════════════════════════ */}
       {/* CONFIGURATION — Core */}
-      {/* ═══════════════════════════════════════════════════ */}
-      <Section title="Configuration" defaultOpen>
-        {/* Tier Selection */}
+      <PanelSection title="Configuration" defaultOpen>
         <div className="form-group">
           <label className="form-label">Tier / Size</label>
           <select
@@ -544,7 +323,6 @@ export default function RightPanel() {
           </select>
         </div>
 
-        {/* Instance Count */}
         {node.data.scalingType === 'horizontal' && (
           <div className="form-group">
             <label className="form-label">Instances</label>
@@ -560,7 +338,6 @@ export default function RightPanel() {
           </div>
         )}
 
-        {/* Pricing Model */}
         {(isCompute || isDB || isCache) && (
           <div className="form-group">
             <label className="form-label">Pricing Model</label>
@@ -575,7 +352,6 @@ export default function RightPanel() {
           </div>
         )}
 
-        {/* Region */}
         <div className="form-group">
           <label className="form-label">Region / AZ</label>
           <select className="form-select" value={data.region || regions[0]}
@@ -585,7 +361,6 @@ export default function RightPanel() {
           </select>
         </div>
 
-        {/* Enable / Disable */}
         <div className="form-group">
           <label className="form-label">Status</label>
           <button
@@ -602,693 +377,37 @@ export default function RightPanel() {
             {node.data.isDisabled ? 'Disabled — Click to Enable' : 'Enabled — Click to Disable'}
           </button>
         </div>
-      </Section>
+      </PanelSection>
 
-      {/* Server & Compute Advanced Settings */}
-      {isCompute && (
-        <Section title="Compute Details" defaultOpen={false}>
-          <div className="form-group">
-            <label className="form-label">Auto-Scaling Policy</label>
-            <select className="form-select" value={data.scalingPolicy || 'cpu-70'}
-              onChange={e => update('scalingPolicy', e.target.value)}
-            >
-              <option value="cpu-70">Target Tracking: 70% CPU</option>
-              <option value="mem-80">Target Tracking: 80% Memory</option>
-              <option value="custom">Custom Metric (SQS Deep, etc)</option>
-            </select>
-          </div>
+      {/* Modular Config Panels */}
+      {isCompute && <ComputeConfigPanel data={data} update={update} />}
+      {isAuth && <AuthConfigPanel data={data} update={update} />}
+      {node.data.scalingType === 'horizontal' && <ScalingConfigPanel node={node} data={data} update={update} />}
+      {isDB && <DatabaseConfigPanel data={data} update={update} />}
+      {isDB && <StorageConfigPanel node={node} data={data} update={update} />}
+      {isCache && <CacheConfigPanel node={node} data={data} update={update} handleCacheRateChange={handleCacheRateChange} />}
+      {isLB && <LBConfigPanel node={node} data={data} update={update} />}
+      {isNetwork && !isLB && <NetworkConfigPanel node={node} data={data} update={update} />}
+      {isMessaging && <MessagingConfigPanel node={node} data={data} update={update} />}
+      
+      <ReliabilityConfigPanel node={node} data={data} update={update} />
 
-          <div className="form-group">
-            <label className="form-label">Container Runtime</label>
-            <select className="form-select" value={data.containerRuntime || 'docker'}
-              onChange={e => update('containerRuntime', e.target.value)}
-            >
-              <option value="docker">Docker Engine</option>
-              <option value="containerd">containerd (K8s Native)</option>
-              <option value="firecracker">AWS Firecracker (microVMs)</option>
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Security Protocol</label>
-            <button
-              className="btn"
-              style={{
-                width: '100%', justifyContent: 'center',
-                color: data.strictTls ? 'var(--success)' : 'var(--text-tertiary)',
-                borderColor: data.strictTls ? 'var(--success-muted)' : 'var(--border-default)',
-                background: data.strictTls ? 'var(--success-muted)' : 'transparent',
-              }}
-              onClick={() => update('strictTls', !data.strictTls)}
-            >
-              {data.strictTls ? '🔒 Strict TLS 1.3 Enforced' : 'Allow TLS 1.2+'}
-            </button>
-          </div>
-        </Section>
-      )}
-
-      {/* Auth Configuration */}
-      {isAuth && (
-        <Section title="Authentication Settings" defaultOpen>
-          <div className="form-group">
-            <label className="form-label">Authentication Factors</label>
-            <button
-              className="btn"
-              style={{
-                width: '100%', justifyContent: 'center',
-                color: data.mfaEnabled ? 'var(--success)' : 'var(--text-tertiary)',
-                borderColor: data.mfaEnabled ? 'var(--success-muted)' : 'var(--border-default)',
-                background: data.mfaEnabled ? 'var(--success-muted)' : 'transparent',
-              }}
-              onClick={() => update('mfaEnabled', !data.mfaEnabled)}
-            >
-              {data.mfaEnabled ? '🛡️ MFA Enforced' : 'Password Only (Risk)'}
-            </button>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Session Strategy</label>
-            <select className="form-select" value={data.sessionStrategy || 'stateless'}
-              onChange={e => update('sessionStrategy', e.target.value)}
-            >
-              <option value="stateless">Stateless JWT (Fast)</option>
-              <option value="stateful">Stateful session ID (Redis)</option>
-              <option value="cookie">HttpOnly Secure Cookie</option>
-            </select>
-          </div>
-        </Section>
-      )}
-
-      {/* ═══════════════════════════════════════════════════ */}
-      {/* SCALING — Auto-scaling config */}
-      {/* ═══════════════════════════════════════════════════ */}
-      {node.data.scalingType === 'horizontal' && (
-        <Section title="Auto-Scaling" defaultOpen={false}>
-          <div className="form-group">
-            <label className="form-label">Min Instances</label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <input type="range" className="form-range" min={1} max={node.data.instances}
-                value={data.minInstances || 1}
-                onChange={e => update('minInstances', Number(e.target.value))}
-              />
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', minWidth: 24, color: 'var(--text-primary)' }}>
-                {data.minInstances || 1}
-              </span>
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Max Instances</label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <input type="range" className="form-range" min={node.data.instances} max={50}
-                value={data.maxInstances || 20}
-                onChange={e => update('maxInstances', Number(e.target.value))}
-              />
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', minWidth: 24, color: 'var(--text-primary)' }}>
-                {data.maxInstances || 20}
-              </span>
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Scale-Up Threshold (CPU %)</label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <input type="range" className="form-range" min={40} max={95}
-                value={data.scaleUpThreshold || 75}
-                onChange={e => update('scaleUpThreshold', Number(e.target.value))}
-              />
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', minWidth: 36, color: 'var(--text-primary)' }}>
-                {data.scaleUpThreshold || 75}%
-              </span>
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Scale-Down Threshold (CPU %)</label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <input type="range" className="form-range" min={10} max={50}
-                value={data.scaleDownThreshold || 25}
-                onChange={e => update('scaleDownThreshold', Number(e.target.value))}
-              />
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', minWidth: 36, color: 'var(--text-primary)' }}>
-                {data.scaleDownThreshold || 25}%
-              </span>
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Cooldown Period (seconds)</label>
-            <input type="number" className={`form-input${validateField(cooldownPeriodSchema, Number(data.cooldownPeriod || 120)) ? ' form-input-error' : ''}`} min={30} max={600} step={10}
-              value={data.cooldownPeriod || 120}
-              onChange={e => {
-                const val = Number(e.target.value);
-                const err = validateField(cooldownPeriodSchema, val);
-                if (!err) update('cooldownPeriod', val);
-              }}
-            />
-            {validateField(cooldownPeriodSchema, Number(data.cooldownPeriod || 120)) && (
-              <span className="form-error">{validateField(cooldownPeriodSchema, Number(data.cooldownPeriod || 120))}</span>
-            )}
-          </div>
-        </Section>
-      )}
-
-      {/* ═══════════════════════════════════════════════════ */}
-      {/* DATABASE-SPECIFIC */}
-      {/* ═══════════════════════════════════════════════════ */}
-      {isDB && (
-        <Section title="Database Settings" defaultOpen={false}>
-          <div className="form-group">
-            <label className="form-label">Max Connections</label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <input type="range" className="form-range" min={10} max={1000} step={10}
-                value={data.maxConnections || 100}
-                onChange={e => update('maxConnections', Number(e.target.value))}
-              />
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', minWidth: 36, color: 'var(--text-primary)' }}>
-                {data.maxConnections || 100}
-              </span>
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Read Replicas</label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <input type="range" className="form-range" min={0} max={5}
-                value={data.readReplicas || 0}
-                onChange={e => update('readReplicas', Number(e.target.value))}
-              />
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', minWidth: 24, color: 'var(--text-primary)' }}>
-                {data.readReplicas || 0}
-              </span>
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Connection Timeout (ms)</label>
-            <input type="number" className={`form-input${validateField(connectionTimeoutSchema, Number(data.connectionTimeout || 5000)) ? ' form-input-error' : ''}`} min={100} max={30000} step={100}
-              value={data.connectionTimeout || 5000}
-              onChange={e => {
-                const val = Number(e.target.value);
-                const err = validateField(connectionTimeoutSchema, val);
-                if (!err) update('connectionTimeout', val);
-              }}
-            />
-            {validateField(connectionTimeoutSchema, Number(data.connectionTimeout || 5000)) && (
-              <span className="form-error">{validateField(connectionTimeoutSchema, Number(data.connectionTimeout || 5000))}</span>
-            )}
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Storage Size (GB)</label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <input type="range" className="form-range" min={10} max={5000} step={10}
-                value={data.storageGB || 100}
-                onChange={e => update('storageGB', Number(e.target.value))}
-              />
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', minWidth: 52, color: 'var(--text-primary)' }}>
-                {data.storageGB || 100} GB
-              </span>
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Volume Type</label>
-            <select className="form-select" value={data.volumeType || 'gp3'}
-              onChange={e => update('volumeType', e.target.value)}
-            >
-              <option value="gp3">General Purpose (gp3)</option>
-              <option value="io1">Provisioned IOPS (io1)</option>
-              <option value="magnetic">Magnetic (Low Cost)</option>
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Backup Retention (days)</label>
-            <input type="number" className={`form-input${validateField(backupRetentionSchema, Number(data.backupRetention || 7)) ? ' form-input-error' : ''}`} min={0} max={35}
-              value={data.backupRetention || 7}
-              onChange={e => {
-                const val = Number(e.target.value);
-                const err = validateField(backupRetentionSchema, val);
-                if (!err) update('backupRetention', val);
-              }}
-            />
-            {validateField(backupRetentionSchema, Number(data.backupRetention || 7)) && (
-              <span className="form-error">{validateField(backupRetentionSchema, Number(data.backupRetention || 7))}</span>
-            )}
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Multi-AZ Deployment</label>
-            <button
-              className="btn"
-              style={{
-                width: '100%', justifyContent: 'center',
-                color: data.multiAZ ? 'var(--success)' : 'var(--text-tertiary)',
-                borderColor: data.multiAZ ? 'var(--success-muted)' : 'var(--border-default)',
-                background: data.multiAZ ? 'var(--success-muted)' : 'transparent',
-              }}
-              onClick={() => update('multiAZ', !data.multiAZ)}
-            >
-              {data.multiAZ ? '✓ Enabled (High Availability)' : 'Disabled — Click to Enable'}
-            </button>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Encryption at Rest</label>
-            <button
-              className="btn"
-              style={{
-                width: '100%', justifyContent: 'center',
-                color: data.encryption !== false ? 'var(--accent)' : 'var(--text-tertiary)',
-                borderColor: data.encryption !== false ? 'var(--accent-muted)' : 'var(--border-default)',
-                background: data.encryption !== false ? 'var(--accent-muted)' : 'transparent',
-              }}
-              onClick={() => update('encryption', data.encryption === false ? true : false)}
-            >
-              {data.encryption !== false ? '🔒 Encrypted (AES-256)' : 'Disabled'}
-            </button>
-          </div>
-        </Section>
-      )}
-
-      {/* ═══════════════════════════════════════════════════ */}
-      {/* CACHE-SPECIFIC */}
-      {/* ═══════════════════════════════════════════════════ */}
-      {isCache && (
-        <Section title="Cache Settings" defaultOpen>
-          <div className="form-group">
-            <label className="form-label">Cache Hit Rate</label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <input type="range" className="form-range" min={0} max={100}
-                value={(node.data.cacheHitRate ?? 0.6) * 100}
-                onChange={e => handleCacheRateChange(Number(e.target.value) / 100)}
-              />
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', minWidth: 36, color: 'var(--text-primary)' }}>
-                {Math.round((node.data.cacheHitRate ?? 0.6) * 100)}%
-              </span>
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">TTL (seconds)</label>
-            <input type="number" className="form-input" min={1} max={86400}
-              value={data.ttl || 3600}
-              onChange={e => update('ttl', Number(e.target.value))}
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Eviction Policy</label>
-            <select className="form-select" value={data.evictionPolicy || 'allkeys-lru'}
-              onChange={e => update('evictionPolicy', e.target.value)}
-            >
-              {evictionPolicies.map(p => <option key={p} value={p}>{p}</option>)}
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Max Memory (MB)</label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <input type="range" className="form-range" min={64} max={16384} step={64}
-                value={data.maxMemoryMB || 512}
-                onChange={e => update('maxMemoryMB', Number(e.target.value))}
-              />
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', minWidth: 52, color: 'var(--text-primary)' }}>
-                {data.maxMemoryMB || 512} MB
-              </span>
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Cluster Mode</label>
-            <button
-              className="btn"
-              style={{
-                width: '100%', justifyContent: 'center',
-                color: data.clusterMode ? 'var(--success)' : 'var(--text-tertiary)',
-                borderColor: data.clusterMode ? 'var(--success-muted)' : 'var(--border-default)',
-                background: data.clusterMode ? 'var(--success-muted)' : 'transparent',
-              }}
-              onClick={() => update('clusterMode', !data.clusterMode)}
-            >
-              {data.clusterMode ? '✓ Cluster Mode Enabled' : 'Standalone — Click to Enable Cluster'}
-            </button>
-          </div>
-        </Section>
-      )}
-
-      {/* ═══════════════════════════════════════════════════ */}
-      {/* LOAD BALANCER SPECIFIC */}
-      {/* ═══════════════════════════════════════════════════ */}
-      {isLB && (
-        <Section title="Load Balancer Settings" defaultOpen>
-          <div className="form-group">
-            <label className="form-label">Algorithm</label>
-            <select className="form-select" value={data.lbAlgorithm || 'round-robin'}
-              onChange={e => update('lbAlgorithm', e.target.value)}
-            >
-              {lbAlgorithms.map(a => <option key={a} value={a}>{a}</option>)}
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Sticky Sessions</label>
-            <button
-              className="btn"
-              style={{
-                width: '100%', justifyContent: 'center',
-                color: data.stickySessions ? 'var(--accent)' : 'var(--text-tertiary)',
-                borderColor: data.stickySessions ? 'var(--accent-muted)' : 'var(--border-default)',
-                background: data.stickySessions ? 'var(--accent-muted)' : 'transparent',
-              }}
-              onClick={() => update('stickySessions', !data.stickySessions)}
-            >
-              {data.stickySessions ? '✓ Sticky Sessions Active' : 'Disabled — Click to Enable'}
-            </button>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Health Check Path</label>
-            <input type="text" className="form-input" placeholder="/health"
-              value={data.healthCheckPath || '/health'}
-              onChange={e => update('healthCheckPath', e.target.value)}
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Idle Timeout (seconds)</label>
-            <input type="number" className="form-input" min={1} max={4000}
-              value={data.idleTimeout || 60}
-              onChange={e => update('idleTimeout', Number(e.target.value))}
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">SSL Termination</label>
-            <button
-              className="btn"
-              style={{
-                width: '100%', justifyContent: 'center',
-                color: data.sslTermination !== false ? 'var(--success)' : 'var(--text-tertiary)',
-                borderColor: data.sslTermination !== false ? 'var(--success-muted)' : 'var(--border-default)',
-                background: data.sslTermination !== false ? 'var(--success-muted)' : 'transparent',
-              }}
-              onClick={() => update('sslTermination', data.sslTermination === false ? true : false)}
-            >
-              {data.sslTermination !== false ? '🔒 SSL Termination Enabled' : 'Disabled'}
-            </button>
-          </div>
-        </Section>
-      )}
-
-      {/* ═══════════════════════════════════════════════════ */}
-      {/* COMPUTE-SPECIFIC */}
-      {/* ═══════════════════════════════════════════════════ */}
-      {isCompute && (
-        <Section title="Server Settings" defaultOpen={false}>
-          <div className="form-group">
-            <label className="form-label">Request Timeout (ms)</label>
-            <input type="number" className="form-input" min={100} max={300000} step={100}
-              value={data.requestTimeout || 30000}
-              onChange={e => update('requestTimeout', Number(e.target.value))}
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Max Concurrent Requests</label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <input type="range" className="form-range" min={10} max={10000} step={10}
-                value={data.maxConcurrentRequests || 1000}
-                onChange={e => update('maxConcurrentRequests', Number(e.target.value))}
-              />
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', minWidth: 44, color: 'var(--text-primary)' }}>
-                {data.maxConcurrentRequests || 1000}
-              </span>
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Graceful Shutdown (seconds)</label>
-            <input type="number" className="form-input" min={0} max={120}
-              value={data.gracefulShutdown || 30}
-              onChange={e => update('gracefulShutdown', Number(e.target.value))}
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Log Level</label>
-            <select className="form-select" value={data.logLevel || 'info'}
-              onChange={e => update('logLevel', e.target.value)}
-            >
-              <option value="debug">debug</option>
-              <option value="info">info</option>
-              <option value="warn">warn</option>
-              <option value="error">error</option>
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Environment</label>
-            <select className="form-select" value={data.environment || 'production'}
-              onChange={e => update('environment', e.target.value)}
-            >
-              <option value="development">development</option>
-              <option value="staging">staging</option>
-              <option value="production">production</option>
-            </select>
-          </div>
-        </Section>
-      )}
-
-      {/* ═══════════════════════════════════════════════════ */}
-      {/* MESSAGING-SPECIFIC */}
-      {/* ═══════════════════════════════════════════════════ */}
-      {isMessaging && (
-        <Section title="Queue / Messaging Settings" defaultOpen={false}>
-          <div className="form-group">
-            <label className="form-label">Message Retention (hours)</label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <input type="range" className="form-range" min={1} max={336}
-                value={data.messageRetention || 72}
-                onChange={e => update('messageRetention', Number(e.target.value))}
-              />
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', minWidth: 44, color: 'var(--text-primary)' }}>
-                {data.messageRetention || 72}h
-              </span>
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Max Message Size (KB)</label>
-            <input type="number" className="form-input" min={1} max={1024}
-              value={data.maxMessageSize || 256}
-              onChange={e => update('maxMessageSize', Number(e.target.value))}
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Dead Letter Queue</label>
-            <button
-              className="btn"
-              style={{
-                width: '100%', justifyContent: 'center',
-                color: data.dlqEnabled ? 'var(--warning)' : 'var(--text-tertiary)',
-                borderColor: data.dlqEnabled ? 'var(--warning-muted)' : 'var(--border-default)',
-                background: data.dlqEnabled ? 'var(--warning-muted)' : 'transparent',
-              }}
-              onClick={() => update('dlqEnabled', !data.dlqEnabled)}
-            >
-              {data.dlqEnabled ? '✓ DLQ Enabled (max 3 retries)' : 'Disabled — Click to Enable'}
-            </button>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Max Receive Count (before DLQ)</label>
-            <input type="number" className="form-input" min={1} max={100}
-              value={data.maxReceiveCount || 3}
-              onChange={e => update('maxReceiveCount', Number(e.target.value))}
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Batch Size</label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <input type="range" className="form-range" min={1} max={100}
-                value={data.batchSize || 10}
-                onChange={e => update('batchSize', Number(e.target.value))}
-              />
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', minWidth: 24, color: 'var(--text-primary)' }}>
-                {data.batchSize || 10}
-              </span>
-            </div>
-          </div>
-        </Section>
-      )}
-
-      {/* ═══════════════════════════════════════════════════ */}
-      {/* NETWORK — CDN/Gateway specific */}
-      {/* ═══════════════════════════════════════════════════ */}
-      {isNetwork && !isLB && (
-        <Section title="Network Settings" defaultOpen={false}>
-          <div className="form-group">
-            <label className="form-label">Rate Limit (requests/sec)</label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <input type="range" className="form-range" min={100} max={100000} step={100}
-                value={data.rateLimit || 10000}
-                onChange={e => update('rateLimit', Number(e.target.value))}
-              />
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', minWidth: 52, color: 'var(--text-primary)' }}>
-                {(data.rateLimit || 10000).toLocaleString()}
-              </span>
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Connection Timeout (ms)</label>
-            <input type="number" className="form-input" min={100} max={30000} step={100}
-              value={data.connectionTimeout || 5000}
-              onChange={e => update('connectionTimeout', Number(e.target.value))}
-            />
-          </div>
-
-          {node.data.componentType === 'cdn' && (
-            <>
-              <div className="form-group">
-                <label className="form-label">Cache TTL (seconds)</label>
-                <input type="number" className="form-input" min={0} max={86400}
-                  value={data.cdnCacheTTL || 86400}
-                  onChange={e => update('cdnCacheTTL', Number(e.target.value))}
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Gzip Compression</label>
-                <button
-                  className="btn"
-                  style={{
-                    width: '100%', justifyContent: 'center',
-                    color: data.gzipEnabled !== false ? 'var(--success)' : 'var(--text-tertiary)',
-                    borderColor: data.gzipEnabled !== false ? 'var(--success-muted)' : 'var(--border-default)',
-                    background: data.gzipEnabled !== false ? 'var(--success-muted)' : 'transparent',
-                  }}
-                  onClick={() => update('gzipEnabled', data.gzipEnabled === false ? true : false)}
-                >
-                  {data.gzipEnabled !== false ? '✓ Compression Enabled' : 'Disabled'}
-                </button>
-              </div>
-            </>
-          )}
-        </Section>
-      )}
-
-      {/* ═══════════════════════════════════════════════════ */}
-      {/* RELIABILITY & RESILIENCE — Universal */}
-      {/* ═══════════════════════════════════════════════════ */}
-      <Section title="Reliability & Resilience" defaultOpen={false}>
-        <div className="form-group">
-          <label className="form-label">Health Check Interval (seconds)</label>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <input type="range" className="form-range" min={5} max={300}
-              value={data.healthCheckInterval || 30}
-              onChange={e => update('healthCheckInterval', Number(e.target.value))}
-            />
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', minWidth: 36, color: 'var(--text-primary)' }}>
-              {data.healthCheckInterval || 30}s
-            </span>
-          </div>
-        </div>
-
-        <div className="form-group">
-          <label className="form-label">Health Check Type</label>
-          <select className="form-select" value={data.healthCheckType || 'HTTP'}
-            onChange={e => update('healthCheckType', e.target.value)}
-          >
-            {healthCheckTypes.map(t => <option key={t} value={t}>{t}</option>)}
-          </select>
-        </div>
-
-        <div className="form-group">
-          <label className="form-label">Retry Strategy</label>
-          <select className="form-select" value={data.retryStrategy || 'exponential-backoff'}
-            onChange={e => update('retryStrategy', e.target.value)}
-          >
-            {retryStrategies.map(s => <option key={s} value={s}>{s}</option>)}
-          </select>
-        </div>
-
-        <div className="form-group">
-          <label className="form-label">Max Retries</label>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <input type="range" className="form-range" min={0} max={10}
-              value={data.maxRetries ?? 3}
-              onChange={e => update('maxRetries', Number(e.target.value))}
-            />
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', minWidth: 24, color: 'var(--text-primary)' }}>
-              {data.maxRetries ?? 3}
-            </span>
-          </div>
-        </div>
-
-        <div className="form-group">
-          <label className="form-label">Disaster Recovery Strategy</label>
-          <select className="form-select" value={data.drStrategy || 'none'}
-            onChange={e => update('drStrategy', e.target.value)}
-          >
-            <option value="none">Single Region Deployment</option>
-            <option value="backup-only">Automated Backup Vaulting</option>
-            <option value="active-passive">Active-Passive (Warm Standby)</option>
-            <option value="active-active">Active-Active (Multi-Region)</option>
-          </select>
-        </div>
-
-        <div className="form-group">
-          <label className="form-label">Circuit Breaker</label>
-          <button
-            className="btn"
-            style={{
-              width: '100%', justifyContent: 'center',
-              color: data.circuitBreaker ? 'var(--warning)' : 'var(--text-tertiary)',
-              borderColor: data.circuitBreaker ? 'var(--warning-muted)' : 'var(--border-default)',
-              background: data.circuitBreaker ? 'var(--warning-muted)' : 'transparent',
-            }}
-            onClick={() => update('circuitBreaker', !data.circuitBreaker)}
-          >
-            {data.circuitBreaker ? '⚡ Circuit Breaker Active' : 'Disabled — Click to Enable'}
-          </button>
-        </div>
-
-        {data.circuitBreaker && (
-          <div className="form-group">
-            <label className="form-label">Failure Threshold (before open)</label>
-            <input type="number" className="form-input" min={1} max={50}
-              value={data.cbFailureThreshold || 5}
-              onChange={e => update('cbFailureThreshold', Number(e.target.value))}
-            />
-          </div>
-        )}
-      </Section>
-
-      {/* ═══════════════════════════════════════════════════ */}
       {/* PERFORMANCE — Live stats */}
-      {/* ═══════════════════════════════════════════════════ */}
-      <Section title="Live Performance" defaultOpen>
+      <PanelSection title="Live Performance" defaultOpen>
         <div className="stat-row">
           <span className="stat-label">Capacity</span>
           <span className="stat-value">
             {(node.data.tier.capacity * node.data.instances).toLocaleString()} rps
           </span>
         </div>
-
         <div className="stat-row">
           <span className="stat-label">Base Latency</span>
           <span className="stat-value">{node.data.tier.latency}ms</span>
         </div>
-
         <div className="stat-row">
           <span className="stat-label">Reliability</span>
           <span className="stat-value">{(node.data.reliability * 100).toFixed(1)}%</span>
         </div>
-
         <div className="stat-row">
           <span className="stat-label">Current Load</span>
           <span
@@ -1304,7 +423,6 @@ export default function RightPanel() {
             {health?.loadPercent ?? 0}%
           </span>
         </div>
-
         <div style={{ marginTop: 8 }}>
           <div className="load-bar">
             <div
@@ -1313,12 +431,10 @@ export default function RightPanel() {
             />
           </div>
         </div>
-      </Section>
+      </PanelSection>
 
-      {/* ═══════════════════════════════════════════════════ */}
       {/* COST */}
-      {/* ═══════════════════════════════════════════════════ */}
-      <Section title="Cost Breakdown" defaultOpen>
+      <PanelSection title="Cost Breakdown" defaultOpen>
         <div className="stat-row">
           <span className="stat-label" style={{ fontWeight: 600 }}>Total Monthly Cost</span>
           <span className="stat-value cost">{formatCostFull(cost)}</span>
@@ -1349,13 +465,11 @@ export default function RightPanel() {
             <span className="stat-value cost">+{formatCostFull(cost * 0.5)}</span>
           </div>
         )}
-      </Section>
+      </PanelSection>
 
-      {/* ═══════════════════════════════════════════════════ */}
       {/* ENTERPRISE SIMULATIONS */}
-      {/* ═══════════════════════════════════════════════════ */}
       {(isCompute || node.type === 'groupNode') && (
-        <Section title="Live Deployment Visualizer" defaultOpen>
+        <PanelSection title="Live Deployment Visualizer" defaultOpen>
           <div className="form-group" style={{ marginTop: 4 }}>
             <p style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.5, margin: '0 0 10px 0' }}>
               Simulate a Blue/Green or Canary deployment. Traffic will seamlessly shift from v1 to v2 over a 10s window.
@@ -1376,7 +490,7 @@ export default function RightPanel() {
               {deploymentState.isActive ? 'Deployment In Progress...' : 'Launch Blue/Green Deployment'}
             </button>
           </div>
-        </Section>
+        </PanelSection>
       )}
 
       {/* ── Actions ── */}

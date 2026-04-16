@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { motion } from 'framer-motion';
 import { Handle, Position } from '@xyflow/react';
 import type { NodeProps } from '@xyflow/react';
 import * as Icons from 'lucide-react';
@@ -63,10 +64,14 @@ function ArchNodeComponent({ id, data, selected }: NodeProps) {
   ) : null;
   
   return (
-    <div 
+    <motion.div 
       className={`arch-node ${healthClass} ${selectedClass} ${overloadedClass}`}
       data-category={d.category}
       style={heatmapStyle}
+      initial={{ scale: 0.95, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      layout
+      transition={{ type: 'spring', stiffness: 350, damping: 25 }}
     >
       <Handle type="target" position={Position.Left} />
       <Handle type="source" position={Position.Right} />
@@ -100,7 +105,7 @@ function ArchNodeComponent({ id, data, selected }: NodeProps) {
           style={{ width: `${Math.min(100, d.loadPercent)}%` }}
         />
       </div>
-    </div>
+    </motion.div>
   );
 }
 

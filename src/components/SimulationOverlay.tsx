@@ -72,7 +72,7 @@ export default function SimulationOverlay() {
     );
   }
   
-  const info = eventLabels[activeEvent] || { title: 'Simulation', description: '' };
+  const info = (activeEvent ? eventLabels[activeEvent] : null) || { title: 'Simulation', description: '' };
   
   // For region outage, find which nodes are affected
   const failedCount = activeEvent === 'regionOutage' 

@@ -5,6 +5,7 @@ import {
   Info, ChevronDown, CheckCircle2,
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
+import { useReactFlow } from '@xyflow/react';
 import type { SecurityFinding, SecuritySeverity } from '../types';
 
 const severityColors: Record<SecuritySeverity, string> = {
@@ -36,6 +37,13 @@ function FindingCard({ finding, index }: { finding: SecurityFinding; index: numb
   const [expanded, setExpanded] = useState(false);
   const SevIcon = severityIcons[finding.severity];
   const color = severityColors[finding.severity];
+  const reactFlow = useReactFlow();
+  const selectNode = useArchStore(s => s.selectNode);
+
+  const focusNode = (nodeId: string) => {
+    selectNode(nodeId);
+    reactFlow.fitView({ nodes: [{ id: nodeId }], duration: 800, maxZoom: 1.2 });
+  };
 
   return (
     <div
@@ -88,9 +96,24 @@ function FindingCard({ finding, index }: { finding: SecurityFinding; index: numb
             <span><strong>Remediation:</strong> {finding.remediation}</span>
           </div>
           {finding.affectedNodeIds.length > 0 && (
-            <p className="security-finding-affected">
-              {finding.affectedNodeIds.length} component{finding.affectedNodeIds.length > 1 ? 's' : ''} affected
-            </p>
+            <div className="security-finding-affected" style={{ marginTop: 12 }}>
+              <p style={{ margin: 0, opacity: 0.8 }}>Actionable components ({finding.affectedNodeIds.length}):</p>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
+                {finding.affectedNodeIds.map(nid => {
+                  const node = useArchStore.getState().nodes.find(n => n.id === nid);
+                  return (
+                    <button 
+                      key={nid} 
+                      className="btn" 
+                      style={{ padding: '4px 8px', fontSize: '0.7rem' }}
+                      onClick={() => focusNode(nid)}
+                    >
+                      Fix {node?.data.label || 'Node'}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           )}
         </div>
       )}
