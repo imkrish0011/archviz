@@ -5,6 +5,8 @@ import type { ArchNode, ArchEdge } from '../types';
  * Calculates total system latency including overload penalties.
  */
 
+let previousNodeLoads = new Map<string, number>();
+
 export function calculateOverloadMultiplier(load: number, capacity: number): number {
   if (capacity <= 0) return 10;
   const ratio = load / capacity;
@@ -14,7 +16,8 @@ export function calculateOverloadMultiplier(load: number, capacity: number): num
 
 export function calculateNodeLatency(
   node: ArchNode,
-  load: number
+  load: number,
+  activeEvent?: string | null
 ): number {
   let baseLatency = node.data.tier.latency;
   
@@ -38,7 +41,22 @@ export function calculateNodeLatency(
 
   const capacity = node.data.tier.capacity * node.data.instances;
   const multiplier = calculateOverloadMultiplier(load, capacity);
-  return baseLatency * multiplier;
+  let finalLatency = baseLatency * multiplier;
+  
+  // Cold Start Penalty Check
+  const serverlessTypes = ['lambda', 'aurora-serverless'];
+  if (serverlessTypes.includes(node.data.componentType)) {
+    const prevLoad = previousNodeLoads.get(node.id);
+    const wasAsleep = prevLoad === 0 || prevLoad === undefined;
+    
+    // Inject delay if waking up or explicitly forced via traffic spike event
+    if ((wasAsleep && load > 0) || activeEvent === 'trafficSpike') {
+      const coldStartDelay = Math.random() * 1500 + 500; // 500ms -> 2000ms
+      finalLatency += coldStartDelay;
+    }
+  }
+  
+  return finalLatency;
 }
 
 /**
@@ -48,7 +66,8 @@ export function calculateNodeLatency(
 export function calculateTotalLatency(
   nodes: ArchNode[],
   edges: ArchEdge[],
-  nodeLoads: Map<string, number>
+  nodeLoads: Map<string, number>,
+  activeEvent?: string | null
 ): number {
   if (nodes.length === 0) return 0;
   
@@ -83,7 +102,7 @@ export function calculateTotalLatency(
     if (!node || node.data.isDisabled) return;
     
     const load = nodeLoads.get(nodeId) || 0;
-    const nodeLatency = calculateNodeLatency(node, load);
+    const nodeLatency = calculateNodeLatency(node, load, activeEvent);
     const totalSoFar = currentLatency + nodeLatency;
     
     const neighbors = adjacency.get(nodeId) || [];
@@ -98,6 +117,12 @@ export function calculateTotalLatency(
   
   for (const start of starts) {
     dfs(start.id, 0, new Set());
+  }
+  
+  // Cache the loads for the next tick to check for cold starts
+  previousNodeLoads.clear();
+  for (const [nodeId, load] of nodeLoads.entries()) {
+    previousNodeLoads.set(nodeId, load);
   }
   
   return Math.round(maxLatency * 100) / 100;

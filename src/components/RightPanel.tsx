@@ -186,10 +186,32 @@ function EdgeConfigPanel() {
         </div>
       </Section>
 
-      {/* Bandwidth */}
-      <Section title="Performance" defaultOpen={false}>
+      {/* Bandwidth & Tuning */}
+      <Section title="Egress & Performance" defaultOpen={true}>
         <div className="form-group">
-          <label className="form-label">Bandwidth</label>
+          <label className="form-label">Avg. Payload Size (Bytes)</label>
+          <input
+            className="form-input"
+            type="number"
+            min={0}
+            placeholder="e.g. 1024"
+            value={config.payloadSizeBytes || ''}
+            onChange={e => updateEdgeConfig(edge.id, { payloadSizeBytes: Number(e.target.value) || undefined })}
+          />
+        </div>
+        <div className="form-group" style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 }}>
+          <input
+            type="checkbox"
+            checked={!!config.isCrossAZ}
+            onChange={e => updateEdgeConfig(edge.id, { isCrossAZ: e.target.checked })}
+            style={{ accentColor: 'var(--accent)', cursor: 'pointer' }}
+          />
+          <label className="form-label" style={{ marginBottom: 0, cursor: 'pointer' }} onClick={() => updateEdgeConfig(edge.id, { isCrossAZ: !config.isCrossAZ })}>
+            Cross-AZ Traffic (Incurs Egress Cost)
+          </label>
+        </div>
+        <div className="form-group" style={{ marginTop: 8 }}>
+          <label className="form-label">Bandwidth Requirement</label>
           <input
             className="form-input"
             placeholder="e.g. 100 Mbps, 1 Gbps"

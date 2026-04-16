@@ -1,12 +1,21 @@
-import type { ArchNode } from '../types';
+import type { ArchNode, ArchEdge } from '../types';
 
 /**
  * Cost Engine
  * Calculates individual and total system costs using real AWS pricing.
  */
 
-export function getComponentCost(node: ArchNode): number {
+export function getComponentCost(node: ArchNode, load: number = 0): number {
   let baseCost = node.data.tier.monthlyCost;
+  
+  // Calculate dynamic serverless execution costs
+  const serverlessTypes = ['lambda', 'api-gateway', 'cloudflare-workers', 'step-functions'];
+  if (serverlessTypes.includes(node.data.componentType) && node.data.tier.costPerMillionRequests) {
+    // Math: load (requests-per-second) * seconds_in_month * cost_per_million / 1,000,000
+    const monthlyRequests = load * 2.628e6;
+    const dynamicCost = (monthlyRequests * node.data.tier.costPerMillionRequests) / 1000000;
+    baseCost += dynamicCost;
+  }
   
   // Storage Types
   if (node.data.volumeType === 'io1') baseCost *= 2.5; // High performance IOPS charge
@@ -40,13 +49,44 @@ export function getComponentCost(node: ArchNode): number {
   return computedCost;
 }
 
-export function calculateTotalCost(nodes: ArchNode[]): number {
+export function calculateTotalCost(
+  nodes: ArchNode[], 
+  edges: ArchEdge[] = [], 
+  nodeLoads?: Map<string, number>
+): number {
   let total = 0;
+  
+  // 1. Component & Compute Costs
   for (const node of nodes) {
     if (!node.data.isDisabled) {
-      total += getComponentCost(node);
+      const load = nodeLoads?.get(node.id) || 0;
+      total += getComponentCost(node, load);
     }
   }
+  
+  // 2. Data Transfer / Egress Costs
+  // AWS standard egress is ~$0.09 per GB
+  const EGRESS_RATE_PER_GB = 0.09;
+  
+  for (const edge of edges) {
+    const config = edge.config || {};
+    
+    // Check if the edge crosses an AZ or goes to internet (client)
+    const sourceNode = nodes.find(n => n.id === edge.source);
+    const targetNode = nodes.find(n => n.id === edge.target);
+    const crossesBoundary = config.isCrossAZ || targetNode?.data.category === 'client';
+    
+    if (crossesBoundary && sourceNode && !sourceNode.data.isDisabled) {
+      const sourceLoad = nodeLoads?.get(sourceNode.id) || 0;
+      const payloadSizeBytes = config.payloadSizeBytes || 1024; // default to 1KB
+      
+      // Math: RPS * seconds_in_month * bytes = Bytes per month -> convert to GB -> multiply by rate
+      const bytesPerMonth = sourceLoad * payloadSizeBytes * 2.628e6;
+      const gbPerMonth = bytesPerMonth / 1e9;
+      total += gbPerMonth * EGRESS_RATE_PER_GB;
+    }
+  }
+  
   return Math.round(total * 100) / 100;
 }
 

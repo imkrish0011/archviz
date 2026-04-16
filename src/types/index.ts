@@ -14,6 +14,7 @@ export interface ComponentTier {
   latency: number;     // ms
   ram?: string;
   cpu?: string;
+  costPerMillionRequests?: number;
 }
 
 export interface ComponentDefinition {
@@ -87,6 +88,8 @@ export interface EdgeConfig {
   bandwidth?: string;
   encrypted?: boolean;
   edgeLabel?: string;
+  payloadSizeBytes?: number;
+  isCrossAZ?: boolean;
 }
 
 export type ArchEdge = Edge & { config?: EdgeConfig };

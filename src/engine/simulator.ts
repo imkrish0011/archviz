@@ -23,7 +23,8 @@ function getLetterGrade(score: number): LetterGrade {
 export function runSimulation(
   nodes: ArchNode[],
   edges: ArchEdge[],
-  config: SimulationConfig
+  config: SimulationConfig,
+  activeEvent?: string | null
 ): { metrics: SystemMetrics; nodeLoads: Map<string, number>; nodeHealth: Map<string, { loadPercent: number; status: string }> } {
   // 1. Calculate RPS
   const rps = calculateRPSFromUsers(config.concurrentUsers, config.rpsMultiplier);
@@ -35,10 +36,10 @@ export function runSimulation(
   const nodeLoads = calculateNodeLoads(nodes, edges, rps, dbLoads);
   
   // 4. Calculate total cost
-  const totalCost = calculateTotalCost(nodes);
+  const totalCost = calculateTotalCost(nodes, edges, nodeLoads);
   
   // 5. Calculate total latency
-  const estimatedLatency = calculateTotalLatency(nodes, edges, nodeLoads);
+  const estimatedLatency = calculateTotalLatency(nodes, edges, nodeLoads, activeEvent);
   
   // 6. Calculate reliability & availability
   const reliability = calculateSystemReliability(nodes, edges);
