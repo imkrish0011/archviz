@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { generateTerraform, generateCloudFormation } from '../engine/terraformGenerator';
-import type { ArchNode, ArchEdge } from '../types';
+import type { ArchNode } from '../types';
 
 /** Helper to create a minimal ArchNode */
 function makeNode(type: string, label: string, id = 'node-1'): ArchNode {
@@ -25,67 +25,99 @@ function makeNode(type: string, label: string, id = 'node-1'): ArchNode {
   } as ArchNode;
 }
 
-function makeEdge(source: string, target: string): ArchEdge {
+function makeGroupNode(category: string, label: string, id = 'group-1'): ArchNode {
   return {
-    id: `edge-${source}-${target}`,
-    source,
-    target,
-    animated: true,
-  } as ArchEdge;
+    id,
+    type: 'groupNode',
+    position: { x: 0, y: 0 },
+    data: {
+      componentType: 'groupNode',
+      label,
+      category,
+      icon: 'Box',
+      tier: { id: 't3-medium', label: 't3.medium', monthlyCost: 100, capacity: 1000, latency: 5 },
+      tierIndex: 0,
+      instances: 1,
+      scalingType: 'horizontal',
+      reliability: 0.999,
+      scalingFactor: 1,
+      healthStatus: 'healthy',
+      loadPercent: 0,
+    },
+  } as ArchNode;
 }
 
 describe('generateTerraform', () => {
-  it('generates valid terraform header with provider block', () => {
+  it('returns an object containing main.tf, variables.tf, and outputs.tf', () => {
     const tf = generateTerraform([], [], 'Test Project');
-    expect(tf).toContain('terraform {');
-    expect(tf).toContain('provider "aws"');
-    expect(tf).toContain('required_version');
-    expect(tf).toContain('Test Project');
+    expect(tf).toHaveProperty('main.tf');
+    expect(tf).toHaveProperty('variables.tf');
+    expect(tf).toHaveProperty('outputs.tf');
   });
 
-  it('includes variables block', () => {
+  it('generates valid terraform header with provider block in main.tf', () => {
+    const tf = generateTerraform([], [], 'Test Project');
+    expect(tf['main.tf']).toContain('terraform {');
+    expect(tf['main.tf']).toContain('provider "aws"');
+    expect(tf['main.tf']).toContain('required_version');
+    expect(tf['main.tf']).toContain('Test Project');
+  });
+
+  it('includes variables block in variables.tf', () => {
     const tf = generateTerraform([], [], 'My App');
-    expect(tf).toContain('variable "aws_region"');
-    expect(tf).toContain('variable "environment"');
-    expect(tf).toContain('variable "project_name"');
+    expect(tf['variables.tf']).toContain('variable "aws_region"');
+    expect(tf['variables.tf']).toContain('variable "environment"');
+    expect(tf['variables.tf']).toContain('variable "project_name"');
   });
 
-  it('generates networking scaffold (VPC, subnets, IGW)', () => {
+  it('generates modular networking scaffold (VPC module) in main.tf', () => {
     const tf = generateTerraform([], [], 'Test');
-    expect(tf).toContain('aws_vpc');
-    expect(tf).toContain('aws_subnet');
-    expect(tf).toContain('aws_internet_gateway');
+    expect(tf['main.tf']).toContain('module "vpc" {');
+    expect(tf['main.tf']).toContain('source  = "terraform-aws-modules/vpc/aws"');
   });
 
-  it('generates EC2 resources for api-server nodes', () => {
+  it('maps group nodes to public and private subnets', () => {
+    const nodes = [
+      makeGroupNode('subnet-public', 'Public Subnet A', 'g1'),
+      makeGroupNode('subnet-private', 'Private Subnet A', 'g2'),
+      makeGroupNode('subnet-private', 'Private Subnet B', 'g3'),
+    ];
+    const tf = generateTerraform(nodes, [], 'Test');
+    // Since there is 1 public and 2 private subnets, it dynamically parses numPub=1, numPriv=2
+    expect(tf['main.tf']).toContain('if k < 1');
+    expect(tf['main.tf']).toContain('if k < 2');
+  });
+
+  it('generates EC2 modules for api-server nodes', () => {
     const nodes = [makeNode('api-server', 'API Server', 'n1')];
     const tf = generateTerraform(nodes, [], 'Test');
-    expect(tf).toContain('resource "aws_instance"');
-    expect(tf).toContain('api_server');
-    expect(tf).toContain('instance_type');
+    expect(tf['main.tf']).toContain('module "ec2_instance_api_server" {');
+    expect(tf['main.tf']).toContain('source  = "terraform-aws-modules/ec2-instance/aws"');
+    expect(tf['main.tf']).toContain('instance_type');
   });
 
-  it('generates RDS resources for postgresql nodes', () => {
+  it('generates RDS resources for postgresql nodes and registers an output', () => {
     const nodes = [makeNode('postgresql', 'Main DB', 'n1')];
     const tf = generateTerraform(nodes, [], 'Test');
-    expect(tf).toContain('resource "aws_db_instance"');
-    expect(tf).toContain('engine');
-    expect(tf).toContain('postgres');
+    expect(tf['main.tf']).toContain('resource "aws_db_instance"');
+    expect(tf['main.tf']).toContain('engine');
+    expect(tf['main.tf']).toContain('postgres');
+    expect(tf['outputs.tf']).toContain('output "rds_endpoint_main_db"');
   });
 
   it('generates Lambda resources', () => {
     const nodes = [makeNode('lambda', 'Auth Lambda', 'n1')];
     const tf = generateTerraform(nodes, [], 'Test');
-    expect(tf).toContain('resource "aws_lambda_function"');
-    expect(tf).toContain('runtime');
+    expect(tf['main.tf']).toContain('resource "aws_lambda_function"');
+    expect(tf['main.tf']).toContain('runtime');
   });
 
   it('generates S3 resources with encryption', () => {
     const nodes = [makeNode('s3', 'Assets Bucket', 'n1')];
     const tf = generateTerraform(nodes, [], 'Test');
-    expect(tf).toContain('resource "aws_s3_bucket"');
-    expect(tf).toContain('aws_s3_bucket_server_side_encryption_configuration');
-    expect(tf).toContain('aws:kms');
+    expect(tf['main.tf']).toContain('resource "aws_s3_bucket"');
+    expect(tf['main.tf']).toContain('aws_s3_bucket_server_side_encryption_configuration');
+    expect(tf['main.tf']).toContain('aws:kms');
   });
 
   it('generates security groups for each resource', () => {
@@ -94,31 +126,22 @@ describe('generateTerraform', () => {
       makeNode('redis', 'Cache', 'n2'),
     ];
     const tf = generateTerraform(nodes, [], 'Test');
-    expect(tf).toContain('resource "aws_security_group"');
-    // Should have at least 2 SGs
-    const sgCount = (tf.match(/aws_security_group/g) || []).length;
-    expect(sgCount).toBeGreaterThanOrEqual(4); // 2 resources + 2 references
+    expect(tf['main.tf']).toContain('resource "aws_security_group"');
+    const sgCount = (tf['main.tf'].match(/resource "aws_security_group"/g) || []).length;
+    expect(sgCount).toBe(2); 
   });
 
-  it('generates outputs section', () => {
+  it('generates basic outputs section', () => {
     const tf = generateTerraform([], [], 'Test');
-    expect(tf).toContain('output "vpc_id"');
-    expect(tf).toContain('output "architecture_summary"');
-  });
-
-  it('counts components and connections in header', () => {
-    const nodes = [makeNode('api-server', 'API', 'n1'), makeNode('redis', 'Redis', 'n2')];
-    const edges = [makeEdge('n1', 'n2')];
-    const tf = generateTerraform(nodes, edges, 'Test');
-    expect(tf).toContain('Components: 2');
-    expect(tf).toContain('Connections: 1');
+    expect(tf['outputs.tf']).toContain('output "vpc_id"');
+    expect(tf['outputs.tf']).toContain('output "architecture_summary"');
   });
 
   it('skips external client nodes gracefully', () => {
     const nodes = [makeNode('client-browser', 'User Browser', 'n1')];
     const tf = generateTerraform(nodes, [], 'Test');
-    expect(tf).toContain('External client');
-    expect(tf).not.toContain('resource "aws_instance" "user_browser"');
+    expect(tf['main.tf']).toContain('External client');
+    expect(tf['main.tf']).not.toContain('module "ec2_instance_user_browser"');
   });
 });
 

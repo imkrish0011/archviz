@@ -47,6 +47,7 @@ function FlowCanvas() {
   const onEdgesChange = useArchStore(s => s.onEdgesChange);
   const onConnect = useArchStore(s => s.onConnect);
   const selectNode = useArchStore(s => s.selectNode);
+  const selectedNodeId = useArchStore(s => s.selectedNodeId);
   const selectEdge = useArchStore(s => s.selectEdge);
   const addNode = useArchStore(s => s.addNode);
   const removeNode = useArchStore(s => s.removeNode);

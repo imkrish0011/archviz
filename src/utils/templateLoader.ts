@@ -83,7 +83,7 @@ export function loadTemplateWithAnimation(
   setNodes([]);
   setEdges([]);
   
-  nodes.forEach((node, index) => {
+  nodes.forEach((_node, index) => {
     const timeout = setTimeout(() => {
       setNodes(nodes.slice(0, index + 1));
       

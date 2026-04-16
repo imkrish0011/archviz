@@ -1,7 +1,7 @@
 import type { Node, Edge } from '@xyflow/react';
 
 // ─── Component Types ─────────────────────────────────────────
-export type ComponentCategory = 'client' | 'compute' | 'storage' | 'network' | 'messaging' | 'observability' | 'boundary';
+export type ComponentCategory = 'client' | 'compute' | 'storage' | 'network' | 'messaging' | 'observability' | 'boundary' | 'deployment';
 export type ScalingType = 'horizontal' | 'vertical';
 export type HealthStatus = 'healthy' | 'warning' | 'critical';
 export type LetterGrade = 'A' | 'B' | 'C' | 'D' | 'F';

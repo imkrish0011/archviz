@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useArchStore } from '../store/useArchStore';
 import {
-  Box, Save, Upload, Clock, LayoutTemplate, Play, ChevronDown,
+  Save, Upload, Clock, LayoutTemplate, Play, ChevronDown,
   Zap, ServerCrash, Trash2, CloudOff, DatabaseZap, XCircle,
   PanelLeft, Undo2, Redo2, Download, Image, Maximize, Keyboard,
   BrainCircuit, ShieldAlert, FileCode, LayoutGrid,

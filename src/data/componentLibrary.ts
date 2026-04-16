@@ -1296,6 +1296,117 @@ const componentLibrary: ComponentDefinition[] = [
     ],
     defaultTierIndex: 0,
   },
+  {
+    type: 'datadog',
+    label: 'Datadog Agent',
+    category: 'observability',
+    icon: 'Activity',
+    description: 'Enterprise full-stack observability and monitoring',
+    scalingType: 'horizontal',
+    reliability: 0.9999,
+    scalingFactor: 1.0,
+    baseLatency: 5,
+    tiers: [
+      { id: 'dd-pro', label: 'Pro Host', monthlyCost: 15.00, capacity: 10000, latency: 5 },
+      { id: 'dd-ent', label: 'Enterprise Host', monthlyCost: 23.00, capacity: 25000, latency: 5 },
+    ],
+    defaultTierIndex: 0,
+  },
+  {
+    type: 'github-actions',
+    label: 'GitHub Actions',
+    category: 'deployment',
+    icon: 'GitPullRequestDraft',
+    description: 'CI/CD pipeline workflow automation natively in GitHub',
+    scalingType: 'horizontal',
+    reliability: 0.999,
+    scalingFactor: 1.0,
+    baseLatency: 2000,
+    tiers: [
+      { id: 'gha-free', label: 'Free Runners', monthlyCost: 0, capacity: 20, latency: 5000 },
+      { id: 'gha-team', label: 'Team Runners', monthlyCost: 44, capacity: 100, latency: 2000 },
+    ],
+    defaultTierIndex: 0,
+  },
+  {
+    type: 'jenkins',
+    label: 'Jenkins CI',
+    category: 'deployment',
+    icon: 'Settings2',
+    description: 'Self-hosted, extensible open-source automation server',
+    scalingType: 'horizontal',
+    reliability: 0.98,
+    scalingFactor: 1.0,
+    baseLatency: 5000,
+    tiers: [
+      { id: 'jnk-ec2-small', label: 'Small Controller', monthlyCost: 33.41, capacity: 5, latency: 5000 },
+      { id: 'jnk-ec2-large', label: 'Large Controller', monthlyCost: 140.16, capacity: 50, latency: 2000 },
+    ],
+    defaultTierIndex: 0,
+  },
+  {
+    type: 'aws-codepipeline',
+    label: 'AWS CodePipeline',
+    category: 'deployment',
+    icon: 'Combine',
+    description: 'Fully managed continuous delivery service by AWS',
+    scalingType: 'horizontal',
+    reliability: 0.9999,
+    scalingFactor: 1.0,
+    baseLatency: 1500,
+    tiers: [
+      { id: 'cp-active', label: 'Per Active Pipeline', monthlyCost: 1.00, capacity: 1000, latency: 1500 },
+    ],
+    defaultTierIndex: 0,
+  },
+  {
+    type: 'qdrant',
+    label: 'Qdrant Vector DB',
+    category: 'storage',
+    icon: 'Database',
+    description: 'High-performance vector search database written in Rust',
+    scalingType: 'horizontal',
+    reliability: 0.999,
+    scalingFactor: 1.0,
+    baseLatency: 15,
+    tiers: [
+      { id: 'qdrant-cloud', label: 'Managed Cloud', monthlyCost: 25.00, capacity: 5000, latency: 20 },
+      { id: 'qdrant-ent', label: 'Enterprise Cluster', monthlyCost: 300.00, capacity: 50000, latency: 5 },
+    ],
+    defaultTierIndex: 0,
+  },
+  {
+    type: 'anthropic-api',
+    label: 'Anthropic API',
+    category: 'client',
+    icon: 'Bot',
+    description: 'Claude LLM API provider for conversational and analytical workloads',
+    scalingType: 'horizontal',
+    reliability: 0.99,
+    scalingFactor: 1.0,
+    baseLatency: 1000,
+    tiers: [
+      { id: 'claude-haiku', label: 'Claude 3 Haiku', monthlyCost: 50.00, capacity: 10000, latency: 400 },
+      { id: 'claude-opus', label: 'Claude 3 Opus', monthlyCost: 1500.00, capacity: 2000, latency: 2500 },
+    ],
+    defaultTierIndex: 0,
+  },
+  {
+    type: 'gpu-instance',
+    label: 'GPU Instance',
+    category: 'compute',
+    icon: 'Cpu',
+    description: 'High-end accelerated compute specifically designed for ML workloads',
+    scalingType: 'horizontal',
+    reliability: 0.99,
+    scalingFactor: 1.0,
+    baseLatency: 50,
+    tiers: [
+      { id: 'g4dn.xlarge', label: 'g4dn.xlarge (1x T4)', monthlyCost: 383.98, capacity: 500, latency: 80, ram: '16 GB' },
+      { id: 'p4d.24xlarge', label: 'p4d.24xlarge (8x A100)', monthlyCost: 23925.12, capacity: 20000, latency: 20, ram: '1152 GB' },
+    ],
+    defaultTierIndex: 1,
+  },
 
   // ── Boundary / Group Nodes ──
   {
@@ -1369,7 +1480,7 @@ export function getComponentsByCategory(category: ComponentCategory): ComponentD
 }
 
 export function getAllCategories(): ComponentCategory[] {
-  return ['client', 'compute', 'storage', 'network', 'messaging', 'observability', 'boundary'];
+  return ['client', 'compute', 'storage', 'network', 'messaging', 'observability', 'boundary', 'deployment'];
 }
 
 export function getCategoryLabel(category: ComponentCategory): string {
@@ -1381,6 +1492,7 @@ export function getCategoryLabel(category: ComponentCategory): string {
     messaging: 'Messaging',
     observability: 'Observability',
     boundary: 'Boundaries',
+    deployment: 'Deployment (CI/CD)',
   };
   return labels[category];
 }

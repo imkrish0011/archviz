@@ -70,7 +70,8 @@ export function calculateSystemReliability(
   }
   
   // Check for single points of failure in the edge graph
-  const _criticalPaths = findSinglePointsOfFailure(nodes, edges);
+  // (result consumed by future telemetry integration)
+  findSinglePointsOfFailure(nodes, edges);
   
   return Math.max(0, Math.min(1, reliability));
 }

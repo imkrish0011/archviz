@@ -1,13 +1,13 @@
 import { useCallback, useRef, useState, useEffect } from 'react';
 import {
-  BrainCircuit, Plus, Upload, ArrowRight, Tv, Camera, MessageCircle,
+  BrainCircuit, Plus, ArrowRight, Tv, Camera, MessageCircle,
   Car, Music, Search, Gamepad2, Disc, CreditCard, Film, Globe,
   MessageSquare, Video, ShoppingCart, MapPin, Users, Blocks, Server,
   Zap, Layers, Box, Activity, DollarSign, Fingerprint, RefreshCcw,
   Lock, Eye, Download, Clock, Shield, Cpu, Database, Cloud,
-  GitBranch, LayoutTemplate, Play, Check, ChevronRight, Terminal,
-  MousePointerClick, Workflow, Sparkles, Monitor, Palette, Keyboard,
-  Save, Undo2, Image, Maximize, Command, Code2, Gauge, Network,
+  GitBranch, LayoutTemplate, Check, Terminal,
+  Workflow, Sparkles, Monitor, Palette, Keyboard,
+  Code2, Gauge, Network,
   Webhook, Container, HardDrive, Radio, CircuitBoard, Flame,
   FileCode, ShieldAlert, Target, Mail
 } from 'lucide-react';
@@ -19,14 +19,14 @@ import { instantiateTemplate, loadTemplateWithAnimation } from '../utils/templat
 import type { Template } from '../types';
 
 /* ── Brand icon mapping ── */
-const brandIcons: Record<string, React.ComponentType<{ size?: number }>> = {
+const brandIcons: Record<string, React.ComponentType<{ size?: number; strokeWidth?: number }>> = {
   instagram: Camera, netflix: Tv, whatsapp: MessageCircle, uber: Car,
   spotify: Music, 'google-search': Search, steam: Gamepad2, discord: Disc,
   stripe: CreditCard, tiktok: Film,
 };
 
 /* ── Starter icon mapping ── */
-const starterIcons: Record<string, React.ComponentType<{ size?: number }>> = {
+const starterIcons: Record<string, React.ComponentType<{ size?: number; strokeWidth?: number }>> = {
   'basic-web': Globe, 'chat-app': MessageSquare, 'video-streaming': Video,
   ecommerce: ShoppingCart, 'food-delivery': MapPin, 'social-media': Users,
   microservices: Blocks,

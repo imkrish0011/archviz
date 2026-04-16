@@ -1,5 +1,11 @@
-import { EdgeProps, getSmoothStepPath, EdgeLabelRenderer, BaseEdge } from '@xyflow/react';
-import type { ArchEdge as ArchEdgeType } from '../../types';
+import type { EdgeProps } from '@xyflow/react';
+import { getSmoothStepPath, EdgeLabelRenderer, BaseEdge } from '@xyflow/react';
+import type { EdgeConfig } from '../../types';
+
+interface ArchEdgeData {
+  config?: EdgeConfig;
+  [key: string]: unknown;
+}
 
 export default function ArchEdge({
   id,
@@ -12,7 +18,7 @@ export default function ArchEdge({
   style = {},
   data,
   markerEnd,
-}: EdgeProps<ArchEdgeType>) {
+}: EdgeProps) {
   const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
     sourceY,
@@ -22,11 +28,12 @@ export default function ArchEdge({
     targetPosition,
   });
 
-  const config = data?.config || {};
+  const edgeData = data as ArchEdgeData | undefined;
+  const config = edgeData?.config || {};
   const connectionType = config.connectionType || 'default';
   
   // Base styling
-  let edgeStyle = { ...style };
+  const edgeStyle = { ...style };
   let className = 'react-flow__edge-path';
   
   switch(connectionType) {

@@ -2,7 +2,7 @@ import { useArchStore } from '../store/useArchStore';
 import { runSecurityScan } from '../engine/securityScanner';
 import {
   X, ShieldAlert, ShieldCheck, ShieldX, AlertTriangle, AlertCircle,
-  Info, ChevronDown, ChevronRight, CheckCircle2,
+  Info, ChevronDown, CheckCircle2,
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import type { SecurityFinding, SecuritySeverity } from '../types';

@@ -40,7 +40,6 @@ export function applyAutoLayout(
 
   // Only layout non-group nodes (group nodes stay as-is or are handled separately)
   const layoutNodes = nodes.filter(n => n.type !== 'groupNode');
-  const groupNodes = nodes.filter(n => n.type === 'groupNode');
 
   for (const node of layoutNodes) {
     g.setNode(node.id, { width: nodeWidth, height: nodeHeight });

@@ -7,7 +7,7 @@ import type { ArchNode, ArchEdge, Recommendation, Warning } from '../types';
 
 export function generateRecommendations(
   nodes: ArchNode[],
-  edges: ArchEdge[],
+  _edges: ArchEdge[],
   rps: number,
   nodeLoads: Map<string, number>,
   totalCost: number
@@ -175,7 +175,7 @@ export function generateRecommendations(
  */
 export function generateWarnings(
   nodes: ArchNode[],
-  edges: ArchEdge[],
+  _edges: ArchEdge[],
   rps: number,
   nodeLoads: Map<string, number>
 ): Warning[] {
