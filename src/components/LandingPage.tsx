@@ -9,7 +9,8 @@ import {
   Workflow, Sparkles, Monitor, Palette, Keyboard,
   Code2, Gauge, Network,
   Webhook, Container, HardDrive, Radio, CircuitBoard, Flame,
-  FileCode, ShieldAlert, Target, Mail, Leaf
+  FileCode, ShieldAlert, Target, Mail, Leaf,
+  Warehouse, PackageOpen, LayoutDashboard, ArrowLeftRight, FileText
 } from 'lucide-react';
 import '../styles/landing.css';
 import { famousSystemTemplates } from '../data/templates/famousSystemTemplates';
@@ -47,6 +48,10 @@ const computeItems = [
   { label: 'Apache Spark', icon: Terminal },
   { label: 'Datadog', icon: Activity },
   { label: 'AWS Bedrock', icon: Sparkles },
+  { label: 'Docker Container', icon: Box },
+  { label: 'Container Registry', icon: PackageOpen },
+  { label: 'Log Aggregator', icon: FileText },
+  { label: 'Headless CMS', icon: LayoutDashboard },
 ];
 
 const dataItems = [
@@ -64,6 +69,8 @@ const dataItems = [
   { label: 'Amazon EFS', icon: HardDrive },
   { label: 'Amazon Glacier', icon: Box },
   { label: 'AWS Athena', icon: Search },
+  { label: 'Data Lake', icon: Warehouse },
+  { label: 'Block Storage', icon: HardDrive },
 ];
 
 const networkItems = [
@@ -82,6 +89,9 @@ const networkItems = [
   { label: 'Twilio API', icon: MessageCircle },
   { label: 'SendGrid', icon: Mail },
   { label: 'Pusher', icon: Radio },
+  { label: 'Reverse Proxy', icon: ArrowLeftRight },
+  { label: 'VPN Gateway', icon: Lock },
+  { label: 'Webhook Handler', icon: Webhook },
 ];
 
 interface LandingPageProps {
