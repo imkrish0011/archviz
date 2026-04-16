@@ -1,0 +1,327 @@
+/* ─── React Flow Overrides ─────────────────────────────────── */
+.react-flow {
+  background: var(--bg-base) !important;
+}
+
+/* Grid dots */
+.react-flow__background pattern circle {
+  fill: var(--border-subtle) !important;
+}
+
+/* Controls */
+.react-flow__controls {
+  border: 1px solid var(--border-default) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-md) !important;
+  overflow: hidden;
+  bottom: 12px !important;
+  left: 12px !important;
+}
+
+.react-flow__controls-button {
+  background: var(--bg-elevated) !important;
+  border-bottom: 1px solid var(--border-subtle) !important;
+  width: 30px !important;
+  height: 30px !important;
+  padding: 4px !important;
+  fill: var(--text-secondary) !important;
+  color: var(--text-secondary) !important;
+}
+
+.react-flow__controls-button:hover {
+  background: var(--bg-hover) !important;
+  fill: var(--text-primary) !important;
+}
+
+.react-flow__controls-button:last-child {
+  border-bottom: none !important;
+}
+
+.react-flow__controls-button svg {
+  fill: currentColor !important;
+  max-width: 14px !important;
+  max-height: 14px !important;
+}
+
+/* Minimap */
+.react-flow__minimap {
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: var(--radius-lg) !important;
+  bottom: 12px !important;
+  right: 12px !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.react-flow__minimap-mask {
+  fill: rgba(94, 234, 212, 0.08) !important;
+  stroke: var(--accent) !important;
+  stroke-width: 1 !important;
+}
+
+.react-flow__minimap-node {
+  fill: var(--bg-active) !important;
+  stroke: var(--border-default) !important;
+}
+
+/* Edges */
+.react-flow__edge-path {
+  stroke: rgba(255, 255, 255, 0.2) !important;
+  stroke-width: 2.5 !important;
+}
+
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: var(--accent) !important;
+  stroke-width: 3 !important;
+}
+
+.react-flow__edge:hover .react-flow__edge-path {
+  stroke: rgba(255, 255, 255, 0.5) !important;
+  stroke-width: 3 !important;
+}
+
+.react-flow__edge-text {
+  font-family: var(--font-mono) !important;
+  font-size: 10px !important;
+}
+
+.react-flow__edge-textbg {
+  fill: var(--bg-surface) !important;
+}
+
+.react-flow__edge-textwrapper text {
+  fill: var(--text-tertiary) !important;
+}
+
+/* Connection Line */
+.react-flow__connection-path {
+  stroke: var(--accent) !important;
+  stroke-width: 2 !important;
+  stroke-dasharray: 6 3 !important;
+}
+
+/* Handles */
+.react-flow__handle {
+  width: 8px !important;
+  height: 8px !important;
+  background: var(--bg-active) !important;
+  border: 2px solid var(--border-strong) !important;
+  transition: all var(--transition-fast) !important;
+}
+
+.react-flow__handle:hover,
+.react-flow__handle.connecting {
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgba(94, 234, 212, 0.2) !important;
+}
+
+/* Selection */
+.react-flow__selection {
+  border: 1px solid var(--accent) !important;
+  background: rgba(94, 234, 212, 0.05) !important;
+}
+
+.react-flow__nodesselection-rect {
+  border: 1px solid var(--accent) !important;
+  background: rgba(94, 234, 212, 0.05) !important;
+}
+
+/* ─── Custom Arch Node ────────────────────────────────────── */
+.arch-node {
+  background: var(--bg-elevated);
+  border: 1.5px solid var(--border-default);
+  border-left: 3px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+  min-width: 150px;
+  transition: all var(--transition-fast);
+  position: relative;
+  cursor: pointer;
+}
+
+.arch-node:hover {
+  border-color: var(--border-strong);
+  box-shadow: 0 0 0 1px var(--border-strong);
+}
+
+.arch-node.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), 0 0 12px rgba(94, 234, 212, 0.1);
+}
+
+/* Category-specific left border & icon colors */
+.arch-node[data-category="client"] { border-left-color: var(--cat-client); }
+.arch-node[data-category="compute"] { border-left-color: var(--cat-compute); }
+.arch-node[data-category="storage"] { border-left-color: var(--cat-storage); }
+.arch-node[data-category="network"] { border-left-color: var(--cat-network); }
+.arch-node[data-category="messaging"] { border-left-color: var(--cat-messaging); }
+.arch-node[data-category="observability"] { border-left-color: var(--cat-observability); }
+
+.arch-node[data-category="client"] .arch-node-icon { color: var(--cat-client); }
+.arch-node[data-category="compute"] .arch-node-icon { color: var(--cat-compute); }
+.arch-node[data-category="storage"] .arch-node-icon { color: var(--cat-storage); }
+.arch-node[data-category="network"] .arch-node-icon { color: var(--cat-network); }
+.arch-node[data-category="messaging"] .arch-node-icon { color: var(--cat-messaging); }
+.arch-node[data-category="observability"] .arch-node-icon { color: var(--cat-observability); }
+
+.arch-node[data-category="client"] .arch-node-cost { color: var(--cat-client); opacity: 0.5; }
+.arch-node[data-category="compute"] .arch-node-cost { color: var(--cat-compute); }
+.arch-node[data-category="storage"] .arch-node-cost { color: var(--cat-storage); }
+.arch-node[data-category="network"] .arch-node-cost { color: var(--cat-network); }
+.arch-node[data-category="messaging"] .arch-node-cost { color: var(--cat-messaging); }
+.arch-node[data-category="observability"] .arch-node-cost { color: var(--cat-observability); }
+
+.arch-node.healthy {
+  box-shadow: 0 0 0 1px rgba(74, 222, 128, 0.15);
+}
+
+.arch-node.warning {
+  box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.15);
+}
+
+.arch-node.critical {
+  box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.2);
+}
+
+.arch-node.failed {
+  border-color: var(--danger);
+  border-left-color: var(--danger);
+  opacity: 0.6;
+}
+
+.arch-node.disabled {
+  border-color: var(--border-subtle);
+  border-left-color: var(--border-subtle);
+  opacity: 0.4;
+}
+
+.arch-node-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.arch-node-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.arch-node-label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.arch-node-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.arch-node-tier {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+}
+
+.arch-node-cost {
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.arch-node-load-bar {
+  margin-top: var(--space-2);
+  height: 3px;
+  background: var(--bg-active);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.arch-node-load-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease, background 0.3s ease;
+}
+
+.arch-node-load-fill.healthy { background: var(--success); }
+.arch-node-load-fill.warning { background: var(--warning); }
+.arch-node-load-fill.critical { background: var(--danger); }
+
+/* Instance Badge */
+.arch-node-instances {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  min-width: 20px;
+  height: 20px;
+  border-radius: var(--radius-full);
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border-strong);
+  font-size: 10px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+
+/* Failed overlay */
+.arch-node-failed-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: var(--radius-lg);
+  z-index: 5;
+}
+
+.arch-node-failed-overlay svg {
+  color: var(--danger);
+  width: 24px;
+  height: 24px;
+}
+
+/* Edge animated particles & traffic health */
+.react-flow__edge.edge-healthy .react-flow__edge-path {
+  stroke: var(--success) !important;
+  stroke-dasharray: 5 !important;
+  animation: trafficFlow 1.2s linear infinite !important;
+}
+
+.react-flow__edge.edge-warning .react-flow__edge-path {
+  stroke: var(--warning) !important;
+  stroke-dasharray: 5 !important;
+  animation: trafficFlow 0.6s linear infinite !important;
+  stroke-width: 2.5 !important;
+}
+
+.react-flow__edge.edge-critical .react-flow__edge-path {
+  stroke: var(--danger) !important;
+  stroke-dasharray: 5 !important;
+  animation: trafficFlow 0.3s linear infinite !important;
+  stroke-width: 3 !important;
+}
+
+@keyframes trafficFlow {
+  from { stroke-dashoffset: 20; }
+  to { stroke-dashoffset: 0; }
+}
+
+/* Attribution removal */
+.react-flow__attribution {
+  display: none !important;
+}

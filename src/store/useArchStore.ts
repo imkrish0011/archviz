@@ -1,0 +1,545 @@
+import { create } from 'zustand';
+import type { ArchNode, ArchEdge, SimulationConfig, Snapshot, SimulationEvent, EdgeConfig } from '../types';
+import { getComponentDefinition } from '../data/componentLibrary';
+import type { Connection } from '@xyflow/react';
+import { applyNodeChanges, applyEdgeChanges } from '@xyflow/react';
+import type { NodeChange, EdgeChange } from '@xyflow/react';
+import { toastBus } from '../components/ToastSystem';
+import { validateConnection } from '../engine/connectionValidator';
+import { applyAutoLayout } from '../engine/autoLayout';
+import type { LayoutDirection } from '../engine/autoLayout';
+
+interface HistoryEntry {
+  nodes: ArchNode[];
+  edges: ArchEdge[];
+}
+
+interface ArchStore {
+  // ── Graph State ──
+  nodes: ArchNode[];
+  edges: ArchEdge[];
+  
+  // ── Simulation Config ──
+  simulationConfig: SimulationConfig;
+  
+  // ── UI State ──
+  selectedNodeId: string | null;
+  selectedEdgeId: string | null;
+  rightPanelOpen: boolean;
+  versionHistoryOpen: boolean;
+  recommendationPanelOpen: boolean;
+  templatePickerOpen: boolean;
+  activeSimulationEvent: SimulationEvent | null;
+  showOnboarding: boolean;
+  leftSidebarOpen: boolean;
+  securityPanelOpen: boolean;
+  projectName: string;
+  
+  // ── Snapshots ──
+  snapshots: Snapshot[];
+  compareSnapshots: [string, string] | null;
+  
+  // ── Undo/Redo ──
+  undoStack: HistoryEntry[];
+  redoStack: HistoryEntry[];
+  
+  // ── Actions ──
+  onNodesChange: (changes: NodeChange<ArchNode>[]) => void;
+  onEdgesChange: (changes: EdgeChange[]) => void;
+  onConnect: (connection: Connection) => void;
+  addNode: (componentType: string, position: { x: number; y: number }) => void;
+  removeNode: (nodeId: string) => void;
+  removeEdge: (edgeId: string) => void;
+  updateNodeData: (nodeId: string, data: Partial<ArchNode['data']>) => void;
+  changeNodeType: (nodeId: string, newComponentType: string) => void;
+  selectNode: (nodeId: string | null) => void;
+  selectEdge: (edgeId: string | null) => void;
+  setSimulationConfig: (config: Partial<SimulationConfig>) => void;
+  setProjectName: (name: string) => void;
+  
+  // UI toggles
+  toggleVersionHistory: () => void;
+  toggleRecommendationPanel: () => void;
+  toggleTemplatePicker: () => void;
+  toggleLeftSidebar: () => void;
+  toggleSecurityPanel: () => void;
+  dismissOnboarding: () => void;
+  setActiveSimulationEvent: (event: SimulationEvent | null) => void;
+  setCompareSnapshots: (ids: [string, string] | null) => void;
+  
+  // Snapshot actions
+  takeSnapshot: (label?: string) => void;
+  restoreSnapshot: (snapshotId: string) => void;
+  
+  // Template actions
+  loadTemplate: (nodes: ArchNode[], edges: ArchEdge[]) => void;
+  clearCanvas: () => void;
+  
+  // Bulk updates
+  setNodes: (nodes: ArchNode[]) => void;
+  setEdges: (edges: ArchEdge[]) => void;
+  
+  // Undo/Redo
+  undo: () => void;
+  redo: () => void;
+  pushHistory: () => void;
+  
+  // Auto-layout
+  runAutoLayout: (direction?: LayoutDirection) => void;
+  
+  // Edge config
+  updateEdgeConfig: (edgeId: string, config: Partial<EdgeConfig>) => void;
+  
+  // Save/Load
+  saveToLocalStorage: () => void;
+  loadFromLocalStorage: () => boolean;
+}
+
+let nodeIdCounter = 0;
+function genNodeId() {
+  return `node_${++nodeIdCounter}_${Date.now()}`;
+}
+
+function genEdgeId() {
+  return `edge_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+}
+
+export const useArchStore = create<ArchStore>((set, get) => ({
+  // ── Initial State ──
+  nodes: [],
+  edges: [],
+  simulationConfig: {
+    concurrentUsers: 1000,
+    rpsMultiplier: 0.1,
+    cacheHitRate: 0.6,
+  },
+  selectedNodeId: null,
+  selectedEdgeId: null,
+  rightPanelOpen: false,
+  versionHistoryOpen: false,
+  recommendationPanelOpen: false,
+  templatePickerOpen: false,
+  activeSimulationEvent: null,
+  showOnboarding: !localStorage.getItem('archviz-onboarded'),
+  leftSidebarOpen: true,
+  securityPanelOpen: false,
+  projectName: 'Untitled Architecture',
+  snapshots: [],
+  compareSnapshots: null,
+  undoStack: [],
+  redoStack: [],
+  
+  // ── React Flow handlers ──
+  onNodesChange: (changes) => {
+    set({ nodes: applyNodeChanges(changes, get().nodes) });
+  },
+  
+  onEdgesChange: (changes) => {
+    set({ edges: applyEdgeChanges(changes, get().edges) as ArchEdge[] });
+  },
+  
+  onConnect: (connection) => {
+    const sourceNode = get().nodes.find(n => n.id === connection.source);
+    const targetNode = get().nodes.find(n => n.id === connection.target);
+
+    if (sourceNode && targetNode) {
+      const srcCat = sourceNode.data.category;
+      const tgtCat = targetNode.data.category;
+      
+      // Category-level validation
+      const allowedTargets: Record<string, string[]> = {
+        client: ['network', 'compute', 'storage'],
+        network: ['compute', 'storage', 'network', 'observability'],
+        compute: ['compute', 'storage', 'messaging', 'network', 'observability'],
+        storage: ['compute', 'messaging', 'observability'],
+        messaging: ['compute', 'storage', 'observability', 'network'],
+        observability: ['observability'],
+        boundary: ['boundary', 'compute', 'storage', 'network', 'messaging', 'observability', 'client'],
+      };
+
+      if (!allowedTargets[srcCat]?.includes(tgtCat)) {
+        const allowedNames = allowedTargets[srcCat]
+          .map(c => c.charAt(0).toUpperCase() + c.slice(1))
+          .join(', ');
+        if (typeof window !== 'undefined') {
+          const event = new CustomEvent('archviz-toast', { 
+            detail: { message: `${srcCat.toUpperCase()} can only attach to: ${allowedNames}`, type: 'error' } 
+          });
+          window.dispatchEvent(event);
+        }
+        return;
+      }
+
+      // Component-level anti-pattern validation
+      const validation = validateConnection(sourceNode.data, targetNode.data);
+      if (!validation.allowed) {
+        toastBus.emit(validation.message, 'error');
+        if (validation.suggestion) {
+          setTimeout(() => toastBus.emit(`➔ ${validation.suggestion}`, 'info'), 400);
+        }
+        return;
+      }
+      if (validation.level === 'warning' && validation.message) {
+        toastBus.emit(validation.message, 'warning');
+        if (validation.suggestion) {
+          setTimeout(() => toastBus.emit(`➔ ${validation.suggestion}`, 'info'), 400);
+        }
+      }
+    }
+
+    const newEdge: ArchEdge = {
+      id: genEdgeId(),
+      source: connection.source,
+      target: connection.target,
+      sourceHandle: connection.sourceHandle ?? undefined,
+      targetHandle: connection.targetHandle ?? undefined,
+      animated: true,
+    };
+    get().pushHistory();
+    set({ edges: [...get().edges, newEdge], redoStack: [] });
+    // Auto snapshot
+    setTimeout(() => get().takeSnapshot(), 100);
+  },
+  
+  // ── Node Actions ──
+  addNode: (componentType, position) => {
+    const def = getComponentDefinition(componentType);
+    if (!def) return;
+    
+    const isBoundary = def.category === 'boundary';
+    const tier = def.tiers[def.defaultTierIndex];
+    
+    const newNode: ArchNode = {
+      id: genNodeId(),
+      type: isBoundary ? 'groupNode' : 'archNode',
+      position,
+      ...(isBoundary ? {
+        style: { width: 350, height: 250 },
+      } : {}),
+      data: {
+        componentType: def.type,
+        label: def.label,
+        category: def.category,
+        icon: def.icon,
+        tier,
+        tierIndex: def.defaultTierIndex,
+        instances: 1,
+        scalingType: def.scalingType,
+        reliability: def.reliability,
+        scalingFactor: def.scalingFactor,
+        healthStatus: 'healthy',
+        loadPercent: 0,
+        ...(isBoundary ? { isGroup: true } : {}),
+      },
+    };
+    
+    get().pushHistory();
+    set({ nodes: [...get().nodes, newNode], redoStack: [] });
+    // Auto snapshot
+    setTimeout(() => get().takeSnapshot(), 100);
+  },
+  
+  removeNode: (nodeId) => {
+    get().pushHistory();
+    set({
+      nodes: get().nodes.filter(n => n.id !== nodeId),
+      edges: get().edges.filter(e => e.source !== nodeId && e.target !== nodeId),
+      selectedNodeId: get().selectedNodeId === nodeId ? null : get().selectedNodeId,
+      rightPanelOpen: get().selectedNodeId === nodeId ? false : get().rightPanelOpen,
+      redoStack: [],
+    });
+    setTimeout(() => get().takeSnapshot(), 100);
+  },
+  
+  removeEdge: (edgeId) => {
+    get().pushHistory();
+    set({
+      edges: get().edges.filter(e => e.id !== edgeId),
+      selectedEdgeId: null,
+      redoStack: [],
+    });
+    toastBus.emit('Connection removed', 'info');
+    setTimeout(() => get().takeSnapshot(), 100);
+  },
+  
+  updateNodeData: (nodeId, data) => {
+    set({
+      nodes: get().nodes.map(n => 
+        n.id === nodeId ? { ...n, data: { ...n.data, ...data } } : n
+      ),
+    });
+  },
+  
+  selectNode: (nodeId) => {
+    set({
+      selectedNodeId: nodeId,
+      selectedEdgeId: null,
+      rightPanelOpen: nodeId !== null,
+    });
+  },
+  
+  selectEdge: (edgeId) => {
+    set({
+      selectedEdgeId: edgeId,
+      selectedNodeId: null,
+      rightPanelOpen: edgeId !== null,
+    });
+  },
+  
+  // ── Change Component Type ──
+  changeNodeType: (nodeId, newComponentType) => {
+    const def = getComponentDefinition(newComponentType);
+    if (!def) return;
+    get().pushHistory();
+    const tier = def.tiers[def.defaultTierIndex];
+    set({
+      nodes: get().nodes.map(n =>
+        n.id === nodeId
+          ? {
+              ...n,
+              data: {
+                ...n.data,
+                componentType: def.type,
+                label: def.label,
+                category: def.category,
+                icon: def.icon,
+                tier,
+                tierIndex: def.defaultTierIndex,
+                scalingType: def.scalingType,
+                reliability: def.reliability,
+                scalingFactor: def.scalingFactor,
+              },
+            }
+          : n
+      ),
+      redoStack: [],
+    });
+    toastBus.emit(`Changed to ${def.label}`, 'success');
+    setTimeout(() => get().takeSnapshot(), 100);
+  },
+  
+  // ── Simulation Config ──
+  setSimulationConfig: (config) => {
+    set({
+      simulationConfig: { ...get().simulationConfig, ...config },
+    });
+  },
+  
+  setProjectName: (name) => set({ projectName: name }),
+  
+  // ── UI Toggles ──
+  toggleVersionHistory: () => set({ versionHistoryOpen: !get().versionHistoryOpen }),
+  toggleRecommendationPanel: () => set({ recommendationPanelOpen: !get().recommendationPanelOpen }),
+  toggleTemplatePicker: () => set({ templatePickerOpen: !get().templatePickerOpen }),
+  toggleLeftSidebar: () => set({ leftSidebarOpen: !get().leftSidebarOpen }),
+  toggleSecurityPanel: () => set({ securityPanelOpen: !get().securityPanelOpen }),
+  dismissOnboarding: () => {
+    localStorage.setItem('archviz-onboarded', 'true');
+    set({ showOnboarding: false });
+  },
+  setActiveSimulationEvent: (event) => set({ activeSimulationEvent: event }),
+  setCompareSnapshots: (ids) => set({ compareSnapshots: ids }),
+  
+  // ── Snapshots ──
+  takeSnapshot: (label) => {
+    const { nodes, edges, simulationConfig, snapshots } = get();
+    if (nodes.length === 0) return;
+    
+    const autoLabel = label || generateSnapshotLabel(nodes, edges, snapshots);
+    
+    const snapshot: Snapshot = {
+      id: `snap_${Date.now()}`,
+      nodes: JSON.parse(JSON.stringify(nodes)),
+      edges: JSON.parse(JSON.stringify(edges)),
+      timestamp: Date.now(),
+      label: autoLabel,
+      healthScore: 0,  // Will be recalculated
+      monthlyCost: 0,  // Will be recalculated
+      simulationConfig: { ...simulationConfig },
+    };
+    
+    const newSnapshots = [...snapshots, snapshot].slice(-20); // Keep last 20
+    set({ snapshots: newSnapshots });
+  },
+  
+  restoreSnapshot: (snapshotId) => {
+    const snapshot = get().snapshots.find(s => s.id === snapshotId);
+    if (!snapshot) return;
+    
+    set({
+      nodes: JSON.parse(JSON.stringify(snapshot.nodes)),
+      edges: JSON.parse(JSON.stringify(snapshot.edges)),
+      simulationConfig: { ...snapshot.simulationConfig },
+      selectedNodeId: null,
+      rightPanelOpen: false,
+    });
+  },
+  
+  // ── Templates ──
+  loadTemplate: (nodes, edges) => {
+    set({
+      nodes,
+      edges,
+      selectedNodeId: null,
+      rightPanelOpen: false,
+      templatePickerOpen: false,
+    });
+    setTimeout(() => get().takeSnapshot('Template loaded'), 200);
+  },
+  
+  clearCanvas: () => {
+    if (get().nodes.length > 0) get().pushHistory();
+    set({
+      nodes: [],
+      edges: [],
+      selectedNodeId: null,
+      rightPanelOpen: false,
+      redoStack: [],
+    });
+  },
+  
+  setNodes: (nodes) => set({ nodes }),
+  setEdges: (edges) => set({ edges }),
+  
+  // ── Undo / Redo ──
+  pushHistory: () => {
+    const { nodes, edges, undoStack } = get();
+    const entry: HistoryEntry = {
+      nodes: JSON.parse(JSON.stringify(nodes)),
+      edges: JSON.parse(JSON.stringify(edges)),
+    };
+    set({ undoStack: [...undoStack.slice(-30), entry] });
+  },
+  
+  // ── Auto Layout ──
+  runAutoLayout: (direction = 'LR') => {
+    const { nodes, edges } = get();
+    if (nodes.length === 0) return;
+    get().pushHistory();
+    const layouted = applyAutoLayout(nodes, edges, { direction });
+    set({ nodes: layouted, redoStack: [] });
+    toastBus.emit('Layout organized', 'success');
+  },
+  
+  // ── Edge Config ──
+  updateEdgeConfig: (edgeId, config) => {
+    set({
+      edges: get().edges.map(e =>
+        e.id === edgeId
+          ? {
+              ...e,
+              config: { ...(e as any).config, ...config },
+              label: config.edgeLabel ?? (e as any).config?.edgeLabel ?? e.label,
+            }
+          : e
+      ),
+    });
+  },
+  
+  undo: () => {
+    const { undoStack, nodes, edges } = get();
+    if (undoStack.length === 0) return;
+    const prev = undoStack[undoStack.length - 1];
+    const current: HistoryEntry = {
+      nodes: JSON.parse(JSON.stringify(nodes)),
+      edges: JSON.parse(JSON.stringify(edges)),
+    };
+    set({
+      nodes: prev.nodes,
+      edges: prev.edges,
+      undoStack: undoStack.slice(0, -1),
+      redoStack: [...get().redoStack, current],
+      selectedNodeId: null,
+      rightPanelOpen: false,
+    });
+    toastBus.emit('Undo', 'info');
+  },
+  
+  redo: () => {
+    const { redoStack, nodes, edges } = get();
+    if (redoStack.length === 0) return;
+    const next = redoStack[redoStack.length - 1];
+    const current: HistoryEntry = {
+      nodes: JSON.parse(JSON.stringify(nodes)),
+      edges: JSON.parse(JSON.stringify(edges)),
+    };
+    set({
+      nodes: next.nodes,
+      edges: next.edges,
+      redoStack: redoStack.slice(0, -1),
+      undoStack: [...get().undoStack, current],
+      selectedNodeId: null,
+      rightPanelOpen: false,
+    });
+    toastBus.emit('Redo', 'info');
+  },
+  
+  // ── Persistence ──
+  saveToLocalStorage: () => {
+    const { nodes, edges, simulationConfig, projectName, snapshots } = get();
+    const data = { nodes, edges, simulationConfig, projectName, snapshots };
+    localStorage.setItem('archviz-state', JSON.stringify(data));
+    toastBus.emit('Project saved', 'success');
+  },
+  
+  loadFromLocalStorage: () => {
+    try {
+      const raw = localStorage.getItem('archviz-state');
+      if (!raw) return false;
+      const data = JSON.parse(raw);
+      set({
+        nodes: data.nodes || [],
+        edges: data.edges || [],
+        simulationConfig: data.simulationConfig || { concurrentUsers: 1000, rpsMultiplier: 0.1, cacheHitRate: 0.6 },
+        projectName: data.projectName || 'Untitled Architecture',
+        snapshots: data.snapshots || [],
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  },
+}));
+
+// ── Snapshot Label Generator ──
+function generateSnapshotLabel(
+  nodes: ArchNode[],
+  edges: ArchEdge[],
+  prevSnapshots: Snapshot[]
+): string {
+  if (prevSnapshots.length === 0) return 'Initial architecture';
+  
+  const prev = prevSnapshots[prevSnapshots.length - 1];
+  const prevNodeIds = new Set(prev.nodes.map(n => n.id));
+  const currNodeIds = new Set(nodes.map(n => n.id));
+  const prevEdgeIds = new Set(prev.edges.map(e => e.id));
+  const currEdgeIds = new Set(edges.map(e => e.id));
+  
+  const addedNodes = nodes.filter(n => !prevNodeIds.has(n.id));
+  const removedNodes = prev.nodes.filter(n => !currNodeIds.has(n.id));
+  const addedEdges = edges.filter(e => !prevEdgeIds.has(e.id));
+  const removedEdges = prev.edges.filter(e => !currEdgeIds.has(e.id));
+  
+  const totalChanges = addedNodes.length + removedNodes.length + addedEdges.length + removedEdges.length;
+  
+  if (totalChanges === 0) return 'Configuration changed';
+  
+  if (addedNodes.length === 1 && removedNodes.length === 0 && addedEdges.length <= 1) {
+    return `Added ${addedNodes[0].data.label}`;
+  }
+  
+  if (removedNodes.length === 1 && addedNodes.length === 0) {
+    return `Removed ${removedNodes[0].data.label}`;
+  }
+  
+  if (addedEdges.length === 1 && addedNodes.length === 0 && removedNodes.length === 0) {
+    const edge = addedEdges[0];
+    const src = nodes.find(n => n.id === edge.source);
+    const tgt = nodes.find(n => n.id === edge.target);
+    if (src && tgt) {
+      return `Connected ${src.data.label} → ${tgt.data.label}`;
+    }
+  }
+  
+  return `Modified architecture (+${totalChanges} changes)`;
+}
