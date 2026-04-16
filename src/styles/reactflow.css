@@ -325,3 +325,32 @@
 .react-flow__attribution {
   display: none !important;
 }
+
+/* Custom Edge Types */
+.react-flow__edge-path.async-event-edge {
+  animation: asyncFlow 1s linear infinite !important;
+}
+
+@keyframes asyncFlow {
+  from { stroke-dashoffset: 10; }
+  to { stroke-dashoffset: 0; }
+}
+
+/* Smart Alignment Guide Lines */
+.alignment-line {
+  position: absolute;
+  background: var(--accent);
+  opacity: 0.6;
+  pointer-events: none;
+  z-index: 1000;
+}
+.alignment-line.vertical {
+  width: 1px;
+  top: 0;
+  bottom: 0;
+}
+.alignment-line.horizontal {
+  height: 1px;
+  left: 0;
+  right: 0;
+}

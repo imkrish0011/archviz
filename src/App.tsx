@@ -20,6 +20,7 @@ import { useSimulationEvents } from './hooks/useSimulationEvents';
 
 import ArchNodeComponent from './components/nodes/ArchNode';
 import GroupNode from './components/nodes/GroupNode';
+import ArchEdge from './components/edges/ArchEdge';
 import TopBar from './components/TopBar';
 import LeftSidebar from './components/LeftSidebar';
 import RightPanel from './components/RightPanel';
@@ -37,6 +38,7 @@ import { toastBus } from './components/ToastSystem';
 import { ErrorBoundary, CanvasErrorBoundary } from './components/ErrorBoundary';
 
 const nodeTypes = { archNode: ArchNodeComponent, groupNode: GroupNode };
+const edgeTypes = { default: ArchEdge, custom: ArchEdge };
 
 function FlowCanvas() {
   const nodes = useArchStore(s => s.nodes);
@@ -49,8 +51,10 @@ function FlowCanvas() {
   const addNode = useArchStore(s => s.addNode);
   const removeNode = useArchStore(s => s.removeNode);
   const removeEdge = useArchStore(s => s.removeEdge);
-  const selectedNodeId = useArchStore(s => s.selectedNodeId);
   const selectedEdgeId = useArchStore(s => s.selectedEdgeId);
+  const handleNodeDrag = useArchStore(s => s.handleNodeDrag);
+  const handleNodeDragStop = useArchStore(s => s.handleNodeDragStop);
+  const alignmentLines = useArchStore(s => s.alignmentLines);
   const { nodeHealth } = useSimulation();
   const reactFlowInstance = useReactFlow();
   
@@ -184,8 +188,16 @@ function FlowCanvas() {
     selectEdge(null);
   }, [selectNode, selectEdge]);
   
+  const onNodeDragFn = useCallback((_: React.MouseEvent, node: { id: string, position: { x: number, y: number } }) => {
+    handleNodeDrag(node.id, node.position);
+  }, [handleNodeDrag]);
+
+  const onNodeDragStopFn = useCallback((_: React.MouseEvent, node: { id: string, position: { x: number, y: number } }) => {
+    handleNodeDragStop(node.id, node.position);
+  }, [handleNodeDragStop]);
+
   return (
-    <div className="canvas-wrapper">
+    <div className="canvas-wrapper" style={{ position: 'relative' }}>
       <CanvasErrorBoundary>
         <ReactFlow
           nodes={nodes}
@@ -195,13 +207,16 @@ function FlowCanvas() {
           onConnect={onConnect}
           onNodeClick={onNodeClick}
           onEdgeClick={onEdgeClick}
+          onNodeDrag={onNodeDragFn}
+          onNodeDragStop={onNodeDragStopFn}
           onPaneClick={onPaneClick}
           onDragOver={onDragOver}
           onDrop={onDrop}
           nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
           fitView
           fitViewOptions={{ padding: 0.2 }}
-          defaultEdgeOptions={{ animated: true, type: 'smoothstep' }}
+          defaultEdgeOptions={{ animated: true, type: 'default' }}
           connectionLineType={ConnectionLineType.SmoothStep}
           proOptions={{ hideAttribution: true }}
           minZoom={0.1}
@@ -218,6 +233,29 @@ function FlowCanvas() {
             style={{ width: 140, height: 90 }}
           />
         </ReactFlow>
+
+        {/* Alignment Guide Lines Overlay */}
+        {alignmentLines?.x !== undefined && (
+          <div
+            className="alignment-line vertical"
+            style={{
+               // We need to map flow coordinates to screen position here if we want exact alignment inside the DOM.
+               // React flow handles node positioning deeply, so projecting canvas coordinates to viewport bounds is needed...
+               // However, an easier approach is to render alignment lines INSIDE React Flow using absolute nodes or
+               // just calculate using the reactFlowInstance.flowToScreenPosition(alignmentLines).
+               transform: `translateX(${reactFlowInstance.flowToScreenPosition({ x: alignmentLines.x, y: 0 }).x}px)` 
+            }}
+          />
+        )}
+        {alignmentLines?.y !== undefined && (
+          <div
+            className="alignment-line horizontal"
+            style={{
+               transform: `translateY(${reactFlowInstance.flowToScreenPosition({ x: 0, y: alignmentLines.y }).y}px)` 
+            }}
+          />
+        )}
+
       </CanvasErrorBoundary>
     </div>
   );

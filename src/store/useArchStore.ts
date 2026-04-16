@@ -43,8 +43,13 @@ interface ArchStore {
   undoStack: HistoryEntry[];
   redoStack: HistoryEntry[];
   
+  // ── Smart Guides ──
+  alignmentLines: { x?: number; y?: number } | null;
+  
   // ── Actions ──
   onNodesChange: (changes: NodeChange<ArchNode>[]) => void;
+  handleNodeDrag: (nodeId: string, position: { x: number; y: number }) => void;
+  handleNodeDragStop: (nodeId: string, position: { x: number; y: number }) => void;
   onEdgesChange: (changes: EdgeChange[]) => void;
   onConnect: (connection: Connection) => void;
   addNode: (componentType: string, position: { x: number; y: number }) => void;
@@ -128,10 +133,114 @@ export const useArchStore = create<ArchStore>((set, get) => ({
   compareSnapshots: null,
   undoStack: [],
   redoStack: [],
+  alignmentLines: null,
   
   // ── React Flow handlers ──
   onNodesChange: (changes) => {
     set({ nodes: applyNodeChanges(changes, get().nodes) });
+  },
+  
+  handleNodeDrag: (nodeId, position) => {
+    const { nodes } = get();
+    let snappedX: number | undefined;
+    let snappedY: number | undefined;
+    
+    // Configurable snapping threshold
+    const threshold = 10;
+    
+    nodes.forEach(n => {
+      if (n.id === nodeId || n.data.isGroup) return; // Don't snap to self or background groups during free drag
+      
+      // Check X alignment
+      if (Math.abs(n.position.x - position.x) < threshold) {
+        snappedX = n.position.x;
+      }
+      // Check Y alignment
+      if (Math.abs(n.position.y - position.y) < threshold) {
+        snappedY = n.position.y;
+      }
+    });
+
+    set({ alignmentLines: { x: snappedX, y: snappedY } });
+  },
+
+  handleNodeDragStop: (nodeId, position) => {
+    const { nodes, alignmentLines } = get();
+    const draggedNode = nodes.find(n => n.id === nodeId);
+    if (!draggedNode) return;
+
+    // Apply any snapped position definitively if it was close
+    let finalX = alignmentLines?.x !== undefined ? alignmentLines.x : position.x;
+    let finalY = alignmentLines?.y !== undefined ? alignmentLines.y : position.y;
+
+    // Clear alignment visual lines
+    set({ alignmentLines: null });
+
+    // Group intersection logic
+    let targetParentId: string | undefined = undefined;
+    let targetSecurityContext: string | undefined = undefined;
+
+    // Standard node dimensions (approx) to check center intersection
+    const nodeCenterX = finalX + 75;
+    const nodeCenterY = finalY + 40;
+
+    // Find the smallest group that contains the node center
+    const groups = nodes.filter(n => n.data.isGroup && n.id !== nodeId);
+    
+    groups.forEach(group => {
+      // Basic bounds check assuming standard sizes / custom sizes
+      const { x, y } = group.position;
+      const w = Number(group.style?.width) || 350;
+      const h = Number(group.style?.height) || 250;
+      
+      if (
+        nodeCenterX > x && nodeCenterX < x + w &&
+        nodeCenterY > y && nodeCenterY < y + h
+      ) {
+        targetParentId = group.id;
+        targetSecurityContext = group.data.securityContext || group.data.componentType;
+      }
+    });
+
+    // Update the dropped node with potential snapping, grouping, and security context
+    set({
+      nodes: get().nodes.map(n => {
+        if (n.id === nodeId) {
+          const updatedNode = { ...n, position: { x: finalX, y: finalY } };
+          // If we attach to a parent group, adjust position to be relative to the parent
+          // ReactFlow handles parent nesting by making child positions relative.
+          if (targetParentId && n.parentId !== targetParentId) {
+            const parent = nodes.find(p => p.id === targetParentId);
+            if (parent) {
+              updatedNode.parentId = targetParentId;
+              updatedNode.extent = 'parent';
+              updatedNode.position = {
+                x: finalX - parent.position.x,
+                y: finalY - parent.position.y
+              };
+              updatedNode.data = { ...updatedNode.data, securityContext: targetSecurityContext };
+              toastBus.emit(`Attached to ${parent.data.label}`, 'success');
+            }
+          } else if (!targetParentId && n.parentId) {
+            // Dragged outside, decouple from parent
+            const parent = nodes.find(p => p.id === n.parentId);
+            if (parent) {
+               // Convert relative to absolute coordinates
+               updatedNode.position = {
+                 x: n.position.x + parent.position.x,
+                 y: n.position.y + parent.position.y
+               };
+            }
+            delete updatedNode.parentId;
+            delete updatedNode.extent;
+            updatedNode.data = { ...updatedNode.data, securityContext: undefined };
+            toastBus.emit('Detached from group', 'info');
+          }
+          return updatedNode;
+        }
+        return n;
+      })
+    });
   },
   
   onEdgesChange: (changes) => {

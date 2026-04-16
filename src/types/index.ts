@@ -61,6 +61,10 @@ export interface ArchNodeData {
   // Auth Specific
   mfaEnabled?: boolean;
   sessionStrategy?: 'stateful' | 'stateless' | 'cookie';
+  
+  // Security / Hierarchy
+  securityContext?: string;
+  parentId?: string;
 
   // Server Specific
   scalingPolicy?: 'cpu-70' | 'mem-80' | 'custom';
@@ -73,8 +77,11 @@ export interface ArchNodeData {
 export type ArchNode = Node<ArchNodeData>;
 
 // ─── Edge Configuration ──────────────────────────────────────
+export type ConnectionType = 'sync-http' | 'async-event' | 'firewall-boundary' | 'default';
+
 export interface EdgeConfig {
   protocol?: 'HTTPS' | 'gRPC' | 'WebSocket' | 'TCP' | 'AMQP' | 'Custom';
+  connectionType?: ConnectionType;
   iamAction?: string;
   dataFlow?: 'request' | 'response' | 'bidirectional' | 'event';
   bandwidth?: string;

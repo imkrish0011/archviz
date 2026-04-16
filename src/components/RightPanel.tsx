@@ -35,6 +35,12 @@ const healthCheckTypes = ['TCP', 'HTTP', 'HTTPS', 'gRPC'];
 
 const protocols: EdgeConfig['protocol'][] = ['HTTPS', 'gRPC', 'WebSocket', 'TCP', 'AMQP', 'Custom'];
 const dataFlows: EdgeConfig['dataFlow'][] = ['request', 'response', 'bidirectional', 'event'];
+const connectionTypes = [
+  { value: 'default', label: 'Default (Smooth)' },
+  { value: 'sync-http', label: 'Synchronous (Solid)' },
+  { value: 'async-event', label: 'Asynchronous (Dashed)' },
+  { value: 'firewall-boundary', label: 'Firewall / Boundary (Red Dotted)' },
+];
 
 /* ── Collapsible Section ── */
 function Section({
@@ -117,8 +123,18 @@ function EdgeConfigPanel() {
         </div>
       </Section>
 
-      {/* Protocol */}
-      <Section title="Protocol" defaultOpen={true}>
+      {/* Protocol & Style */}
+      <Section title="Connection Style & Protocol" defaultOpen={true}>
+        <div className="form-group">
+          <label className="form-label">Connection Style</label>
+          <select
+            className="form-select"
+            value={config.connectionType || 'default'}
+            onChange={e => updateEdgeConfig(edge.id, { connectionType: (e.target.value || undefined) as any })}
+          >
+            {connectionTypes.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+          </select>
+        </div>
         <div className="form-group">
           <label className="form-label">Protocol</label>
           <select
