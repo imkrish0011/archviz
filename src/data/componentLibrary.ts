@@ -2036,6 +2036,73 @@ const componentLibrary: ComponentDefinition[] = [
     ],
     defaultTierIndex: 0,
   },
+  
+  // ═══════════════════════════════════════════════════
+  // ADVANCED COMPONENTS (AI, DATA, MESH, WORKFLOW)
+  // ═══════════════════════════════════════════════════
+  {
+    type: 'vllm-server',
+    label: 'vLLM Inference Server',
+    category: 'compute',
+    icon: 'BrainCircuit',
+    description: 'High-throughput and memory-efficient LLM inference and serving engine',
+    scalingType: 'horizontal',
+    reliability: 0.99,
+    scalingFactor: 1.0,
+    baseLatency: 300,
+    tiers: [
+      { id: 'vllm-t4', label: '1x T4 GPU', monthlyCost: 383.00, capacity: 10, latency: 500, ram: '16 GB' },
+      { id: 'vllm-a100', label: '1x A100 GPU', monthlyCost: 2800.00, capacity: 150, latency: 150, ram: '80 GB' },
+    ],
+    defaultTierIndex: 0,
+  },
+  {
+    type: 'databricks-lakehouse',
+    label: 'Databricks Lakehouse',
+    category: 'storage',
+    icon: 'Warehouse',
+    description: 'Unified data analytics platform for massive-scale data engineering and AI',
+    scalingType: 'horizontal',
+    reliability: 0.999,
+    scalingFactor: 0.9,
+    baseLatency: 150,
+    tiers: [
+      { id: 'dbx-standard', label: 'Standard Workspace', monthlyCost: 500.00, capacity: 5000, latency: 150 },
+      { id: 'dbx-premium', label: 'Premium Workspace', monthlyCost: 2500.00, capacity: 50000, latency: 100 },
+    ],
+    defaultTierIndex: 0,
+  },
+  {
+    type: 'istio-mesh',
+    label: 'Istio Service Mesh',
+    category: 'network',
+    icon: 'Network',
+    description: 'Dedicated infrastructure layer for facilitating service-to-service communications',
+    scalingType: 'horizontal',
+    reliability: 0.9999,
+    scalingFactor: 1.0,
+    baseLatency: 5,
+    tiers: [
+      { id: 'istio-control', label: 'Control Plane Node', monthlyCost: 50.00, capacity: 50000, latency: 5 },
+    ],
+    defaultTierIndex: 0,
+  },
+  {
+    type: 'temporal-worker',
+    label: 'Temporal Worker',
+    category: 'compute',
+    icon: 'Clock',
+    description: 'Stateful workflow orchestrator for microservices (durable execution)',
+    scalingType: 'horizontal',
+    reliability: 0.9995,
+    scalingFactor: 1.0,
+    baseLatency: 50,
+    tiers: [
+      { id: 'temporal-cloud', label: 'Temporal Cloud', monthlyCost: 200.00, capacity: 20000, latency: 50 },
+      { id: 'temporal-self', label: 'Self-Hosted Worker', monthlyCost: 40.00, capacity: 5000, latency: 20 },
+    ],
+    defaultTierIndex: 0,
+  },
 ];
 
 export function getComponentDefinition(type: string): ComponentDefinition | undefined {

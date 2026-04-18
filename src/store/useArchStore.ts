@@ -719,21 +719,7 @@ export const useArchStore = create<ArchStore>((set, get) => ({
     set({ nodes: layouted, redoStack: [] });
     toastBus.emit('Layout organized', 'success');
   },
-  
-  // ── Edge Config ──
-  updateEdgeConfig: (edgeId, config) => {
-    set({
-      edges: get().edges.map(e =>
-        e.id === edgeId
-          ? {
-              ...e,
-              config: { ...(e as any).config, ...config },
-              label: config.edgeLabel ?? (e as any).config?.edgeLabel ?? e.label,
-            }
-          : e
-      ),
-    });
-  },
+
   
   undo: () => {
     const { undoStack, nodes, edges } = get();
@@ -780,7 +766,8 @@ export const useArchStore = create<ArchStore>((set, get) => ({
       edges: get().edges.map(e => {
         if (e.id === edgeId) {
           const baseData = e.data || {};
-          const prevConfig = (baseData as any).config || {};
+          const prevConfig = (baseData as any).config || (e as any).config || {};
+          const mergedConfig = { ...prevConfig, ...config };
           
           let animation = e.animated;
           let newStyle = { ...e.style };
@@ -802,11 +789,13 @@ export const useArchStore = create<ArchStore>((set, get) => ({
 
           return {
             ...e,
+            config: mergedConfig,
+            label: mergedConfig.edgeLabel ?? e.label,
             animated: animation,
             style: newStyle,
             data: {
               ...baseData,
-              config: { ...prevConfig, ...config }
+              config: mergedConfig
             }
           };
         }

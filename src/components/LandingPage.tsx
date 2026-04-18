@@ -58,6 +58,8 @@ const computeItems = [
   { label: 'Apache Airflow', icon: Clock },
   { label: 'Argo CD', icon: RefreshCcw },
   { label: 'Terraform Cloud', icon: Layers },
+  { label: 'vLLM Engine', icon: BrainCircuit },
+  { label: 'Temporal Worker', icon: Clock },
 ];
 
 const dataItems = [
@@ -83,6 +85,7 @@ const dataItems = [
   { label: 'Feature Store', icon: Layers },
   { label: 'Snowflake DW', icon: Database },
   { label: 'Vector DB', icon: Database },
+  { label: 'Databricks', icon: Warehouse },
 ];
 
 const networkItems = [
@@ -114,6 +117,7 @@ const networkItems = [
   { label: 'Hugging Face', icon: Sparkles },
   { label: 'Firebase FCM', icon: Zap },
   { label: 'Slack API', icon: MessageSquare },
+  { label: 'Istio Mesh', icon: Network },
 ];
 
 interface LandingPageProps {
