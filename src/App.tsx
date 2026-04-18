@@ -38,6 +38,7 @@ import { ToastProvider, useToastBus, toastBus } from './components/ToastSystem';
 import { ContextMenu, SearchOverlay, ShortcutsOverlay } from './components/InteractiveOverlays';
 import { ErrorBoundary, CanvasErrorBoundary } from './components/ErrorBoundary';
 import { captureArchitectureAsImage } from './engine/exportRenderer';
+import { getTemplateById, instantiateTemplate } from './utils/templateLoader';
 
 const nodeTypes = { archNode: ArchNodeComponent, groupNode: GroupNode, zoneNode: ZoneNode };
 const edgeTypes = { default: ArchEdge, custom: ArchEdge };
@@ -115,15 +116,60 @@ function FlowCanvas() {
   
   const onDrop = useCallback((event: React.DragEvent) => {
     event.preventDefault();
-    const componentType = event.dataTransfer.getData('application/archviz-component');
-    if (!componentType) return;
-    
     const position = reactFlowInstance.screenToFlowPosition({
       x: event.clientX,
       y: event.clientY,
     });
     
-    addNode(componentType, position);
+    const componentType = event.dataTransfer.getData('application/archviz-component');
+    if (componentType) {
+      addNode(componentType, position);
+      return;
+    }
+    
+    const snippetId = event.dataTransfer.getData('application/archviz-snippet');
+    if (snippetId) {
+      const template = getTemplateById(snippetId);
+      if (!template) return;
+      
+      const { nodes: newNodes, edges: newEdges } = instantiateTemplate(template);
+      if (newNodes.length === 0) return;
+      
+      // Calculate offset from first node
+      const firstNode = newNodes[0];
+      const offsetX = position.x - firstNode.position.x;
+      const offsetY = position.y - firstNode.position.y;
+      
+      const idMap = new Map<string, string>();
+      const timePrefix = Date.now().toString(36) + Math.random().toString(36).substr(2, 4);
+      
+      const processedNodes = newNodes.map((n, i) => {
+        const newId = `node-${timePrefix}-${i}`;
+        idMap.set(n.id, newId);
+        return {
+          ...n,
+          id: newId,
+          position: {
+            x: n.position.x + offsetX,
+            y: n.position.y + offsetY
+          }
+        };
+      });
+      
+      const processedEdges = newEdges.map((e, i) => {
+        return {
+          ...e,
+          id: `edge-${timePrefix}-${i}`,
+          source: idMap.get(e.source) || e.source,
+          target: idMap.get(e.target) || e.target,
+        };
+      });
+      
+      const store = useArchStore.getState();
+      store.pushHistory();
+      store.setNodes([...store.nodes, ...processedNodes]);
+      store.setEdges([...store.edges, ...processedEdges]);
+    }
   }, [reactFlowInstance, addNode]);
   
   // Keyboard shortcuts
@@ -213,6 +259,17 @@ function FlowCanvas() {
       aria-label="Architecture Canvas. Use arrow keys to navigate nodes when selected."
     >
       <CanvasErrorBoundary>
+        <svg style={{ position: 'absolute', width: 0, height: 0 }} aria-hidden="true">
+          <defs>
+            <filter id="tracer-glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+        </svg>
         <ReactFlow
           nodes={nodes}
           edges={edges}

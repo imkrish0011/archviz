@@ -41,6 +41,7 @@ interface ArchStore {
   outageRegionId: string | null;
   cloudProvider: CloudProvider;
   isWhiteLabelReport: boolean;
+  isTracing: boolean;
   
   // ── Snapshots ──
   snapshots: Snapshot[];
@@ -85,6 +86,7 @@ interface ArchStore {
   setCompareSnapshots: (ids: [string, string] | null) => void;
   setCloudProvider: (provider: CloudProvider) => void;
   toggleWhiteLabelReport: () => void;
+  toggleTrace: () => void;
   
   // Deployment actions
   startDeployment: (sourceNodeId: string) => void;
@@ -159,6 +161,7 @@ export const useArchStore = create<ArchStore>((set, get) => ({
   deploymentState: INITIAL_DEPLOYMENT_STATE,
   cloudProvider: 'aws',
   isWhiteLabelReport: false,
+  isTracing: false,
   
   // ── React Flow handlers ──
   onNodesChange: (changes) => {
@@ -477,6 +480,7 @@ export const useArchStore = create<ArchStore>((set, get) => ({
   setCompareSnapshots: (ids) => set({ compareSnapshots: ids }),
   setCloudProvider: (provider) => set({ cloudProvider: provider }),
   toggleWhiteLabelReport: () => set({ isWhiteLabelReport: !get().isWhiteLabelReport }),
+  toggleTrace: () => set({ isTracing: !get().isTracing }),
   
   // ── Snapshots ──
   takeSnapshot: (label) => {

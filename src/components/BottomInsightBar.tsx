@@ -2,12 +2,14 @@ import { useSimulation } from '../hooks/useSimulation';
 import { useArchStore } from '../store/useArchStore';
 import { formatCost } from '../engine/costEngine';
 import { formatAvailability } from '../engine/failureModel';
-import { DollarSign, Clock, Heart, Activity, Shield, AlertTriangle, AlertCircle, Info } from 'lucide-react';
+import { DollarSign, Clock, Heart, Activity, Shield, AlertTriangle, AlertCircle, Info, Cloud } from 'lucide-react';
 
 export default function BottomInsightBar() {
   const { metrics } = useSimulation();
   const toggleRecommendationPanel = useArchStore(s => s.toggleRecommendationPanel);
   const nodes = useArchStore(s => s.nodes);
+  const cloudProvider = useArchStore(s => s.cloudProvider);
+  const setCloudProvider = useArchStore(s => s.setCloudProvider);
   
   if (nodes.length === 0) {
     return (
@@ -41,9 +43,37 @@ export default function BottomInsightBar() {
         <div className="bottom-metric">
           <DollarSign size={13} style={{ color: 'var(--text-tertiary)' }} />
           <span className="bottom-metric-label">Cost</span>
-          <span className="bottom-metric-value" style={{ color: 'var(--accent)' }}>
+          <span className="bottom-metric-value" style={{ color: 'var(--accent)', transition: 'color 0.3s' }}>
             {formatCost(metrics.totalCost)}/mo
           </span>
+        </div>
+        
+        <div className="bottom-metric" style={{ borderLeft: '1px solid var(--border-subtle)', paddingLeft: '12px' }}>
+          <Cloud size={13} style={{ color: 'var(--text-tertiary)' }} />
+          <span className="bottom-metric-label">Arbitrage</span>
+          <div className="provider-toggles" style={{ display: 'flex', gap: 4, marginLeft: 4 }}>
+            {(['aws', 'gcp', 'azure'] as const).map(p => (
+              <button
+                key={p}
+                onClick={() => setCloudProvider(p)}
+                style={{
+                  background: cloudProvider === p ? 'var(--accent-muted)' : 'transparent',
+                  color: cloudProvider === p ? 'var(--accent)' : 'var(--text-tertiary)',
+                  border: `1px solid ${cloudProvider === p ? 'var(--accent)' : 'var(--border-subtle)'}`,
+                  borderRadius: 4,
+                  padding: '1px 6px',
+                  fontSize: '9px',
+                  fontWeight: 'bold',
+                  textTransform: 'uppercase',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                title={`Switch to ${p.toUpperCase()} pricing`}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
         </div>
         
         <div className="bottom-metric">

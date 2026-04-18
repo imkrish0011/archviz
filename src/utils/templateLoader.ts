@@ -2,9 +2,10 @@ import type { ArchNode, ArchEdge, Template, TemplateNodeDef } from '../types';
 import { getComponentDefinition } from '../data/componentLibrary';
 import { famousSystemTemplates } from '../data/templates/famousSystemTemplates';
 import { starterTemplates } from '../data/templates/starterTemplates';
+import { snippetTemplates } from '../data/templates/snippets';
 
 export function getAllTemplates(): Template[] {
-  return [...famousSystemTemplates, ...starterTemplates];
+  return [...famousSystemTemplates, ...starterTemplates, ...snippetTemplates];
 }
 
 export function getTemplateById(id: string): Template | undefined {

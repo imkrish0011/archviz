@@ -6,7 +6,7 @@ import {
   Zap, ServerCrash, Trash2, CloudOff, DatabaseZap, XCircle,
   PanelLeft, Undo2, Redo2, Download, Image, Maximize, Keyboard,
   BrainCircuit, ShieldAlert, FileCode, LayoutGrid, Leaf, MapPin,
-  Cloud, FileText, Container, MoreHorizontal
+  Cloud, FileText, Container, MoreHorizontal, Activity
 } from 'lucide-react';
 import { downloadTerraform, downloadCloudFormation, downloadDockerCompose, downloadKubernetesManifests } from '../engine/terraformGenerator';
 import { generateArchitectureReport } from '../engine/reportGenerator';
@@ -36,6 +36,8 @@ export default function TopBar() {
   const greenOpsHeatmap = useArchStore(s => s.greenOpsHeatmap);
   const setOutageRegionId = useArchStore(s => s.setOutageRegionId);
   const runAutoLayout = useArchStore(s => s.runAutoLayout);
+  const isTracing = useArchStore(s => s.isTracing);
+  const toggleTrace = useArchStore(s => s.toggleTrace);
   const navigate = useNavigate();
   
   const [showSimDropdown, setShowSimDropdown] = useState(false);
@@ -262,30 +264,21 @@ export default function TopBar() {
         
         <div className="topbar-divider" />
         
-        {/* Multi-Cloud Arbitrage Dropdown */}
-        <div className="sim-dropdown" ref={cloudRef}>
-          <button className="btn" onClick={() => setShowCloudDropdown(!showCloudDropdown)}>
-            <Cloud size={14} />
-            {cloudProvider.toUpperCase()}
-            <ChevronDown size={12} />
-          </button>
-          
-          {showCloudDropdown && (
-            <div className="sim-dropdown-menu">
-              <button className={`sim-dropdown-item ${cloudProvider === 'aws' ? 'active' : ''}`} onClick={() => { setCloudProvider('aws'); setShowCloudDropdown(false); }}>
-                AWS (Base)
-              </button>
-              <button className={`sim-dropdown-item ${cloudProvider === 'gcp' ? 'active' : ''}`} onClick={() => { setCloudProvider('gcp'); setShowCloudDropdown(false); }}>
-                GCP (Offset)
-              </button>
-              <button className={`sim-dropdown-item ${cloudProvider === 'azure' ? 'active' : ''}`} onClick={() => { setCloudProvider('azure'); setShowCloudDropdown(false); }}>
-                Azure (Offset)
-              </button>
-            </div>
-          )}
-        </div>
-
-        <div className="topbar-divider" />
+        {/* Trace Request Flow */}
+        <button
+          className={`btn ${isTracing ? 'btn-trace-active' : ''}`}
+          onClick={toggleTrace}
+          title={isTracing ? 'Stop Tracing' : 'Trace Request Flow'}
+          style={{
+            background: isTracing ? 'rgba(94, 234, 212, 0.12)' : undefined,
+            color: isTracing ? '#5eead4' : undefined,
+            borderColor: isTracing ? 'rgba(94, 234, 212, 0.3)' : undefined,
+            boxShadow: isTracing ? '0 0 12px rgba(94, 234, 212, 0.15)' : undefined,
+          }}
+        >
+          <Activity size={14} style={isTracing ? { animation: 'pulse 1.5s ease-in-out infinite' } : undefined} />
+          {isTracing ? 'Tracing...' : 'Trace Flow'}
+        </button>
         
         {/* Export Dropdown */}
         <div className="sim-dropdown" ref={exportRef}>

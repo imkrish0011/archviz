@@ -589,12 +589,25 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
             
             <AnimatedSection className="lp-feature-card lp-feature-card-enterprise" delay={0.68}>
               <div className="lp-feature-badge-new">NEW — Enterprise</div>
-              <div className="lp-feature-icon" style={{ color: '#f59e0b' }}><Cloud size={24} /></div>
-              <h3>Multi-Cloud Cost Arbitrage</h3>
+              <div className="lp-feature-icon" style={{ color: '#06b6d4', textShadow: '0 0 15px rgba(6, 182, 212, 0.5)' }}><Blocks size={24} /></div>
+              <h3>Architecture "Snippets"</h3>
               <p>
-                Visually compare what your architecture would cost on <strong>AWS vs. GCP vs. Azure</strong> side-by-side. 
-                Dynamically switch between providers and let the pricing engine automatically recalculate instance offsets 
-                and egress data fees to find the most cost-effective cloud.
+                Drag and drop <strong>Micro-Architecture Patterns</strong> directly onto your canvas. Instantly instantiate 
+                best-practice modules like <span style={{ color: 'var(--accent)' }}>Serverless CRUD APIs</span>, 
+                <span style={{ color: 'var(--accent)' }}> CQRS Event Sourcing</span>, 
+                <span style={{ color: 'var(--accent)' }}> RAG AI Pipelines</span>, or 
+                <span style={{ color: 'var(--accent)' }}> Real-Time Data Pipelines</span> orchestrated via Kafka and Snowflake with a single click.
+              </p>
+            </AnimatedSection>
+            
+            <AnimatedSection className="lp-feature-card lp-feature-card-enterprise" delay={0.69}>
+              <div className="lp-feature-badge-new">NEW — Enterprise</div>
+              <div className="lp-feature-icon" style={{ color: '#f59e0b', textShadow: '0 0 15px rgba(245, 158, 11, 0.5)' }}><Cloud size={24} /></div>
+              <h3>Instant Cost Arbitrage</h3>
+              <p>
+                Visually compare what your architecture would cost on <strong>AWS vs. GCP vs. Azure</strong> via the new 
+                1-click Bottom Bar arbitrage interface. See financial variance immediately as the pricing engine automatically 
+                recalculates instance offsets and egress data fees.
               </p>
             </AnimatedSection>
 

@@ -4,6 +4,7 @@ import { ChevronDown, ChevronRight, Search } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import { useArchStore } from '../store/useArchStore';
 import { useReactFlow } from '@xyflow/react';
+import { snippetTemplates } from '../data/templates/snippets';
 
 function getIcon(name: string): React.ComponentType<{ size?: number; className?: string }> {
   const icon = (Icons as Record<string, unknown>)[name];
@@ -35,6 +36,11 @@ export default function LeftSidebar() {
   
   const onDragStart = useCallback((event: React.DragEvent, componentType: string) => {
     event.dataTransfer.setData('application/archviz-component', componentType);
+    event.dataTransfer.effectAllowed = 'move';
+  }, []);
+
+  const onSnippetDragStart = useCallback((event: React.DragEvent, snippetId: string) => {
+    event.dataTransfer.setData('application/archviz-snippet', snippetId);
     event.dataTransfer.effectAllowed = 'move';
   }, []);
 
@@ -126,6 +132,43 @@ export default function LeftSidebar() {
           </div>
         );
       })}
+
+      {/* Snippets Section */}
+      <div className="sidebar-divider" style={{ height: 1, background: 'var(--border-subtle)', margin: '12px 0' }} />
+      <div className="sidebar-category">
+        <div className="sidebar-category-header" onClick={() => toggleCategory('snippets')}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            {collapsed['snippets'] ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
+            <span className="sidebar-category-title" style={{ color: 'var(--accent)' }}>Architecture Snippets</span>
+          </div>
+          <span className="sidebar-category-count" style={{ background: 'var(--accent-muted)', color: 'var(--accent)' }}>
+            {snippetTemplates.length}
+          </span>
+        </div>
+        
+        {!collapsed['snippets'] && (
+          <div className="sidebar-grid" style={{ gridTemplateColumns: '1fr' }}>
+            {snippetTemplates.filter(s => search === '' || s.name.toLowerCase().includes(search.toLowerCase())).map(snippet => (
+              <div
+                key={snippet.id}
+                className="sidebar-grid-item"
+                style={{ flexDirection: 'row', justifyContent: 'flex-start', padding: '8px 12px' }}
+                draggable
+                onDragStart={e => onSnippetDragStart(e, snippet.id)}
+                title={`${snippet.name}\n${snippet.description}\nDrag to add this pattern to your canvas`}
+              >
+                <div className="sidebar-grid-icon" style={{ background: 'var(--accent-muted)', color: 'var(--accent)' }}>
+                  <Icons.LayoutTemplate size={16} />
+                </div>
+                <div style={{ display: 'flex', flex: '1', flexDirection: 'column', gap: 2, textAlign: 'left', overflow: 'hidden' }}>
+                  <span style={{ whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{snippet.name}</span>
+                  <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{snippet.nodeCount} components</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
