@@ -1,12 +1,18 @@
-import type { ArchNode, ArchEdge } from '../types';
+import type { ArchNode, ArchEdge, CloudProvider } from '../types';
 
 /**
  * Cost Engine
- * Calculates individual and total system costs using real AWS pricing.
+ * Calculates individual and total system costs using AWS base pricing and cloud provider offsets.
  */
 
-export function getComponentCost(node: ArchNode, load: number = 0): number {
+export function getComponentCost(node: ArchNode, load: number = 0, provider: CloudProvider = 'aws'): number {
   let baseCost = node.data.tier.monthlyCost;
+  
+  if (provider === 'gcp') {
+    baseCost *= node.data.tier.pricingOffsets?.gcp || 0.92; // GCP is typically 8% cheaper compute
+  } else if (provider === 'azure') {
+    baseCost *= node.data.tier.pricingOffsets?.azure || 1.05; // Azure is often slightly more expensive
+  }
   
   // Calculate dynamic serverless execution costs
   const serverlessTypes = ['lambda', 'api-gateway', 'cloudflare-workers', 'step-functions'];
@@ -52,7 +58,8 @@ export function getComponentCost(node: ArchNode, load: number = 0): number {
 export function calculateTotalCost(
   nodes: ArchNode[], 
   edges: ArchEdge[] = [], 
-  nodeLoads?: Map<string, number>
+  nodeLoads?: Map<string, number>,
+  provider: CloudProvider = 'aws'
 ): number {
   let total = 0;
   
@@ -60,13 +67,14 @@ export function calculateTotalCost(
   for (const node of nodes) {
     if (!node.data.isDisabled) {
       const load = nodeLoads?.get(node.id) || 0;
-      total += getComponentCost(node, load);
+      total += getComponentCost(node, load, provider);
     }
   }
   
   // 2. Data Transfer / Egress Costs
-  // AWS standard egress is ~$0.09 per GB
-  const EGRESS_RATE_PER_GB = 0.09;
+  let EGRESS_RATE_PER_GB = 0.09;
+  if (provider === 'gcp') EGRESS_RATE_PER_GB = 0.085;
+  if (provider === 'azure') EGRESS_RATE_PER_GB = 0.087;
   
   for (const edge of edges) {
     const config = edge.config || {};
@@ -92,11 +100,28 @@ export function calculateTotalCost(
 
 export function getScalingCostDelta(
   node: ArchNode,
-  newInstances: number
+  newInstances: number,
+  provider: CloudProvider = 'aws'
 ): number {
-  const currentCost = getComponentCost(node);
-  const newCost = node.data.tier.monthlyCost * newInstances;
+  const currentCost = getComponentCost(node, 0, provider);
+  let baseTierCost = node.data.tier.monthlyCost;
+  if (provider === 'gcp') baseTierCost *= node.data.tier.pricingOffsets?.gcp || 0.92;
+  if (provider === 'azure') baseTierCost *= node.data.tier.pricingOffsets?.azure || 1.05;
+  
+  const newCost = baseTierCost * newInstances;
   return Math.round((newCost - currentCost) * 100) / 100;
+}
+
+export function getArbitrageCosts(
+  nodes: ArchNode[],
+  edges: ArchEdge[] = [],
+  nodeLoads?: Map<string, number>
+): Record<CloudProvider, number> {
+  return {
+    aws: calculateTotalCost(nodes, edges, nodeLoads, 'aws'),
+    gcp: calculateTotalCost(nodes, edges, nodeLoads, 'gcp'),
+    azure: calculateTotalCost(nodes, edges, nodeLoads, 'azure')
+  };
 }
 
 export function formatCost(cost: number): string {

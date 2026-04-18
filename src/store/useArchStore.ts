@@ -10,6 +10,7 @@ import { applyAutoLayout } from '../engine/autoLayout';
 import type { LayoutDirection } from '../engine/autoLayout';
 import { INITIAL_DEPLOYMENT_STATE, createDeploymentClones } from '../engine/deploymentSimulator';
 import type { DeploymentState } from '../engine/deploymentSimulator';
+import type { CloudProvider } from '../types';
 
 interface HistoryEntry {
   nodes: ArchNode[];
@@ -38,6 +39,8 @@ interface ArchStore {
   projectName: string;
   greenOpsHeatmap: boolean;
   outageRegionId: string | null;
+  cloudProvider: CloudProvider;
+  isWhiteLabelReport: boolean;
   
   // ── Snapshots ──
   snapshots: Snapshot[];
@@ -80,6 +83,8 @@ interface ArchStore {
   dismissOnboarding: () => void;
   setActiveSimulationEvent: (event: SimulationEvent | null) => void;
   setCompareSnapshots: (ids: [string, string] | null) => void;
+  setCloudProvider: (provider: CloudProvider) => void;
+  toggleWhiteLabelReport: () => void;
   
   // Deployment actions
   startDeployment: (sourceNodeId: string) => void;
@@ -152,6 +157,8 @@ export const useArchStore = create<ArchStore>((set, get) => ({
   greenOpsHeatmap: false,
   outageRegionId: null,
   deploymentState: INITIAL_DEPLOYMENT_STATE,
+  cloudProvider: 'aws',
+  isWhiteLabelReport: false,
   
   // ── React Flow handlers ──
   onNodesChange: (changes) => {
@@ -468,6 +475,8 @@ export const useArchStore = create<ArchStore>((set, get) => ({
   },
   setActiveSimulationEvent: (event) => set({ activeSimulationEvent: event }),
   setCompareSnapshots: (ids) => set({ compareSnapshots: ids }),
+  setCloudProvider: (provider) => set({ cloudProvider: provider }),
+  toggleWhiteLabelReport: () => set({ isWhiteLabelReport: !get().isWhiteLabelReport }),
   
   // ── Snapshots ──
   takeSnapshot: (label) => {

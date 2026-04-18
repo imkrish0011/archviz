@@ -749,11 +749,34 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
             <AnimatedSection className="lp-feature-card lp-feature-card-large lp-feature-card-enterprise" delay={0.65}>
               <div className="lp-feature-badge-new">NEW — Enterprise</div>
               <div className="lp-feature-icon" style={{ color: '#6366f1' }}><FileCode size={24} /></div>
-              <h3>Infrastructure-as-Code Export</h3>
+              <h3>Infrastructure-as-Code Expansion Pack</h3>
               <p>
-                Turn your visual designs into deployable code. Export to <strong>Terraform (.tf)</strong> or
-                <strong> AWS CloudFormation (.json)</strong> with a single click. Generates VPC scaffolding,
-                security groups, instance configurations, and inter-resource references — a visual cloud compiler.
+                Turn your visual designs into deployable code. Export to <strong>Terraform (.tf)</strong>,
+                <strong> AWS CloudFormation (.json)</strong>, <strong>Kubernetes Manifests (YAML)</strong>, or 
+                <strong> Docker Compose</strong> with a single click. Generates VPC scaffolding, deployment templates,
+                security groups, and inter-resource references — a visual cloud compiler.
+              </p>
+            </AnimatedSection>
+            
+            <AnimatedSection className="lp-feature-card lp-feature-card-enterprise" delay={0.68}>
+              <div className="lp-feature-badge-new">NEW — Enterprise</div>
+              <div className="lp-feature-icon" style={{ color: '#f59e0b' }}><Cloud size={24} /></div>
+              <h3>Multi-Cloud Cost Arbitrage</h3>
+              <p>
+                Visually compare what your architecture would cost on <strong>AWS vs. GCP vs. Azure</strong> side-by-side. 
+                Dynamically switch between providers and let the pricing engine automatically recalculate instance offsets 
+                and egress data fees to find the most cost-effective cloud.
+              </p>
+            </AnimatedSection>
+
+            <AnimatedSection className="lp-feature-card lp-feature-card-enterprise" delay={0.70}>
+              <div className="lp-feature-badge-new">NEW — Enterprise</div>
+              <div className="lp-feature-icon" style={{ color: '#10b981' }}><FileText size={24} /></div>
+              <h3>Fully-Branded Architecture Reports</h3>
+              <p>
+                Generate sleek, multi-page professional PDF reports containing high-res diagrams, 
+                financial breakdowns, carbon footprint, security warnings, and SLA scores. 
+                Perfect for Solution Architects pitching to clients. Enable <strong>White-labeling</strong> to remove watermarks.
               </p>
             </AnimatedSection>
 

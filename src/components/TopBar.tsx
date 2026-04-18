@@ -6,8 +6,11 @@ import {
   Zap, ServerCrash, Trash2, CloudOff, DatabaseZap, XCircle,
   PanelLeft, Undo2, Redo2, Download, Image, Maximize, Keyboard,
   BrainCircuit, ShieldAlert, FileCode, LayoutGrid, Leaf, MapPin,
+  Cloud, FileText, Container
 } from 'lucide-react';
-import { downloadTerraform, downloadCloudFormation } from '../engine/terraformGenerator';
+import { downloadTerraform, downloadCloudFormation, downloadDockerCompose, downloadKubernetesManifests } from '../engine/terraformGenerator';
+import { generateArchitectureReport } from '../engine/reportGenerator';
+import { runSimulation } from '../engine/simulator';
 import { toastBus } from './ToastSystem';
 
 export default function TopBar() {
@@ -37,9 +40,16 @@ export default function TopBar() {
   
   const [showSimDropdown, setShowSimDropdown] = useState(false);
   const [showExportDropdown, setShowExportDropdown] = useState(false);
+  const [showCloudDropdown, setShowCloudDropdown] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const simRef = useRef<HTMLDivElement>(null);
   const exportRef = useRef<HTMLDivElement>(null);
+  const cloudRef = useRef<HTMLDivElement>(null);
+
+  const cloudProvider = useArchStore(s => s.cloudProvider);
+  const setCloudProvider = useArchStore(s => s.setCloudProvider);
+  const isWhiteLabelReport = useArchStore(s => s.isWhiteLabelReport);
+  const toggleWhiteLabelReport = useArchStore(s => s.toggleWhiteLabelReport);
   
   // Close dropdowns on outside click
   useEffect(() => {
@@ -49,6 +59,9 @@ export default function TopBar() {
       }
       if (exportRef.current && !exportRef.current.contains(e.target as Node)) {
         setShowExportDropdown(false);
+      }
+      if (cloudRef.current && !cloudRef.current.contains(e.target as Node)) {
+        setShowCloudDropdown(false);
       }
     }
     document.addEventListener('mousedown', handleClick);
@@ -97,6 +110,23 @@ export default function TopBar() {
     triggerEvent('regionOutage');
   };
   
+  const handleExportReport = async () => {
+    if (nodes.length === 0) {
+      toastBus.emit('Add components to canvas first', 'warning');
+      return;
+    }
+    const { metrics } = runSimulation(nodes, useArchStore.getState().edges, simulationConfig, null);
+    await generateArchitectureReport({
+      nodes,
+      edges: useArchStore.getState().edges,
+      metrics,
+      projectName,
+      isWhiteLabel: isWhiteLabelReport,
+      cloudProvider
+    });
+    setShowExportDropdown(false);
+  };
+
   const rps = Math.round(simulationConfig.concurrentUsers * simulationConfig.rpsMultiplier);
   
   return (
@@ -227,6 +257,31 @@ export default function TopBar() {
         
         <div className="topbar-divider" />
         
+        {/* Multi-Cloud Arbitrage Dropdown */}
+        <div className="sim-dropdown" ref={cloudRef}>
+          <button className="btn" onClick={() => setShowCloudDropdown(!showCloudDropdown)}>
+            <Cloud size={14} />
+            {cloudProvider.toUpperCase()}
+            <ChevronDown size={12} />
+          </button>
+          
+          {showCloudDropdown && (
+            <div className="sim-dropdown-menu">
+              <button className={`sim-dropdown-item ${cloudProvider === 'aws' ? 'active' : ''}`} onClick={() => { setCloudProvider('aws'); setShowCloudDropdown(false); }}>
+                AWS (Base)
+              </button>
+              <button className={`sim-dropdown-item ${cloudProvider === 'gcp' ? 'active' : ''}`} onClick={() => { setCloudProvider('gcp'); setShowCloudDropdown(false); }}>
+                GCP (Offset)
+              </button>
+              <button className={`sim-dropdown-item ${cloudProvider === 'azure' ? 'active' : ''}`} onClick={() => { setCloudProvider('azure'); setShowCloudDropdown(false); }}>
+                Azure (Offset)
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div className="topbar-divider" />
+        
         {/* Export Dropdown */}
         <div className="sim-dropdown" ref={exportRef}>
           <button className="btn" onClick={() => setShowExportDropdown(!showExportDropdown)}>
@@ -237,6 +292,16 @@ export default function TopBar() {
           
           {showExportDropdown && (
             <div className="sim-dropdown-menu">
+              <button className="sim-dropdown-item" onClick={handleExportReport} style={{ fontWeight: 'bold', color: 'var(--accent)' }}>
+                <FileText size={16} />
+                Generate Premium Report (PDF)
+              </button>
+              <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
+              <button className="sim-dropdown-item" onClick={() => toggleWhiteLabelReport()}>
+                <span style={{ fontSize: 16 }}>{isWhiteLabelReport ? '✅' : '⬜'}</span>
+                White-label Pro Export
+              </button>
+              <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
               <button className="sim-dropdown-item" onClick={() => { (window as any).__archviz_exportPNG?.(); setShowExportDropdown(false); }}>
                 <Image size={16} />
                 Export as PNG
@@ -261,6 +326,22 @@ export default function TopBar() {
               }}>
                 <FileCode size={16} />
                 Export to CloudFormation
+              </button>
+              <button className="sim-dropdown-item" onClick={() => {
+                if (nodes.length === 0) { toastBus.emit('Add components to canvas first', 'warning'); }
+                else { downloadKubernetesManifests(nodes, useArchStore.getState().edges, projectName); toastBus.emit('K8s Manifests exported!', 'success'); }
+                setShowExportDropdown(false);
+              }}>
+                <Container size={16} />
+                Export Kubernetes Manifests
+              </button>
+              <button className="sim-dropdown-item" onClick={() => {
+                if (nodes.length === 0) { toastBus.emit('Add components to canvas first', 'warning'); }
+                else { downloadDockerCompose(nodes, useArchStore.getState().edges, projectName); toastBus.emit('Docker Compose exported!', 'success'); }
+                setShowExportDropdown(false);
+              }}>
+                <FileCode size={16} />
+                Export Docker Compose
               </button>
             </div>
           )}

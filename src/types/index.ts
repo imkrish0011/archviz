@@ -5,6 +5,7 @@ export type ComponentCategory = 'client' | 'compute' | 'storage' | 'network' | '
 export type ScalingType = 'horizontal' | 'vertical';
 export type HealthStatus = 'healthy' | 'warning' | 'critical';
 export type LetterGrade = 'A' | 'B' | 'C' | 'D' | 'F';
+export type CloudProvider = 'aws' | 'gcp' | 'azure';
 
 export interface ComponentTier {
   id: string;
@@ -15,6 +16,10 @@ export interface ComponentTier {
   ram?: string;
   cpu?: string;
   costPerMillionRequests?: number;
+  pricingOffsets?: {   // Multiplier used for arbitrage (e.g. 1.1 for 10% more expensive)
+    gcp?: number;
+    azure?: number;
+  };
 }
 
 export interface ComponentDefinition {

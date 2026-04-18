@@ -632,3 +632,129 @@ export function downloadCloudFormation(nodes: ArchNode[], edges: ArchEdge[], pro
   link.click();
   URL.revokeObjectURL(url);
 }
+
+// ── Docker Compose Generator ──
+export function generateDockerCompose(nodes: ArchNode[], _edges: ArchEdge[], projectName: string): string {
+  const services: Record<string, any> = {};
+
+  for (const node of nodes) {
+    if (node.data.componentType === 'groupNode') continue;
+
+    const name = sanitize(node.data.label);
+    const type = node.data.componentType;
+
+    if (['api-server', 'web-server', 'worker', 'websocket-server', 'graphql-server'].includes(type)) {
+      services[name] = {
+        image: `my-registry.local/${name}:latest`,
+        ports: ['8080:8080'],
+        environment: ['NODE_ENV=development'],
+        deploy: {
+          replicas: node.data.scalingType === 'horizontal' ? node.data.instances : 1
+        }
+      };
+    } else if (['postgresql'].includes(type)) {
+      services[name] = {
+        image: 'postgres:15',
+        environment: ['POSTGRES_USER=admin', 'POSTGRES_PASSWORD=secret'],
+        ports: ['5432:5432'],
+        volumes: [`${name}_data:/var/lib/postgresql/data`]
+      };
+    } else if (['mysql'].includes(type)) {
+      services[name] = {
+        image: 'mysql:8',
+        environment: ['MYSQL_ROOT_PASSWORD=secret'],
+        ports: ['3306:3306'],
+        volumes: [`${name}_data:/var/lib/mysql`]
+      };
+    } else if (['redis'].includes(type)) {
+      services[name] = { image: 'redis:7-alpine', ports: ['6379:6379'] };
+    } else if (['s3'].includes(type)) {
+      services[name] = { image: 'minio/minio', command: 'server /data', ports: ['9000:9000'] };
+    }
+  }
+
+  const volumeNames = Object.keys(services).filter(k => services[k].volumes).map(k => `${k}_data`);
+
+  // Generate generic YAML manually to avoid dependency
+  let yaml = `version: '3.8'\nname: ${sanitize(projectName)}\n\nservices:\n`;
+  for (const [sName, sDef] of Object.entries(services)) {
+    yaml += `  ${sName}:\n`;
+    if (sDef.image) yaml += `    image: ${sDef.image}\n`;
+    if (sDef.command) yaml += `    command: ${sDef.command}\n`;
+    if (sDef.ports) {
+      yaml += `    ports:\n`;
+      sDef.ports.forEach((p: string) => yaml += `      - "${p}"\n`);
+    }
+    if (sDef.environment) {
+      yaml += `    environment:\n`;
+      sDef.environment.forEach((e: string) => yaml += `      - ${e}\n`);
+    }
+    if (sDef.volumes) {
+      yaml += `    volumes:\n`;
+      sDef.volumes.forEach((v: string) => yaml += `      - ${v}\n`);
+    }
+    if (sDef.deploy) {
+      yaml += `    deploy:\n      replicas: ${sDef.deploy.replicas}\n`;
+    }
+  }
+
+  if (volumeNames.length > 0) {
+    yaml += `\nvolumes:\n`;
+    volumeNames.forEach(v => yaml += `  ${v}:\n`);
+  }
+
+  return yaml;
+}
+
+// ── Kubernetes Manifest Generator ──
+export function generateKubernetesManifests(nodes: ArchNode[], _edges: ArchEdge[], _projectName: string): string {
+  let manifests = '';
+
+  for (const node of nodes) {
+    if (node.data.componentType === 'groupNode') continue;
+    if (!['api-server', 'web-server', 'worker', 'websocket-server', 'redis', 'postgresql', 'mysql'].includes(node.data.componentType)) continue;
+
+    const name = sanitize(node.data.label).replace(/_/g, '-');
+    const replicas = node.data.scalingType === 'horizontal' ? node.data.instances : 1;
+    
+    // Deployment
+    manifests += `apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: ${name}\n  namespace: default\n  labels:\n    app: ${name}\n`;
+    manifests += `spec:\n  replicas: ${replicas}\n  selector:\n    matchLabels:\n      app: ${name}\n`;
+    manifests += `  template:\n    metadata:\n      labels:\n        app: ${name}\n`;
+    manifests += `    spec:\n      containers:\n      - name: ${name}\n        image: ${name}:latest\n`;
+    manifests += `        ports:\n        - containerPort: 8080\n---\n`;
+
+    // Service
+    manifests += `apiVersion: v1\nkind: Service\nmetadata:\n  name: ${name}-svc\n  namespace: default\n`;
+    manifests += `spec:\n  selector:\n    app: ${name}\n  ports:\n    - protocol: TCP\n      port: 80\n      targetPort: 8080\n`;
+    if (node.data.category === 'compute') {
+      manifests += `  type: ClusterIP\n---\n`;
+    } else {
+      manifests += `  type: ClusterIP\n---\n`;
+    }
+  }
+
+  return manifests || '# No applicable workloads found for Kubernetes manifest generation.';
+}
+
+export function downloadDockerCompose(nodes: ArchNode[], edges: ArchEdge[], projectName: string) {
+  const content = generateDockerCompose(nodes, edges, projectName);
+  const blob = new Blob([content], { type: 'text/yaml' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.download = `docker-compose.yml`;
+  link.href = url;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+export function downloadKubernetesManifests(nodes: ArchNode[], edges: ArchEdge[], projectName: string) {
+  const content = generateKubernetesManifests(nodes, edges, projectName);
+  const blob = new Blob([content], { type: 'text/yaml' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.download = `k8s-manifests.yaml`;
+  link.href = url;
+  link.click();
+  URL.revokeObjectURL(url);
+}
