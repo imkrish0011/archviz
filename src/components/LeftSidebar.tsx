@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { getAllCategories, getComponentsByCategory, getCategoryLabel } from '../data/componentLibrary';
-import { ChevronDown, ChevronRight, Search } from 'lucide-react';
+import { ChevronDown, ChevronRight, Search, StickyNote } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import { useArchStore } from '../store/useArchStore';
 import { useReactFlow } from '@xyflow/react';
@@ -32,7 +32,8 @@ export default function LeftSidebar() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
   
-  const categories = getAllCategories();
+  // Exclude 'meta' from sidebar components – handled by the sticky note button below
+  const categories = getAllCategories().filter(c => c !== 'meta');
   
   const onDragStart = useCallback((event: React.DragEvent, componentType: string) => {
     event.dataTransfer.setData('application/archviz-component', componentType);
@@ -44,26 +45,33 @@ export default function LeftSidebar() {
     event.dataTransfer.effectAllowed = 'move';
   }, []);
 
-  const handleDoubleClick = useCallback((componentType: string) => {
-    // Get center of current viewport
+  const getCanvasCenter = useCallback(() => {
     const { x, y, zoom } = reactFlowInstance.getViewport();
     const canvasEl = document.querySelector('.react-flow') as HTMLElement;
-    if (!canvasEl) return;
+    if (!canvasEl) return { x: 400, y: 300 };
     const rect = canvasEl.getBoundingClientRect();
-    const centerX = (rect.width / 2 - x) / zoom;
-    const centerY = (rect.height / 2 - y) / zoom;
-    // Add slight random offset to prevent stacking
     const offsetX = (Math.random() - 0.5) * 120;
     const offsetY = (Math.random() - 0.5) * 80;
-    addNode(componentType, { x: centerX + offsetX, y: centerY + offsetY });
-  }, [reactFlowInstance, addNode]);
+    return {
+      x: (rect.width / 2 - x) / zoom + offsetX,
+      y: (rect.height / 2 - y) / zoom + offsetY,
+    };
+  }, [reactFlowInstance]);
+
+  const handleDoubleClick = useCallback((componentType: string) => {
+    addNode(componentType, getCanvasCenter());
+  }, [addNode, getCanvasCenter]);
+
+  const handleAddStickyNote = useCallback(() => {
+    addNode('sticky-note', getCanvasCenter());
+  }, [addNode, getCanvasCenter]);
   
   const toggleCategory = (cat: string) => {
     setCollapsed(prev => ({ ...prev, [cat]: !prev[cat] }));
   };
   
   return (
-    <div className="left-sidebar">
+    <div className="left-sidebar" style={{ display: 'flex', flexDirection: 'column' }}>
       <div className="sidebar-search">
         <div style={{ position: 'relative' }}>
           <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-disabled)' }} />
@@ -85,89 +93,107 @@ export default function LeftSidebar() {
           </div>
         </div>
       </div>
-      
-      {categories.map(cat => {
-        const components = getComponentsByCategory(cat).filter(c => 
-          search === '' || c.label.toLowerCase().includes(search.toLowerCase()) || c.type.toLowerCase().includes(search.toLowerCase())
-        );
-        
-        if (components.length === 0) return null;
-        
-        const isCollapsed = collapsed[cat];
-        
-        return (
-          <div key={cat} className="sidebar-category">
-            <div className="sidebar-category-header" onClick={() => toggleCategory(cat)}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                {isCollapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
-                <span className={`sidebar-category-dot ${cat}`} />
-                <span className="sidebar-category-title">{getCategoryLabel(cat)}</span>
-              </div>
-              <span className="sidebar-category-count">{components.length}</span>
-            </div>
-            
-            {!isCollapsed && (
-              <div className="sidebar-grid">
-                {components.map(comp => {
-                  const IconComp = getIcon(comp.icon);
-                  return (
-                    <div
-                      key={comp.type}
-                      className="sidebar-grid-item"
-                      data-category={cat}
-                      draggable
-                      onDragStart={e => onDragStart(e, comp.type)}
-                      onDoubleClick={() => handleDoubleClick(comp.type)}
-                      title={`${comp.label}\nLat: ${comp.baseLatency}ms\n\n${comp.description}\n\nDrag or double-click to add`}
-                    >
-                      <div className="sidebar-grid-icon">
-                        <IconComp size={16} />
-                      </div>
-                      <span>{comp.label}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        );
-      })}
 
-      {/* Snippets Section */}
-      <div className="sidebar-divider" style={{ height: 1, background: 'var(--border-subtle)', margin: '12px 0' }} />
-      <div className="sidebar-category">
-        <div className="sidebar-category-header" onClick={() => toggleCategory('snippets')}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            {collapsed['snippets'] ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
-            <span className="sidebar-category-title" style={{ color: 'var(--accent)' }}>Architecture Snippets</span>
-          </div>
-          <span className="sidebar-category-count" style={{ background: 'var(--accent-muted)', color: 'var(--accent)' }}>
-            {snippetTemplates.length}
-          </span>
-        </div>
-        
-        {!collapsed['snippets'] && (
-          <div className="sidebar-grid" style={{ gridTemplateColumns: '1fr' }}>
-            {snippetTemplates.filter(s => search === '' || s.name.toLowerCase().includes(search.toLowerCase())).map(snippet => (
-              <div
-                key={snippet.id}
-                className="sidebar-grid-item"
-                style={{ flexDirection: 'row', justifyContent: 'flex-start', padding: '8px 12px' }}
-                draggable
-                onDragStart={e => onSnippetDragStart(e, snippet.id)}
-                title={`${snippet.name}\n${snippet.description}\nDrag to add this pattern to your canvas`}
-              >
-                <div className="sidebar-grid-icon" style={{ background: 'var(--accent-muted)', color: 'var(--accent)' }}>
-                  <Icons.LayoutTemplate size={16} />
+      {/* Scrollable component list */}
+      <div style={{ flex: 1, overflowY: 'auto' }}>
+        {categories.map(cat => {
+          const components = getComponentsByCategory(cat).filter(c => 
+            search === '' || c.label.toLowerCase().includes(search.toLowerCase()) || c.type.toLowerCase().includes(search.toLowerCase())
+          );
+          
+          if (components.length === 0) return null;
+          
+          const isCollapsed = collapsed[cat];
+          
+          return (
+            <div key={cat} className="sidebar-category">
+              <div className="sidebar-category-header" onClick={() => toggleCategory(cat)}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {isCollapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
+                  <span className={`sidebar-category-dot ${cat}`} />
+                  <span className="sidebar-category-title">{getCategoryLabel(cat)}</span>
                 </div>
-                <div style={{ display: 'flex', flex: '1', flexDirection: 'column', gap: 2, textAlign: 'left', overflow: 'hidden' }}>
-                  <span style={{ whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{snippet.name}</span>
-                  <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{snippet.nodeCount} components</span>
-                </div>
+                <span className="sidebar-category-count">{components.length}</span>
               </div>
-            ))}
+              
+              {!isCollapsed && (
+                <div className="sidebar-grid">
+                  {components.map(comp => {
+                    const IconComp = getIcon(comp.icon);
+                    return (
+                      <div
+                        key={comp.type}
+                        className="sidebar-grid-item"
+                        data-category={cat}
+                        draggable
+                        onDragStart={e => onDragStart(e, comp.type)}
+                        onDoubleClick={() => handleDoubleClick(comp.type)}
+                        title={`${comp.label}\nLat: ${comp.baseLatency}ms\n\n${comp.description}\n\nDrag or double-click to add`}
+                      >
+                        <div className="sidebar-grid-icon">
+                          <IconComp size={16} />
+                        </div>
+                        <span>{comp.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        {/* Snippets Section */}
+        <div className="sidebar-divider" style={{ height: 1, background: 'var(--border-subtle)', margin: '12px 0' }} />
+        <div className="sidebar-category">
+          <div className="sidebar-category-header" onClick={() => toggleCategory('snippets')}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              {collapsed['snippets'] ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
+              <span className="sidebar-category-title" style={{ color: 'var(--accent)' }}>Architecture Snippets</span>
+            </div>
+            <span className="sidebar-category-count" style={{ background: 'var(--accent-muted)', color: 'var(--accent)' }}>
+              {snippetTemplates.length}
+            </span>
           </div>
-        )}
+          
+          {!collapsed['snippets'] && (
+            <div className="sidebar-grid" style={{ gridTemplateColumns: '1fr' }}>
+              {snippetTemplates.filter(s => search === '' || s.name.toLowerCase().includes(search.toLowerCase())).map(snippet => (
+                <div
+                  key={snippet.id}
+                  className="sidebar-grid-item"
+                  style={{ flexDirection: 'row', justifyContent: 'flex-start', padding: '8px 12px' }}
+                  draggable
+                  onDragStart={e => onSnippetDragStart(e, snippet.id)}
+                  title={`${snippet.name}\n${snippet.description}\nDrag to add this pattern to your canvas`}
+                >
+                  <div className="sidebar-grid-icon" style={{ background: 'var(--accent-muted)', color: 'var(--accent)' }}>
+                    <Icons.LayoutTemplate size={16} />
+                  </div>
+                  <div style={{ display: 'flex', flex: '1', flexDirection: 'column', gap: 2, textAlign: 'left', overflow: 'hidden' }}>
+                    <span style={{ whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{snippet.name}</span>
+                    <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{snippet.nodeCount} components</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Sticky Note Quick-Add ─────────────────────────── */}
+      <div className="sidebar-sticky-note-footer">
+        <button
+          className="sidebar-sticky-note-btn"
+          onClick={handleAddStickyNote}
+          title="Add a sticky note / architecture decision record to the canvas"
+          draggable
+          onDragStart={e => onDragStart(e, 'sticky-note')}
+        >
+          <StickyNote size={14} />
+          <span>Add Sticky Note</span>
+          <span className="sidebar-sticky-note-hint">drag or click</span>
+        </button>
       </div>
     </div>
   );

@@ -2272,3 +2272,45 @@ html, body, #root {
   overflow: hidden;
 }
 
+
+/* --- Sticky Note Sidebar Footer ----------------------- */
+.sidebar-sticky-note-footer {
+  padding: 10px 12px;
+  border-top: 1px solid rgba(252, 211, 77, 0.12);
+  background: rgba(252, 211, 77, 0.03);
+  flex-shrink: 0;
+}
+
+.sidebar-sticky-note-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  background: rgba(252, 211, 77, 0.06);
+  border: 1px dashed rgba(252, 211, 77, 0.3);
+  border-radius: 8px;
+  color: rgba(252, 211, 77, 0.85);
+  font-size: 0.75rem;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.sidebar-sticky-note-btn:hover {
+  background: rgba(252, 211, 77, 0.12);
+  border-color: rgba(252, 211, 77, 0.55);
+  color: #fcd34d;
+  box-shadow: 0 0 10px rgba(252, 211, 77, 0.08);
+}
+
+.sidebar-sticky-note-hint {
+  margin-left: auto;
+  font-size: 0.6rem;
+  color: rgba(252, 211, 77, 0.4);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
