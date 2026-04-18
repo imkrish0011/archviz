@@ -315,6 +315,75 @@ export const famousSystemTemplates: Template[] = [
       { id: 'tt-e5', source: 'tt-2', target: 'tt-5' },
       { id: 'tt-e6', source: 'tt-2', target: 'tt-6' }
     ]
+  },
+  // ── X (TWITTER) ──
+  {
+    id: 'x-twitter',
+    name: 'X (Twitter)',
+    category: 'famous',
+    description: 'Real-time global timeline feed using extreme push-based fanout.',
+    keyInsight: 'X uses "Fanout-on-write" for users with < 100K followers (pushing tweets to Redis caches), and "Fanout-on-load" for celebrities to prevent cache meltdowns.',
+    baselineCost: 3400,
+    nodeCount: 10,
+    nodes: [
+      { id: 'tw-client', type: 'archNode', position: { x: 50, y: 250 }, componentType: 'mobile-app', architecturalNote: 'User posts a 280-character tweet.' },
+      { id: 'tw-1', type: 'archNode', position: { x: 250, y: 250 }, componentType: 'api-gateway', architecturalNote: 'API routing and rate-limiting.' },
+      { id: 'tw-2', type: 'archNode', position: { x: 450, y: 250 }, componentType: 'load-balancer', architecturalNote: 'Distributes traffic to the Write and Read APIs.' },
+      { id: 'tw-3', type: 'archNode', position: { x: 650, y: 150 }, componentType: 'api-server', tierIndex: 2, architecturalNote: 'Tweet Service validates and saves the post.' },
+      { id: 'tw-4', type: 'archNode', position: { x: 650, y: 350 }, componentType: 'api-server', tierIndex: 2, architecturalNote: 'Timeline Service fetches home feeds for users.' },
+      { id: 'tw-5', type: 'archNode', position: { x: 850, y: 150 }, componentType: 'redis', tierIndex: 1, architecturalNote: 'Massive Redis clusters store the pre-computed Timeline for fast reads.' },
+      { id: 'tw-6', type: 'archNode', position: { x: 850, y: 50 }, componentType: 'worker', instances: 4, tierIndex: 1, architecturalNote: 'Fanout workers push new tweets into followers\' Redis timelines async.' },
+      { id: 'tw-7', type: 'archNode', position: { x: 850, y: 350 }, componentType: 'postgresql', tierIndex: 2, architecturalNote: 'Relational DB for core identity and tweet persistence.' },
+      { id: 'tw-8', type: 'archNode', position: { x: 850, y: 500 }, componentType: 'mongodb', tierIndex: 1, architecturalNote: 'Social Graph DB stores who follows whom to calculate fanout loops.' },
+      { id: 'tw-9', type: 'archNode', position: { x: 450, y: 100 }, componentType: 's3', architecturalNote: 'Stores image attachments and videos.' }
+    ],
+    edges: [
+      { id: 'tw-e0a', source: 'tw-client', target: 'tw-1' },
+      { id: 'tw-e0b', source: 'tw-1', target: 'tw-2' },
+      { id: 'tw-e1', source: 'tw-2', target: 'tw-3' },
+      { id: 'tw-e2', source: 'tw-2', target: 'tw-4' },
+      { id: 'tw-e3', source: 'tw-3', target: 'tw-6' },
+      { id: 'tw-e4', source: 'tw-6', target: 'tw-5' },
+      { id: 'tw-e5', source: 'tw-4', target: 'tw-5' },
+      { id: 'tw-e6', source: 'tw-3', target: 'tw-7' },
+      { id: 'tw-e7', source: 'tw-6', target: 'tw-8' },
+      { id: 'tw-e8', source: 'tw-3', target: 'tw-9' }
+    ]
+  },
+  // ── AMAZON E-COMMERCE ──
+  {
+    id: 'amazon',
+    name: 'Amazon',
+    category: 'famous',
+    description: 'The golden standard of Service-Oriented E-Commerce Architecture.',
+    keyInsight: 'Every single feature on an Amazon page (Reviews, Cart, Recommendations, Price) is completely decoupled. One failing service never takes down the checkout.',
+    baselineCost: 5200,
+    nodeCount: 11,
+    nodes: [
+      { id: 'amz-client', type: 'archNode', position: { x: 50, y: 250 }, componentType: 'client-browser', architecturalNote: 'Buyer adding an item to the cart.' },
+      { id: 'amz-1', type: 'archNode', position: { x: 250, y: 250 }, componentType: 'api-gateway', architecturalNote: 'Amazon API Gateway.' },
+      { id: 'amz-2', type: 'archNode', position: { x: 450, y: 100 }, componentType: 'api-server', instances: 4, tierIndex: 2, architecturalNote: 'Product Catalog Service.' },
+      { id: 'amz-3', type: 'archNode', position: { x: 450, y: 250 }, componentType: 'api-server', instances: 4, tierIndex: 2, architecturalNote: 'Shopping Cart Service.' },
+      { id: 'amz-4', type: 'archNode', position: { x: 450, y: 400 }, componentType: 'api-server', tierIndex: 2, architecturalNote: 'Order & Checkout Service.' },
+      { id: 'amz-5', type: 'archNode', position: { x: 650, y: 100 }, componentType: 'dynamodb', tierIndex: 1, architecturalNote: 'DynamoDB powers the massive scalable product catalog with single-digit ms latency.' },
+      { id: 'amz-6', type: 'archNode', position: { x: 650, y: 250 }, componentType: 'redis', tierIndex: 1, architecturalNote: 'Cart state is held in extremely fast memory.' },
+      { id: 'amz-7', type: 'archNode', position: { x: 650, y: 400 }, componentType: 'postgresql', tierIndex: 2, architecturalNote: 'Aurora PostgreSQL acts as the rigid financial ledger for checkout.' },
+      { id: 'amz-8', type: 'archNode', position: { x: 850, y: 400 }, componentType: 'sqs', tierIndex: 1, architecturalNote: 'SQS decouples payment authorization and fulfillment logic from the checkout click.' },
+      { id: 'amz-9', type: 'archNode', position: { x: 1050, y: 400 }, componentType: 'worker', instances: 8, tierIndex: 1, architecturalNote: 'Fulfillment & Inventory deduction workers process orders async.' },
+      { id: 'amz-10', type: 'archNode', position: { x: 850, y: 200 }, componentType: 'elasticsearch', tierIndex: 1, architecturalNote: 'Powers the incredibly fast product search queries.' }
+    ],
+    edges: [
+      { id: 'amz-e1', source: 'amz-client', target: 'amz-1' },
+      { id: 'amz-e2', source: 'amz-1', target: 'amz-2' },
+      { id: 'amz-e3', source: 'amz-1', target: 'amz-3' },
+      { id: 'amz-e4', source: 'amz-1', target: 'amz-4' },
+      { id: 'amz-e5', source: 'amz-2', target: 'amz-5' },
+      { id: 'amz-e6', source: 'amz-3', target: 'amz-6' },
+      { id: 'amz-e7', source: 'amz-4', target: 'amz-7' },
+      { id: 'amz-e8', source: 'amz-4', target: 'amz-8' },
+      { id: 'amz-e9', source: 'amz-8', target: 'amz-9' },
+      { id: 'amz-e10', source: 'amz-2', target: 'amz-10' }
+    ]
   }
 ];
 

@@ -773,6 +773,48 @@ export const useArchStore = create<ArchStore>((set, get) => ({
     toastBus.emit('Redo', 'info');
   },
   
+  // ── Edge Config ──
+  updateEdgeConfig: (edgeId, config) => {
+    get().pushHistory();
+    set({
+      edges: get().edges.map(e => {
+        if (e.id === edgeId) {
+          const baseData = e.data || {};
+          const prevConfig = (baseData as any).config || {};
+          
+          let animation = e.animated;
+          let newStyle = { ...e.style };
+          
+          if (config.connectionType === 'sync-http') {
+            animation = false;
+            newStyle.strokeDasharray = undefined;
+          } else if (config.connectionType === 'async-event') {
+            animation = true;
+            newStyle.strokeDasharray = '5 5';
+          } else if (config.connectionType === 'default') {
+             animation = true;
+             newStyle.strokeDasharray = undefined;
+          } else if (config.connectionType === 'firewall-boundary') {
+             animation = false;
+             newStyle.strokeDasharray = '2 8'; // Dotted
+             newStyle.strokeWidth = 3;
+          }
+
+          return {
+            ...e,
+            animated: animation,
+            style: newStyle,
+            data: {
+              ...baseData,
+              config: { ...prevConfig, ...config }
+            }
+          };
+        }
+        return e;
+      })
+    });
+  },
+
   // ── Persistence ──
   saveToLocalStorage: () => {
     const { nodes, edges, simulationConfig, projectName, snapshots } = get();

@@ -10,7 +10,8 @@ import {
   Code2, Gauge, Network,
   Webhook, Container, HardDrive, Radio, CircuitBoard, Flame,
   FileCode, ShieldAlert, Target, Mail, Leaf,
-  Warehouse, PackageOpen, LayoutDashboard, ArrowLeftRight, FileText, Play, X, Cog
+  Warehouse, PackageOpen, LayoutDashboard, ArrowLeftRight, FileText, Play, X, Cog, LayoutGrid,
+  ChevronDown, Power
 } from 'lucide-react';
 import '../styles/landing.css';
 import { famousSystemTemplates } from '../data/templates/famousSystemTemplates';
@@ -23,14 +24,14 @@ import type { Template } from '../types';
 const brandIcons: Record<string, React.ComponentType<{ size?: number; strokeWidth?: number }>> = {
   instagram: Camera, netflix: Tv, whatsapp: MessageCircle, uber: Car,
   spotify: Music, 'google-search': Search, steam: Gamepad2, discord: Disc,
-  stripe: CreditCard, tiktok: Film,
+  stripe: CreditCard, tiktok: Film, amazon: ShoppingCart, 'x-twitter': MessageSquare,
 };
 
 /* ── Starter icon mapping ── */
 const starterIcons: Record<string, React.ComponentType<{ size?: number; strokeWidth?: number }>> = {
   'basic-web': Globe, 'chat-app': MessageSquare, 'video-streaming': Video,
   ecommerce: ShoppingCart, 'food-delivery': MapPin, 'social-media': Users,
-  microservices: Blocks,
+  microservices: Blocks, serverless: Cloud,
 };
 
 /* ── Component library items for marquee ── */
@@ -308,187 +309,11 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
               <div style={{ width: 44 }} />
             </div>
             <div className="lp-preview-body">
-              <div className="lp-mock-workspace">
-                {/* Mock TopBar */}
-                <div className="lp-mock-topbar">
-                  <div className="lp-mock-topbar-left">
-                    <div className="lp-mock-topbar-logo">
-                      <BrainCircuit size={14} /> ArchViz
-                    </div>
-                    <div className="lp-mock-topbar-title">e-commerce-blue-green</div>
-                  </div>
-                  <div className="lp-mock-topbar-center">
-                    <div className="lp-mock-simulation-controls">
-                      <button className="lp-mock-sim-btn"><Play size={10} fill="currentColor" /> Play Simulation</button>
-                    </div>
-                  </div>
-                  <div className="lp-mock-topbar-right">
-                    <button className="lp-mock-btn-icon"><Code2 size={13} /></button>
-                    <button className="lp-mock-btn-icon"><Download size={13} /></button>
-                    <button className="lp-mock-btn-primary">Share</button>
-                    <div className="lp-mock-avatar"></div>
-                  </div>
-                </div>
-
-                {/* Mock Left Sidebar */}
-                <div className="lp-mock-sidebar">
-                  <div className="lp-mock-sidebar-tabs">
-                    <span className="lp-mock-tab active">Cloud</span>
-                    <span className="lp-mock-tab">Icons</span>
-                  </div>
-                  <div className="lp-mock-sidebar-category">Compute</div>
-                  <div className="lp-mock-sidebar-grid">
-                    <div className="lp-mock-sidebar-item"><Server size={14}/><span>EC2</span></div>
-                    <div className="lp-mock-sidebar-item"><Container size={14}/><span>Docker</span></div>
-                    <div className="lp-mock-sidebar-item"><Zap size={14}/><span>Lambda</span></div>
-                    <div className="lp-mock-sidebar-item"><LayoutTemplate size={14}/><span>Fargate</span></div>
-                  </div>
-                  <div className="lp-mock-sidebar-category">Networking</div>
-                  <div className="lp-mock-sidebar-grid">
-                    <div className="lp-mock-sidebar-item"><Network size={14}/><span>ALB</span></div>
-                    <div className="lp-mock-sidebar-item"><Globe size={14}/><span>CDN</span></div>
-                    <div className="lp-mock-sidebar-item"><Shield size={14}/><span>WAF</span></div>
-                    <div className="lp-mock-sidebar-item"><Webhook size={14}/><span>API Gateway</span></div>
-                  </div>
-                </div>
-
-                {/* Mock Canvas */}
-                <div className="lp-mock-canvas">
-                  <div className="lp-mock-canvas-grid" />
-                  {/* SVG Edges */}
-                  <svg className="lp-mock-edges" viewBox="0 0 800 500" preserveAspectRatio="none">
-                    <path d="M 170 110 C 250 110, 250 160, 310 160" />
-                    <path d="M 170 290 C 250 290, 250 160, 310 160" />
-                    <path d="M 330 160 C 420 160, 420 120, 500 120" />
-                    <path d="M 330 160 C 420 160, 420 260, 500 260" />
-                    <path d="M 520 120 C 600 120, 600 190, 690 190" />
-                    <path d="M 520 260 C 600 260, 600 320, 690 320" />
-                  </svg>
-
-                  {/* Mock Nodes with realistic ArchNode styles */}
-                  <div className="lp-mock-node real-look" style={{ top: '16%', left: '12%' }}>
-                    <div className="lp-mock-node-header">
-                      <div className="lp-mock-node-icon" style={{ color: '#f2901a', background: 'rgba(242,144,26,0.1)' }}><Network size={12} /></div>
-                      <div className="lp-mock-node-title"><span className="lp-mock-node-name">Load Balancer</span><span className="lp-mock-node-tier">t3.small</span></div>
-                    </div>
-                    <div className="lp-mock-node-body"><div className="lp-mock-health-ring healthy"></div><span>Load 34%</span></div>
-                  </div>
-                  
-                  <div className="lp-mock-node real-look" style={{ top: '56%', left: '12%' }}>
-                    <div className="lp-mock-node-header">
-                      <div className="lp-mock-node-icon" style={{ color: '#f2901a', background: 'rgba(242,144,26,0.1)' }}><Globe size={12} /></div>
-                      <div className="lp-mock-node-title"><span className="lp-mock-node-name">CloudFront CDN</span><span className="lp-mock-node-tier">global</span></div>
-                    </div>
-                    <div className="lp-mock-node-body"><div className="lp-mock-health-ring healthy"></div><span>Load 12%</span></div>
-                  </div>
-
-                  <div className="lp-mock-node real-look selected" style={{ top: '27%', left: '38%' }}>
-                    <div className="lp-mock-node-header">
-                      <div className="lp-mock-node-icon" style={{ color: '#f2901a', background: 'rgba(242,144,26,0.1)' }}><Server size={12} /></div>
-                      <div className="lp-mock-node-title"><span className="lp-mock-node-name">API Server ×3</span><span className="lp-mock-node-tier">c6g.xlarge</span></div>
-                    </div>
-                    <div className="lp-mock-node-body"><div className="lp-mock-health-ring warning"></div><span style={{color: '#eab308'}}>Load 82%</span></div>
-                  </div>
-
-                  <div className="lp-mock-node real-look" style={{ top: '16%', left: '62%' }}>
-                    <div className="lp-mock-node-header">
-                      <div className="lp-mock-node-icon" style={{ color: '#d62828', background: 'rgba(214,40,40,0.1)' }}><Database size={12} /></div>
-                      <div className="lp-mock-node-title"><span className="lp-mock-node-name">Redis Cache</span><span className="lp-mock-node-tier">r6g.large</span></div>
-                    </div>
-                    <div className="lp-mock-node-body"><div className="lp-mock-health-ring healthy"></div><span>Load 45%</span></div>
-                  </div>
-
-                  <div className="lp-mock-node real-look" style={{ top: '48%', left: '62%' }}>
-                    <div className="lp-mock-node-header">
-                      <div className="lp-mock-node-icon" style={{ color: '#336791', background: 'rgba(51,103,145,0.1)' }}><Database size={12} /></div>
-                      <div className="lp-mock-node-title"><span className="lp-mock-node-name">PostgreSQL</span><span className="lp-mock-node-tier">db.r6g.2x</span></div>
-                    </div>
-                    <div className="lp-mock-node-body"><div className="lp-mock-health-ring healthy"></div><span>Load 60%</span></div>
-                  </div>
-
-                  <div className="lp-mock-node real-look" style={{ top: '34%', left: '80%' }}>
-                    <div className="lp-mock-node-header">
-                      <div className="lp-mock-node-icon" style={{ color: '#E34F26', background: 'rgba(227,79,38,0.1)' }}><HardDrive size={12} /></div>
-                      <div className="lp-mock-node-title"><span className="lp-mock-node-name">S3 Storage</span><span className="lp-mock-node-tier">standard</span></div>
-                    </div>
-                    <div className="lp-mock-node-body"><div className="lp-mock-health-ring healthy"></div><span>Load 5%</span></div>
-                  </div>
-
-                  <div className="lp-mock-node real-look" style={{ top: '65%', left: '80%' }}>
-                    <div className="lp-mock-node-header">
-                      <div className="lp-mock-node-icon" style={{ color: '#d62828', background: 'rgba(214,40,40,0.1)' }}><Activity size={12} /></div>
-                      <div className="lp-mock-node-title"><span className="lp-mock-node-name">Message Queue</span><span className="lp-mock-node-tier">sqs.fifo</span></div>
-                    </div>
-                    <div className="lp-mock-node-body"><div className="lp-mock-health-ring critical"></div><span style={{color: '#ef4444'}}>Load 95%</span></div>
-                  </div>
-                </div>
-
-                {/* Mock Right Panel */}
-                <div className="lp-mock-right-panel">
-                  <div className="lp-mock-rp-header">
-                    <div className="lp-mock-rp-icon"><Server size={14} color="#f2901a" /></div>
-                    <div className="lp-mock-rp-title">API Server ×3</div>
-                    <div className="lp-mock-rp-close"><X size={12}/></div>
-                  </div>
-                  <div className="lp-mock-config-block">
-                    <div className="lp-mock-config-title">Properties</div>
-                    <div className="lp-mock-config-row">
-                      <span className="lp-mock-config-label">Tier</span>
-                      <span className="lp-mock-config-value select-look">c6g.xlarge</span>
-                    </div>
-                    <div className="lp-mock-config-row">
-                      <span className="lp-mock-config-label">Instances</span>
-                      <span className="lp-mock-config-value range-look"><div className="range-track"><div className="range-fill" style={{width:'30%'}}></div></div><span className="range-num">3</span></span>
-                    </div>
-                    <div className="lp-mock-config-row">
-                      <span className="lp-mock-config-label">Multi-AZ</span>
-                      <span className="lp-mock-config-value toggle-look active"></span>
-                    </div>
-                  </div>
-                  
-                  <div className="lp-mock-config-block section-cost">
-                    <div className="lp-mock-config-title" style={{marginBottom: 4}}>Cost Breakdown</div>
-                    <div className="lp-mock-config-row">
-                      <span className="lp-mock-config-label" style={{color: '#fff', fontWeight: 600}}>Total Monthly Cost</span>
-                      <span className="lp-mock-cost-value">$438.00<span className="mo">/mo</span></span>
-                    </div>
-                    <div className="lp-mock-config-row">
-                      <span className="lp-mock-config-label">CPU / RAM</span>
-                      <span className="lp-mock-config-value" style={{color: 'rgba(255,255,255,0.7)'}}>4 vCPU / 8GB</span>
-                    </div>
-                  </div>
-
-                  <div className="lp-mock-config-block">
-                    <div className="lp-mock-config-title">Live Deployment Visualizer</div>
-                    <p className="lp-mock-rp-desc">Simulate a Blue/Green or Canary deployment. Traffic will seamlessly shift from v1 to v2 directly on the canvas.</p>
-                    <div className="lp-mock-btn-deploy"><GitBranch size={12}/> Launch Blue/Green Deployment</div>
-                  </div>
-                </div>
-
-                {/* Mock Bottom Bar */}
-                <div className="lp-mock-bottombar">
-                  <div className="lp-mock-metric">
-                    <DollarSign size={10} color="#10b981" />
-                    Estimated Cost: <span className="lp-mock-metric-val">$847.00 /mo</span>
-                  </div>
-                  <div className="lp-mock-metric">
-                    <Clock size={10} color="#eab308" />
-                    P95 Latency: <span className="lp-mock-metric-val">142ms</span>
-                  </div>
-                  <div className="lp-mock-metric">
-                    <Activity size={10} color="#3b82f6" />
-                    QPS Load: <span className="lp-mock-metric-val">8,400 rps</span>
-                  </div>
-                  <div className="lp-mock-metric">
-                    <Target size={10} color="#10b981" />
-                    Availability: <span className="lp-mock-metric-val">99.999% (5 Nines)</span>
-                  </div>
-                  <div className="lp-mock-metric">
-                    <Activity size={10} color="#10b981" />
-                    Health: <span className="lp-mock-metric-val" style={{ color: '#10b981', fontWeight: 800 }}>Grade A</span>
-                  </div>
-                </div>
-              </div>
+              <img 
+                src="/preview.png" 
+                alt="ArchViz workspace showing system architecture design with nodes, connections, and real-time metrics"
+                className="lp-preview-screenshot"
+              />
             </div>
           </div>
         </AnimatedSection>
@@ -829,6 +654,37 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
                 Upgraded export engine renders diagrams at 3× pixel density for pixel-perfect
                 PNG output on Retina displays and in presentations. Controls, minimap, and
                 overlays are automatically excluded from the export frame.
+              </p>
+            </AnimatedSection>
+            <AnimatedSection className="lp-feature-card" delay={0.95}>
+              <div className="lp-feature-badge-new" style={{ background: 'rgba(99,102,241,0.1)', color: '#818cf8', borderColor: 'rgba(99,102,241,0.2)' }}>NEW</div>
+              <div className="lp-feature-icon" style={{ color: '#818cf8' }}><LayoutGrid size={24} /></div>
+              <h3>Precision Grid Alignment</h3>
+              <p>
+                Forget messy diagrams. The canvas auto-enforces a 20×20 pixel snap-to-grid physics engine, 
+                guaranteeing perfectly symmetrical and professional architectural alignment out of the box.
+              </p>
+            </AnimatedSection>
+            
+            <AnimatedSection className="lp-feature-card" delay={1.0}>
+              <div className="lp-feature-badge-new" style={{ background: 'rgba(99,102,241,0.1)', color: '#818cf8', borderColor: 'rgba(99,102,241,0.2)' }}>NEW</div>
+              <div className="lp-feature-icon" style={{ color: '#10b981' }}><Box size={24} /></div>
+              <h3>Enterprise Network Grouping</h3>
+              <p>
+                Model logical isolation visually with scalable network boundaries. Drag drop AWS VPCs, 
+                Public/Private Subnets, and On-Premises environments that natively encapsulate and bind 
+                child components via intelligent spatial grouping logic.
+              </p>
+            </AnimatedSection>
+
+            <AnimatedSection className="lp-feature-card" delay={1.05}>
+              <div className="lp-feature-badge-new" style={{ background: 'rgba(99,102,241,0.1)', color: '#818cf8', borderColor: 'rgba(99,102,241,0.2)' }}>NEW</div>
+              <div className="lp-feature-icon" style={{ color: '#ef4444' }}><ArrowRight size={24} /></div>
+              <h3>Advanced Data Flow Routing</h3>
+              <p>
+                Visually differentiate your traffic flows. Apply edge-based configurations to simulate 
+                Synchronous APIs (Solid), Asynchronous Events (Dashed), and Firewall Boundaries (Dotted) 
+                directly from the properties panel.
               </p>
             </AnimatedSection>
           </div>

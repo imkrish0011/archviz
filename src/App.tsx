@@ -21,6 +21,7 @@ import { useDeploymentSimulator } from './hooks/useDeploymentSimulator';
 
 import ArchNodeComponent from './components/nodes/ArchNode';
 import GroupNode from './components/nodes/GroupNode';
+import { ZoneNode } from './components/workspace/ZoneNode';
 import ArchEdge from './components/edges/ArchEdge';
 import TopBar from './components/TopBar';
 import LeftSidebar from './components/LeftSidebar';
@@ -38,7 +39,7 @@ import { ContextMenu, SearchOverlay, ShortcutsOverlay } from './components/Inter
 import { ErrorBoundary, CanvasErrorBoundary } from './components/ErrorBoundary';
 import { captureArchitectureAsImage } from './engine/exportRenderer';
 
-const nodeTypes = { archNode: ArchNodeComponent, groupNode: GroupNode };
+const nodeTypes = { archNode: ArchNodeComponent, groupNode: GroupNode, zoneNode: ZoneNode };
 const edgeTypes = { default: ArchEdge, custom: ArchEdge };
 
 function FlowCanvas() {
@@ -236,6 +237,8 @@ function FlowCanvas() {
           maxZoom={2}
           edgesReconnectable
           deleteKeyCode={null}
+          snapToGrid={true}
+          snapGrid={[20, 20]}
         >
           <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="#1a1a1a" />
           <Controls showInteractive={false} />

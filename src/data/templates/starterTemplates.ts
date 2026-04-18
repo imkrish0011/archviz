@@ -216,6 +216,29 @@ export const starterTemplates: Template[] = [
       { id: 'ms-e9', source: 'ms-6', target: 'ms-10' },
     ],
   },
+  // ── SERVERLESS ──
+  {
+    id: 'serverless',
+    name: 'Serverless App',
+    category: 'starter',
+    description: 'Zero maintenance API using auto-scaling functions and NoSQL.',
+    keyInsight: 'Serverless charges strictly per execution. Great for sporadic traffic, but expensive for heavy, constant sustained loads. API Gateway and Lambda handle infinite scaling instantly.',
+    baselineCost: 25,
+    nodeCount: 5,
+    nodes: [
+      { id: 'sl-1', type: 'archNode', position: { x: 50, y: 200 }, componentType: 'api-gateway', architecturalNote: 'API Gateway fully manages endpoint routing, rate limiting, and auth.' },
+      { id: 'sl-2', type: 'archNode', position: { x: 250, y: 150 }, componentType: 'lambda', instances: 4, tierIndex: 1, architecturalNote: 'Lambda scales from 0 to 1,000s of concurrent executions. No servers to maintain.' },
+      { id: 'sl-3', type: 'archNode', position: { x: 250, y: 300 }, componentType: 'lambda', instances: 2, tierIndex: 1, architecturalNote: 'Async Lambda triggered by events or queues.' },
+      { id: 'sl-4', type: 'archNode', position: { x: 450, y: 150 }, componentType: 'dynamodb', tierIndex: 0, architecturalNote: 'DynamoDB scales infinitely without managing connections.' },
+      { id: 'sl-5', type: 'archNode', position: { x: 450, y: 300 }, componentType: 's3', architecturalNote: 'S3 stores assets. Can also trigger Lambdas on file upload.' }
+    ],
+    edges: [
+      { id: 'sl-e1', source: 'sl-1', target: 'sl-2' },
+      { id: 'sl-e2', source: 'sl-1', target: 'sl-3' },
+      { id: 'sl-e3', source: 'sl-2', target: 'sl-4' },
+      { id: 'sl-e4', source: 'sl-3', target: 'sl-5' }
+    ]
+  }
 ];
 
 export default starterTemplates;

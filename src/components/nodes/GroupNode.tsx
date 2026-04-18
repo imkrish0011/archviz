@@ -7,6 +7,7 @@ const groupColors: Record<string, { border: string; bg: string; label: string }>
   'subnet-public':  { border: '#34d399', bg: 'rgba(52, 211, 153, 0.04)', label: 'Public Subnet' },
   'subnet-private': { border: '#fb923c', bg: 'rgba(251, 146, 60, 0.04)', label: 'Private Subnet' },
   'availability-zone': { border: '#60a5fa', bg: 'rgba(96, 165, 250, 0.04)', label: 'Availability Zone' },
+  'on-premises':       { border: '#9ca3af', bg: 'rgba(156, 163, 175, 0.04)', label: 'On-Premises' },
 };
 
 function GroupNode({ data, selected }: NodeProps) {
