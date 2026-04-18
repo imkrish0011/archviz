@@ -19,10 +19,17 @@ function createNodeFromDef(def: TemplateNodeDef): ArchNode | null {
   const tierIndex = def.tierIndex ?? compDef.defaultTierIndex;
   const tier = compDef.tiers[tierIndex] || compDef.tiers[compDef.defaultTierIndex];
   
+  const isBoundary = compDef.category === 'boundary';
+  const isMeta = compDef.category === 'meta';
+  let nodeType = 'archNode';
+  if (isBoundary) nodeType = 'groupNode';
+  else if (isMeta) nodeType = 'stickyNote';
+  
   return {
     id: def.id,
-    type: 'archNode',
+    type: nodeType,
     position: def.position,
+    ...(isBoundary ? { style: { width: 350, height: 250 } } : {}),
     data: {
       componentType: compDef.type,
       label: compDef.label,
@@ -35,9 +42,10 @@ function createNodeFromDef(def: TemplateNodeDef): ArchNode | null {
       reliability: compDef.reliability,
       scalingFactor: compDef.scalingFactor,
       cacheHitRate: def.cacheHitRate,
-      architecturalNote: def.architecturalNote,
+      architecturalNote: isMeta ? (def.architecturalNote ?? 'Double-click to edit note...') : def.architecturalNote,
       healthStatus: 'healthy',
       loadPercent: 0,
+      ...(isBoundary ? { isGroup: true } : {}),
     },
   };
 }

@@ -22,6 +22,7 @@ import { useDeploymentSimulator } from './hooks/useDeploymentSimulator';
 import ArchNodeComponent from './components/nodes/ArchNode';
 import GroupNode from './components/nodes/GroupNode';
 import { ZoneNode } from './components/workspace/ZoneNode';
+import StickyNoteNode from './components/nodes/StickyNoteNode';
 import ArchEdge from './components/edges/ArchEdge';
 import TopBar from './components/TopBar';
 import LeftSidebar from './components/LeftSidebar';
@@ -40,7 +41,7 @@ import { ErrorBoundary, CanvasErrorBoundary } from './components/ErrorBoundary';
 import { captureArchitectureAsImage } from './engine/exportRenderer';
 import { getTemplateById, instantiateTemplate } from './utils/templateLoader';
 
-const nodeTypes = { archNode: ArchNodeComponent, groupNode: GroupNode, zoneNode: ZoneNode };
+const nodeTypes = { archNode: ArchNodeComponent, groupNode: GroupNode, zoneNode: ZoneNode, stickyNote: StickyNoteNode };
 const edgeTypes = { default: ArchEdge, custom: ArchEdge };
 
 function FlowCanvas() {

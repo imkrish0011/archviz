@@ -2107,6 +2107,97 @@ const componentLibrary: ComponentDefinition[] = [
     ],
     defaultTierIndex: 0,
   },
+  {
+    type: 'entra-id',
+    label: 'Microsoft Entra ID',
+    category: 'security',
+    icon: 'Shield',
+    description: 'Enterprise identity and access management (formerly Azure AD)',
+    scalingType: 'horizontal',
+    reliability: 0.9999,
+    scalingFactor: 1.0,
+    baseLatency: 30,
+    tiers: [{ id: 'entra-p1', label: 'Premium P1', monthlyCost: 6.00, capacity: 100000, latency: 30 }],
+    defaultTierIndex: 0,
+  },
+  {
+    type: 'okta',
+    label: 'Okta SSO',
+    category: 'security',
+    icon: 'Key',
+    description: 'Independent enterprise-grade identity management service',
+    scalingType: 'horizontal',
+    reliability: 0.9999,
+    scalingFactor: 1.0,
+    baseLatency: 45,
+    tiers: [{ id: 'okta-sso', label: 'Enterprise SSO', monthlyCost: 5.00, capacity: 100000, latency: 45 }],
+    defaultTierIndex: 0,
+  },
+  {
+    type: 'aws-iam',
+    label: 'AWS IAM',
+    category: 'security',
+    icon: 'Lock',
+    description: 'Securely manage access to AWS services and resources',
+    scalingType: 'horizontal',
+    reliability: 0.9999,
+    scalingFactor: 1.0,
+    baseLatency: 10,
+    tiers: [{ id: 'iam-free', label: 'Global Service', monthlyCost: 0, capacity: 1000000, latency: 10 }],
+    defaultTierIndex: 0,
+  },
+  {
+    type: 'github-actions',
+    label: 'GitHub Actions',
+    category: 'pipeline',
+    icon: 'GitPullRequest',
+    description: 'Automate software workflows natively inside GitHub',
+    scalingType: 'horizontal',
+    reliability: 0.999,
+    scalingFactor: 1.0,
+    baseLatency: 0,
+    tiers: [{ id: 'gha-runners', label: 'Hosted Runners', monthlyCost: 100.00, capacity: 0, latency: 0 }],
+    defaultTierIndex: 0,
+  },
+  {
+    type: 'gitlab-ci',
+    label: 'GitLab CI',
+    category: 'pipeline',
+    icon: 'GitMerge',
+    description: 'Built-in continuous integration and delivery for GitLab',
+    scalingType: 'horizontal',
+    reliability: 0.999,
+    scalingFactor: 1.0,
+    baseLatency: 0,
+    tiers: [{ id: 'gl-premium', label: 'Premium SaaS', monthlyCost: 29.00, capacity: 0, latency: 0 }],
+    defaultTierIndex: 0,
+  },
+  {
+    type: 'argo-cd',
+    label: 'Argo CD',
+    category: 'pipeline',
+    icon: 'Ship',
+    description: 'Declarative continuous delivery tool for Kubernetes',
+    scalingType: 'horizontal',
+    reliability: 0.999,
+    scalingFactor: 1.0,
+    baseLatency: 0,
+    tiers: [{ id: 'argo-cluster', label: 'In-Cluster', monthlyCost: 0.00, capacity: 0, latency: 0 }],
+    defaultTierIndex: 0,
+  },
+  {
+    type: 'sticky-note',
+    label: 'Sticky Note',
+    category: 'meta',
+    icon: 'FileText',
+    description: 'Architecture Decision Record (ADR) and text annotations',
+    scalingType: 'horizontal',
+    reliability: 1.0,
+    scalingFactor: 1.0,
+    baseLatency: 0,
+    tiers: [{ id: 'meta-note', label: 'Documentation', monthlyCost: 0.00, capacity: 0, latency: 0 }],
+    defaultTierIndex: 0,
+  },
 ];
 
 export function getComponentDefinition(type: string): ComponentDefinition | undefined {
@@ -2118,7 +2209,7 @@ export function getComponentsByCategory(category: ComponentCategory): ComponentD
 }
 
 export function getAllCategories(): ComponentCategory[] {
-  return ['client', 'compute', 'storage', 'network', 'messaging', 'observability', 'boundary', 'deployment'];
+  return ['client', 'compute', 'storage', 'network', 'messaging', 'observability', 'security', 'pipeline', 'boundary', 'deployment', 'meta'];
 }
 
 export function getCategoryLabel(category: ComponentCategory): string {
@@ -2129,8 +2220,11 @@ export function getCategoryLabel(category: ComponentCategory): string {
     network: 'Network',
     messaging: 'Messaging',
     observability: 'Observability',
+    security: 'Identity & Security',
+    pipeline: 'CI/CD Pipelines',
     boundary: 'Boundaries',
     deployment: 'Deployment (CI/CD)',
+    meta: 'Annotations & Meta',
   };
   return labels[category];
 }

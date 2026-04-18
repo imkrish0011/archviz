@@ -58,6 +58,15 @@
   --cat-client: #94a3b8;
   --cat-client-muted: rgba(148, 163, 184, 0.12);
   --cat-client-subtle: rgba(148, 163, 184, 0.06);
+  --cat-security: #ef4444;
+  --cat-security-muted: rgba(239, 68, 68, 0.12);
+  --cat-security-subtle: rgba(239, 68, 68, 0.06);
+  --cat-pipeline: #14b8a6;
+  --cat-pipeline-muted: rgba(20, 184, 166, 0.12);
+  --cat-pipeline-subtle: rgba(20, 184, 166, 0.06);
+  --cat-meta: #fcd34d;
+  --cat-meta-muted: rgba(252, 211, 77, 0.12);
+  --cat-meta-subtle: rgba(252, 211, 77, 0.06);
   --cat-boundary: #c084fc;
   --cat-boundary-muted: rgba(192, 132, 252, 0.12);
   --cat-boundary-subtle: rgba(192, 132, 252, 0.06);
@@ -456,6 +465,9 @@ html, body, #root {
 .sidebar-grid-item[data-category="network"] svg { color: var(--cat-network); }
 .sidebar-grid-item[data-category="messaging"] svg { color: var(--cat-messaging); }
 .sidebar-grid-item[data-category="observability"] svg { color: var(--cat-observability); }
+.sidebar-grid-item[data-category="security"] svg { color: var(--cat-security); }
+.sidebar-grid-item[data-category="pipeline"] svg { color: var(--cat-pipeline); }
+.sidebar-grid-item[data-category="meta"] svg { color: var(--cat-meta); }
 
 /* Hover subtle backgrounds */
 .sidebar-grid-item[data-category="client"]:hover { background: var(--cat-client-subtle); border-color: rgba(148, 163, 184, 0.2); }
@@ -464,6 +476,9 @@ html, body, #root {
 .sidebar-grid-item[data-category="network"]:hover { background: var(--cat-network-subtle); border-color: rgba(167, 139, 250, 0.2); }
 .sidebar-grid-item[data-category="messaging"]:hover { background: var(--cat-messaging-subtle); border-color: rgba(251, 191, 36, 0.2); }
 .sidebar-grid-item[data-category="observability"]:hover { background: var(--cat-observability-subtle); border-color: rgba(244, 114, 182, 0.2); }
+.sidebar-grid-item[data-category="security"]:hover { background: var(--cat-security-subtle); border-color: rgba(239, 68, 68, 0.2); }
+.sidebar-grid-item[data-category="pipeline"]:hover { background: var(--cat-pipeline-subtle); border-color: rgba(20, 184, 166, 0.2); }
+.sidebar-grid-item[data-category="meta"]:hover { background: var(--cat-meta-subtle); border-color: rgba(252, 211, 77, 0.2); }
 .sidebar-grid-item[data-category="boundary"]:hover { background: var(--cat-boundary-subtle); border-color: rgba(192, 132, 252, 0.2); }
 
 /* Category-specific sidebar icon colors — boundary */
@@ -482,6 +497,9 @@ html, body, #root {
 .sidebar-category-dot.network { background: var(--cat-network); }
 .sidebar-category-dot.messaging { background: var(--cat-messaging); }
 .sidebar-category-dot.observability { background: var(--cat-observability); }
+.sidebar-category-dot.security { background: var(--cat-security); }
+.sidebar-category-dot.pipeline { background: var(--cat-pipeline); }
+.sidebar-category-dot.meta { background: var(--cat-meta); }
 .sidebar-category-dot.boundary { background: var(--cat-boundary); }
 
 /* ─── Group / Boundary Nodes ──────────────────────────────── */
@@ -2186,3 +2204,71 @@ html, body, #root {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.6; transform: scale(1.1); }
 }
+
+/* --- Sticky Note Nodes -------------------------------- */
+.sticky-note-node {
+  background: rgba(252, 211, 77, 0.05);
+  border: 1px solid rgba(252, 211, 77, 0.2);
+  border-radius: 4px;
+  padding: 12px;
+  min-width: 180px;
+  max-width: 320px;
+  min-height: 80px;
+  color: var(--text-primary);
+  position: relative;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(252, 211, 77, 0.1);
+  transition: all 0.2s ease;
+  backdrop-filter: blur(4px);
+}
+
+.sticky-note-node.selected {
+  border-color: rgba(252, 211, 77, 0.6);
+  box-shadow: 0 0 0 2px rgba(252, 211, 77, 0.2);
+}
+
+.sticky-note-header {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.sticky-note-pin {
+  display: block;
+  width: 24px;
+  height: 6px;
+  background: rgba(252, 211, 77, 0.4);
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+
+.sticky-note-content {
+  font-size: 0.75rem;
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.sticky-note-content p {
+  margin: 0;
+  margin-bottom: 6px;
+}
+
+.sticky-note-content p:last-child {
+  margin-bottom: 0;
+}
+
+.sticky-note-input {
+  width: 100%;
+  min-height: 60px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.75rem;
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  resize: none;
+  outline: none;
+  overflow: hidden;
+}
+

@@ -344,11 +344,16 @@ export const useArchStore = create<ArchStore>((set, get) => ({
     if (!def) return;
     
     const isBoundary = def.category === 'boundary';
+    const isMeta = def.category === 'meta';
     const tier = def.tiers[def.defaultTierIndex];
+    
+    let nodeFlowType: string = 'archNode';
+    if (isBoundary) nodeFlowType = 'groupNode';
+    else if (isMeta) nodeFlowType = 'stickyNote';
     
     const newNode: ArchNode = {
       id: genNodeId(),
-      type: isBoundary ? 'groupNode' : 'archNode',
+      type: nodeFlowType,
       position,
       ...(isBoundary ? {
         style: { width: 350, height: 250 },
@@ -366,6 +371,7 @@ export const useArchStore = create<ArchStore>((set, get) => ({
         scalingFactor: def.scalingFactor,
         healthStatus: 'healthy',
         loadPercent: 0,
+        architecturalNote: isMeta ? 'Double-click to edit note...' : undefined,
         ...(isBoundary ? { isGroup: true } : {}),
       },
     };
