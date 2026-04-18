@@ -33,10 +33,10 @@ import SimulationOverlay from './components/SimulationOverlay';
 import OnboardingOverlay from './components/OnboardingOverlay';
 import SecurityPanel from './components/SecurityPanel';
 import LandingPage from './components/LandingPage';
-import { ToastProvider, useToastBus } from './components/ToastSystem';
+import { ToastProvider, useToastBus, toastBus } from './components/ToastSystem';
 import { ContextMenu, SearchOverlay, ShortcutsOverlay } from './components/InteractiveOverlays';
-import { toastBus } from './components/ToastSystem';
 import { ErrorBoundary, CanvasErrorBoundary } from './components/ErrorBoundary';
+import { captureArchitectureAsImage } from './engine/exportRenderer';
 
 const nodeTypes = { archNode: ArchNodeComponent, groupNode: GroupNode };
 const edgeTypes = { default: ArchEdge, custom: ArchEdge };
@@ -59,6 +59,11 @@ function FlowCanvas() {
   const alignmentLines = useArchStore(s => s.alignmentLines);
   const { nodeHealth } = useSimulation();
   const reactFlowInstance = useReactFlow();
+  
+  // Expose instance for export utilities
+  useEffect(() => {
+    (window as any).__archviz_rfInstance = reactFlowInstance;
+  }, [reactFlowInstance]);
   
   // Update node health status on every simulation tick
   useEffect(() => {
@@ -270,45 +275,23 @@ function FlowCanvas() {
 }
 
 /* ── Export helpers ── */
-function exportCanvasAsPNG() {
-  const rfContainer = document.querySelector('.react-flow') as HTMLElement;
-  if (!rfContainer) { toastBus.emit('No canvas to export', 'error'); return; }
+async function exportCanvasAsPNG() {
+  const state = useArchStore.getState();
+  if (state.nodes.length === 0) { toastBus.emit('No canvas to export', 'error'); return; }
   
-  import('html-to-image').then(mod => {
-    // We explicitly set font embed options to prevent font-loading from hiding nodes.
-    mod.toPng(rfContainer, { 
-      backgroundColor: '#0a0a0a',
-      pixelRatio: 3,
-      quality: 1.0,
-      skipFonts: true, // Prevents html-to-image from failing on system fonts
-      filter: (node: HTMLElement) => {
-        // Only safely check elements
-        if (node?.nodeType !== 1) return true;
-        const cls = node.classList;
-        if (!cls || typeof cls.contains !== 'function') return true;
-        
-        // Hide UI controls but KEEP the background grid!
-        if (cls.contains('react-flow__controls') || 
-            cls.contains('react-flow__minimap') || 
-            cls.contains('react-flow__attribution') ||
-            cls.contains('arch-node-failed-overlay')
-           ) return false;
-        return true;
-      },
-    }).then(dataUrl => {
-      const link = document.createElement('a');
-      link.download = `${useArchStore.getState().projectName || 'architecture'}.png`;
-      link.href = dataUrl;
-      link.click();
-      toastBus.emit('Exported as PNG', 'success');
-    }).catch((err) => {
-      console.error('PNG export error', err);
-      toastBus.emit('PNG export failed — try JSON export', 'error');
-    });
-  }).catch(() => {
-    exportAsJSON();
-    toastBus.emit('PNG library not found. Exported as JSON instead.', 'warning');
-  });
+  try {
+    toastBus.emit('Rendering Architecture...', 'info');
+    const dataUrl = await captureArchitectureAsImage(state.nodes as any, state.edges as any);
+    
+    const link = document.createElement('a');
+    link.download = `${state.projectName || 'architecture'}.png`;
+    link.href = dataUrl;
+    link.click();
+    toastBus.emit('Exported as PNG', 'success');
+  } catch (err) {
+    console.error('PNG export error', err);
+    toastBus.emit('PNG export failed', 'error');
+  }
 }
 
 function exportAsJSON() {

@@ -6,7 +6,7 @@ import {
   Zap, ServerCrash, Trash2, CloudOff, DatabaseZap, XCircle,
   PanelLeft, Undo2, Redo2, Download, Image, Maximize, Keyboard,
   BrainCircuit, ShieldAlert, FileCode, LayoutGrid, Leaf, MapPin,
-  Cloud, FileText, Container
+  Cloud, FileText, Container, MoreHorizontal
 } from 'lucide-react';
 import { downloadTerraform, downloadCloudFormation, downloadDockerCompose, downloadKubernetesManifests } from '../engine/terraformGenerator';
 import { generateArchitectureReport } from '../engine/reportGenerator';
@@ -41,10 +41,12 @@ export default function TopBar() {
   const [showSimDropdown, setShowSimDropdown] = useState(false);
   const [showExportDropdown, setShowExportDropdown] = useState(false);
   const [showCloudDropdown, setShowCloudDropdown] = useState(false);
+  const [showMoreDropdown, setShowMoreDropdown] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const simRef = useRef<HTMLDivElement>(null);
   const exportRef = useRef<HTMLDivElement>(null);
   const cloudRef = useRef<HTMLDivElement>(null);
+  const moreRef = useRef<HTMLDivElement>(null);
 
   const cloudProvider = useArchStore(s => s.cloudProvider);
   const setCloudProvider = useArchStore(s => s.setCloudProvider);
@@ -62,6 +64,9 @@ export default function TopBar() {
       }
       if (cloudRef.current && !cloudRef.current.contains(e.target as Node)) {
         setShowCloudDropdown(false);
+      }
+      if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
+        setShowMoreDropdown(false);
       }
     }
     document.addEventListener('mousedown', handleClick);
@@ -368,31 +373,46 @@ export default function TopBar() {
         
         <div className="topbar-divider" />
         
-        {/* Clear All */}
-        <button 
-          className="btn-icon" 
-          onClick={handleClearAll} 
-          title={showClearConfirm ? 'Click again to confirm' : 'Clear canvas'}
-          style={showClearConfirm ? { color: 'var(--danger)', background: 'var(--danger-muted)' } : nodes.length === 0 ? { opacity: 0.3, pointerEvents: 'none' as const } : {}}
-        >
-          <XCircle size={16} />
-        </button>
-        
-        <button className="btn-icon" onClick={handleSave} title="Save (Ctrl+S)">
-          <Save size={16} />
-        </button>
-        <button className="btn-icon" onClick={handleLoad} title="Load">
-          <Upload size={16} />
-        </button>
-        <button className="btn-icon" onClick={toggleVersionHistory} title="Version History">
-          <Clock size={16} />
-        </button>
-        <button className="btn-icon" onClick={() => (window as any).__archviz_toggleFullscreen?.()} title="Fullscreen (F11)">
-          <Maximize size={16} />
-        </button>
-        <button className="btn-icon" title="Shortcuts (?)" onClick={() => (window as any).__archviz_toggleShortcuts?.()}>
-          <Keyboard size={16} />
-        </button>
+        {/* More Actions Dropdown */}
+        <div className="sim-dropdown" ref={moreRef}>
+          <button className="btn-icon" onClick={() => setShowMoreDropdown(!showMoreDropdown)} title="More Actions">
+            <MoreHorizontal size={16} />
+          </button>
+          
+          {showMoreDropdown && (
+            <div className="sim-dropdown-menu" style={{ right: 0, minWidth: '180px' }}>
+              <button className="sim-dropdown-item" onClick={() => { handleSave(); setShowMoreDropdown(false); }}>
+                <Save size={16} /> Save Project
+              </button>
+              <button className="sim-dropdown-item" onClick={() => { handleLoad(); setShowMoreDropdown(false); }}>
+                <Upload size={16} /> Load Project
+              </button>
+              <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
+              <button className="sim-dropdown-item" onClick={() => { toggleVersionHistory(); setShowMoreDropdown(false); }}>
+                <Clock size={16} /> Version History
+              </button>
+              <button className="sim-dropdown-item" onClick={() => { (window as any).__archviz_toggleFullscreen?.(); setShowMoreDropdown(false); }}>
+                <Maximize size={16} /> Fullscreen
+              </button>
+              <button className="sim-dropdown-item" onClick={() => { (window as any).__archviz_toggleShortcuts?.(); setShowMoreDropdown(false); }}>
+                <Keyboard size={16} /> Shortcuts
+              </button>
+              <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
+              <button 
+                className="sim-dropdown-item" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleClearAll();
+                  if (showClearConfirm) setShowMoreDropdown(false);
+                }} 
+                style={showClearConfirm ? { color: 'var(--danger)', background: 'var(--danger-muted)' } : { color: 'var(--danger)' }}
+              >
+                <XCircle size={16} /> 
+                {showClearConfirm ? 'Click again to clear' : 'Clear Canvas'}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -786,8 +786,19 @@ export const useArchStore = create<ArchStore>((set, get) => ({
       const raw = localStorage.getItem('archviz-state');
       if (!raw) return false;
       const data = JSON.parse(raw);
+      
+      // Fix cache dimension issues by stripping React Flow internal measurements
+      const rawNodes = data.nodes || [];
+      const cleanNodes = rawNodes.map((n: any) => ({
+        ...n,
+        measured: undefined,
+        width: undefined,
+        height: undefined,
+        selected: false,
+      }));
+
       set({
-        nodes: data.nodes || [],
+        nodes: cleanNodes,
         edges: data.edges || [],
         simulationConfig: data.simulationConfig || { concurrentUsers: 1000, rpsMultiplier: 0.1, cacheHitRate: 0.6 },
         projectName: data.projectName || 'Untitled Architecture',
