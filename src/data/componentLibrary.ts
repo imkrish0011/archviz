@@ -2091,22 +2091,8 @@ const componentLibrary: ComponentDefinition[] = [
     ],
     defaultTierIndex: 0,
   },
-  {
-    type: 'datadog',
-    label: 'Datadog',
-    category: 'observability',
-    icon: 'Activity',
-    description: 'Full-stack cloud monitoring and infrastructure observability',
-    scalingType: 'horizontal',
-    reliability: 0.9999,
-    scalingFactor: 1.0,
-    baseLatency: 0,
-    tiers: [
-      { id: 'dd-pro', label: 'Pro', monthlyCost: 15.00, capacity: 1000, latency: 0 },
-      { id: 'dd-ent', label: 'Enterprise', monthlyCost: 23.00, capacity: 1000, latency: 0 },
-    ],
-    defaultTierIndex: 0,
-  },
+
+
   {
     type: 'entra-id',
     label: 'Microsoft Entra ID',

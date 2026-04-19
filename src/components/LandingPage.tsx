@@ -11,7 +11,7 @@ import {
   Webhook, Container, HardDrive, Radio, CircuitBoard, Flame,
   FileCode, ShieldAlert, Target, Mail, Leaf,
   Warehouse, PackageOpen, LayoutDashboard, ArrowLeftRight, FileText, Play, X, Cog, LayoutGrid,
-  ChevronDown, Power
+  ChevronDown, Power, FolderOpen, UserCircle, CloudUpload, LogIn
 } from 'lucide-react';
 import '../styles/landing.css';
 import { famousSystemTemplates } from '../data/templates/famousSystemTemplates';
@@ -978,6 +978,20 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
                     <td><span className="lp-cross">✕</span></td>
                     <td><span className="lp-cross">✕</span></td>
                   </tr>
+                  <tr>
+                    <td className="lp-feature-name">Cloud project save &amp; dashboard</td>
+                    <td className="lp-col-highlight"><span className="lp-check">✓</span></td>
+                    <td><span className="lp-cross">✕</span></td>
+                    <td><span className="lp-check">✓</span></td>
+                    <td><span className="lp-cross">✕</span></td>
+                  </tr>
+                  <tr>
+                    <td className="lp-feature-name">Google Sign-In (one-click auth)</td>
+                    <td className="lp-col-highlight"><span className="lp-check">✓</span></td>
+                    <td><span className="lp-cross">✕</span></td>
+                    <td><span className="lp-partial">Email only</span></td>
+                    <td><span className="lp-cross">✕</span></td>
+                  </tr>
                 </tbody>
               </table>
             </div>
@@ -1168,6 +1182,60 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
         <div className="lp-divider" />
 
         {/* ═══════════════════════════════════════
+         *  CLOUD PERSISTENCE  (NEW)
+         * ═══════════════════════════════════════ */}
+        <section className="lp-section">
+          <AnimatedSection>
+            <div className="lp-section-header">
+              <div className="lp-section-label">
+                <CloudUpload size={13} />
+                Cloud Persistence
+              </div>
+              <h2 className="lp-section-title">Your projects. Everywhere.</h2>
+              <p className="lp-section-desc">
+                Sign in with Google to save your architectures to the cloud.
+                Pick up right where you left off — from any device, any time.
+              </p>
+            </div>
+          </AnimatedSection>
+
+          <AnimatedSection delay={0.08}>
+            <div className="lp-cloud-grid">
+              <div className="lp-cloud-card">
+                <div className="lp-cloud-card-icon"><LogIn size={20} strokeWidth={1.5} /></div>
+                <h3 className="lp-cloud-card-title">One-click Google Sign-In</h3>
+                <p className="lp-cloud-card-desc">
+                  No password to create. Hit "Sign in with Google" and you're in — your account is ready instantly.
+                </p>
+              </div>
+              <div className="lp-cloud-card">
+                <div className="lp-cloud-card-icon"><FolderOpen size={20} strokeWidth={1.5} /></div>
+                <h3 className="lp-cloud-card-title">Figma-style Project Dashboard</h3>
+                <p className="lp-cloud-card-desc">
+                  All your saved architectures in one place. Search, sort, rename, duplicate, or delete — just like Figma.
+                </p>
+              </div>
+              <div className="lp-cloud-card">
+                <div className="lp-cloud-card-icon"><CloudUpload size={20} strokeWidth={1.5} /></div>
+                <h3 className="lp-cloud-card-title">Auto-save to Firestore</h3>
+                <p className="lp-cloud-card-desc">
+                  Designs are saved to Firebase Firestore in real time. Your work is never lost, even if the tab closes.
+                </p>
+              </div>
+              <div className="lp-cloud-card">
+                <div className="lp-cloud-card-icon"><Download size={20} strokeWidth={1.5} /></div>
+                <h3 className="lp-cloud-card-title">Auth-gated Professional Export</h3>
+                <p className="lp-cloud-card-desc">
+                  PDF reports, Terraform IaC, and multi-format exports require sign-in — keeping advanced tools in your personal workspace.
+                </p>
+              </div>
+            </div>
+          </AnimatedSection>
+        </section>
+
+        <div className="lp-divider" />
+
+        {/* ═══════════════════════════════════════
          *  FREE BANNER
          * ═══════════════════════════════════════ */}
         <section className="lp-section">
@@ -1186,6 +1254,8 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
                 <div className="lp-free-feature"><Check size={14} /> Security scanner</div>
                 <div className="lp-free-feature"><Check size={14} /> Local-first storage</div>
                 <div className="lp-free-feature"><Check size={14} /> Version history</div>
+                <div className="lp-free-feature"><Check size={14} /> Cloud project dashboard</div>
+                <div className="lp-free-feature"><Check size={14} /> Google Sign-In</div>
               </div>
               <button className="lp-btn-primary" onClick={handleBlankCanvas}>
                 <Plus size={18} strokeWidth={2.5} />

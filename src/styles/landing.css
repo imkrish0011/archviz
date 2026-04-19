@@ -1943,3 +1943,12 @@
   .lp-mock-topbar-title { display: none; } /* Hide title path strictly for space */
 }
 
+
+
+/* Cloud Persistence */
+.lp-cloud-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; margin-top: 4px; }
+.lp-cloud-card { background: var(--lp-surface); border: 1px solid var(--lp-border); border-radius: var(--lp-radius); padding: 28px 24px; display: flex; flex-direction: column; gap: 14px; transition: transform 0.22s, border-color 0.22s, box-shadow 0.22s; }
+.lp-cloud-card:hover { transform: translateY(-3px); border-color: var(--lp-border-hover); box-shadow: 0 12px 40px rgba(0,0,0,0.45); }
+.lp-cloud-card-icon { width: 44px; height: 44px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--lp-border); display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.55); }
+.lp-cloud-card-title { font-size: 16px; font-weight: 700; letter-spacing: -0.03em; color: var(--lp-text); margin: 0; }
+.lp-cloud-card-desc { font-size: 14px; color: var(--lp-text-muted); line-height: 1.65; margin: 0; }
