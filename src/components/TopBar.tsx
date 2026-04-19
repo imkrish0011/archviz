@@ -8,7 +8,7 @@ import {
   PanelLeft, Undo2, Redo2, Download, Image, Maximize, Keyboard,
   BrainCircuit, ShieldAlert, FileCode, LayoutGrid, Leaf, MapPin,
   Cloud, FileText, Container, MoreHorizontal, Activity, LogIn,
-  LayoutDashboard
+  LayoutDashboard, CheckSquare, Square
 } from 'lucide-react';
 import { downloadTerraform, downloadCloudFormation, downloadDockerCompose, downloadKubernetesManifests } from '../engine/terraformGenerator';
 import { generateArchitectureReport } from '../engine/reportGenerator';
@@ -256,7 +256,7 @@ export default function TopBar() {
           max={userSteps.length - 1}
           value={currentStepIndex >= 0 ? currentStepIndex : 2}
           onChange={e => setSimulationConfig({ concurrentUsers: userSteps[Number(e.target.value)] })}
-          style={{ width: 120 }}
+          style={{ width: 80 }}
         />
         <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', color: 'var(--text-primary)', minWidth: 40 }}>
           {formatUsers(simulationConfig.concurrentUsers)}
@@ -375,20 +375,24 @@ export default function TopBar() {
           </button>
           
           {showExportDropdown && (
-            <div className="sim-dropdown-menu">
+            <div className="sim-dropdown-menu" style={{ minWidth: '240px', padding: '8px', right: 0 }}>
+              <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', color: 'var(--text-tertiary)', letterSpacing: '0.05em', padding: '4px 8px 8px', fontWeight: 600 }}>
+                Reports & Media
+              </div>
+              
               <button className="sim-dropdown-item" onClick={() => {
                 setShowExportDropdown(false);
                 withAuth(() => handleExportReport(), 'PDF Report');
-              }} style={{ fontWeight: 'bold', color: 'var(--accent)' }}>
+              }} style={{ fontWeight: 'bold', color: 'var(--accent)', background: 'var(--accent-subtle)', borderRadius: '6px' }}>
                 <FileText size={16} />
-                Generate Premium Report (PDF)
+                Premium Report (PDF)
               </button>
-              <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
+              
               <button className="sim-dropdown-item" onClick={() => toggleWhiteLabelReport()}>
-                <span style={{ fontSize: 16 }}>{isWhiteLabelReport ? '✅' : '⬜'}</span>
-                White-label Pro Export
+                {isWhiteLabelReport ? <CheckSquare size={16} color="var(--accent)" /> : <Square size={16} />}
+                <span style={{ opacity: isWhiteLabelReport ? 1 : 0.7 }}>White-label PDF Export</span>
               </button>
-              <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
+              
               <button className="sim-dropdown-item" onClick={() => {
                 setShowExportDropdown(false);
                 withAuth(() => { (window as any).__archviz_exportPNG?.(); }, 'PNG Image');
@@ -396,6 +400,7 @@ export default function TopBar() {
                 <Image size={16} />
                 Export as PNG
               </button>
+              
               <button className="sim-dropdown-item" onClick={() => {
                 setShowExportDropdown(false);
                 withAuth(() => { (window as any).__archviz_exportJSON?.(); }, 'JSON');
@@ -403,17 +408,14 @@ export default function TopBar() {
                 <Download size={16} />
                 Export as JSON
               </button>
-              <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
-              <button className="sim-dropdown-item" onClick={() => {
-                setShowExportDropdown(false);
-                if (nodes.length === 0) { toastBus.emit('Add components to canvas first', 'warning'); return; }
-                withAuth(() => { downloadTerraform(nodes, useArchStore.getState().edges, projectName); toastBus.emit('Terraform (.tf) exported!', 'success'); }, 'Terraform');
-              }}>
-                <FileCode size={16} />
-                Export to Terraform
-              </button>
-              <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
-              <button className="sim-dropdown-item" onClick={() => fileInputRef.current?.click()} style={{ color: '#60a5fa' }}>
+              
+              <div style={{ height: 1, background: 'var(--border)', margin: '8px 0' }} />
+              
+              <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', color: 'var(--text-tertiary)', letterSpacing: '0.05em', padding: '4px 8px 8px', fontWeight: 600 }}>
+                Infrastructure as Code
+              </div>
+              
+              <button className="sim-dropdown-item" onClick={() => fileInputRef.current?.click()} style={{ color: '#60a5fa', background: 'rgba(96, 165, 250, 0.08)', borderRadius: '6px' }}>
                 <Upload size={16} />
                 Import terraform.tfstate
               </button>
@@ -425,6 +427,16 @@ export default function TopBar() {
                 accept=".tfstate,.json"
                 onChange={handleImportTfState} 
               />
+              
+              <button className="sim-dropdown-item" onClick={() => {
+                setShowExportDropdown(false);
+                if (nodes.length === 0) { toastBus.emit('Add components to canvas first', 'warning'); return; }
+                withAuth(() => { downloadTerraform(nodes, useArchStore.getState().edges, projectName); toastBus.emit('Terraform (.tf) exported!', 'success'); }, 'Terraform');
+              }}>
+                <FileCode size={16} />
+                Export to Terraform
+              </button>
+              
               <button className="sim-dropdown-item" onClick={() => {
                 setShowExportDropdown(false);
                 if (nodes.length === 0) { toastBus.emit('Add components to canvas first', 'warning'); return; }
@@ -433,14 +445,16 @@ export default function TopBar() {
                 <FileCode size={16} />
                 Export to CloudFormation
               </button>
+              
               <button className="sim-dropdown-item" onClick={() => {
                 setShowExportDropdown(false);
                 if (nodes.length === 0) { toastBus.emit('Add components to canvas first', 'warning'); return; }
                 withAuth(() => { downloadKubernetesManifests(nodes, useArchStore.getState().edges, projectName); toastBus.emit('K8s Manifests exported!', 'success'); }, 'Kubernetes Manifests');
               }}>
                 <Container size={16} />
-                Export Kubernetes Manifests
+                Export K8s Manifests
               </button>
+              
               <button className="sim-dropdown-item" onClick={() => {
                 setShowExportDropdown(false);
                 if (nodes.length === 0) { toastBus.emit('Add components to canvas first', 'warning'); return; }

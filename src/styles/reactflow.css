@@ -312,19 +312,23 @@
 }
 
 /* Security Vulnerability Badge */
-.arch-node-security-badge {
+.arch-node-security-badge-container {
   position: absolute;
   top: -12px;
   right: -12px;
+  z-index: 10;
+}
+
+.arch-node-security-badge {
   background: var(--bg-surface);
   border-radius: 50%;
   padding: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 7;
   box-shadow: 0 4px 12px rgba(0,0,0,0.3);
   animation: deployBadgePulse 2s ease-in-out infinite;
+  cursor: pointer;
 }
 
 /* Blue/Green Deployment Version Badge */

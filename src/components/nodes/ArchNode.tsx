@@ -66,8 +66,14 @@ function ArchNodeComponent({ id, data, selected }: NodeProps) {
       const hasHigh = findings.some((f: any) => f.severity === 'high');
       const color = hasCritical ? '#ff4444' : hasHigh ? '#ff8c00' : '#fbbf24';
       securityBadge = (
-        <div className="arch-node-security-badge" style={{ border: `1px solid ${color}` }} title={`${findings.length} security finding(s)`}>
-          <Icons.ShieldAlert size={16} color={color} />
+        <div className="arch-node-security-badge-container" onClick={(e) => {
+          e.stopPropagation();
+          useArchStore.getState().selectNode(id);
+          useArchStore.setState({ securityPanelOpen: true });
+        }}>
+          <div className="arch-node-security-badge" style={{ border: `1px solid ${color}` }} title={`${findings.length} security finding(s). Click to view details.`}>
+            <Icons.ShieldAlert size={16} color={color} />
+          </div>
         </div>
       );
     }
