@@ -311,6 +311,22 @@
   letter-spacing: 0.02em;
 }
 
+/* Security Vulnerability Badge */
+.arch-node-security-badge {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  background: var(--bg-surface);
+  border-radius: 50%;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 7;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  animation: deployBadgePulse 2s ease-in-out infinite;
+}
+
 /* Blue/Green Deployment Version Badge */
 .arch-node-version-badge {
   position: absolute;

@@ -214,7 +214,7 @@ export default function Dashboard() {
           </div>
           <div className="db-user-info">
             <span className="db-user-name">{user?.displayName ?? 'User'}</span>
-            <span className="db-user-role">Pro · Active</span>
+            <span className="db-user-role">Active</span>
           </div>
           <MoreVertical size={13} className="db-user-more" />
           {userMenu && (
@@ -494,7 +494,6 @@ export default function Dashboard() {
               <div className="db-acc-title-area">
                 <h2 className="db-acc-name">{user?.displayName ?? 'Architect'}</h2>
                 <span className="db-acc-email">{user?.email ?? 'user@archviz.com'}</span>
-                <div className="db-acc-badge">PRO PLAN</div>
               </div>
             </div>
 
@@ -533,24 +532,7 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="db-acc-card db-acc-card--billing">
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
-                  <h3 className="db-acc-card-title" style={{ margin: 0 }}><CreditCard size={16} /> Billing & Subscription</h3>
-                </div>
-                
-                <div className="db-acc-billing-split">
-                  <div className="db-acc-billing-text">
-                    <h4 style={{ color: '#fff', margin: '0 0 8px', fontSize: 20 }}>ArchViz Pro Trial</h4>
-                    <p className="db-acc-desc">
-                      Unlock limits. You currently have access to infinite blank canvases, live architecture simulation, and infinite high-res exports.
-                    </p>
-                  </div>
-                  <div className="db-acc-action-col">
-                    <button className="db-acc-btn db-acc-btn--primary">Upgrade to Enterprise</button>
-                    <button className="db-acc-btn">Manage Billing</button>
-                  </div>
-                </div>
-              </div>
+
 
             </div>
           </section>

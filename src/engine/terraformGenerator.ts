@@ -1,4 +1,5 @@
 import type { ArchNode, ArchEdge } from '../types';
+import { getComponentDefinition } from '../data/componentLibrary';
 
 /**
  * Terraform / CloudFormation Generator
@@ -513,17 +514,105 @@ output "alb_dns_${name}" {
   };
 }
 
-// ── Placeholder Parser ──
-export function parseTfState(stateJson: string): ArchNode[] {
-  // Parses a raw JSON Terraform state and attempts to reconstruct an array of valid ArchNodes.
-  // This acts as a foundation skeleton for Phase 3 reverse engineering support.
-  try {
-    void JSON.parse(stateJson);
-    return [];
-  } catch (err) {
-    console.error("Failed to parse Terraform State:", err);
-    return [];
+export function parseTfState(stateJson: any): { nodes: ArchNode[], edges: ArchEdge[] } {
+  const nodes: ArchNode[] = [];
+  const edges: ArchEdge[] = [];
+  
+  if (!stateJson || !Array.isArray(stateJson.resources)) {
+    return { nodes, edges };
   }
+
+  let yOffset = 0;
+  
+  for (const resource of stateJson.resources) {
+    if (resource.mode !== 'managed') continue;
+    
+    let compType = '';
+    
+    // Simple heuristic mapper for reverse-engineering AWS
+    switch (resource.type) {
+      case 'aws_instance':
+        compType = 'api-server';
+        break;
+      case 'aws_db_instance':
+        compType = 'postgresql'; // or mysql depending on engine if we parse instances
+        break;
+      case 'aws_lb':
+      case 'aws_elb':
+      case 'aws_alb':
+        compType = 'load-balancer';
+        break;
+      case 'aws_s3_bucket':
+        compType = 's3';
+        break;
+      case 'aws_lambda_function':
+        compType = 'lambda';
+        break;
+      case 'aws_elasticache_cluster':
+      case 'aws_elasticache_replication_group':
+        compType = 'redis';
+        break;
+      case 'aws_ecs_service':
+        compType = 'ecs-fargate';
+        break;
+      case 'aws_eks_cluster':
+        compType = 'kubernetes-cluster';
+        break;
+      case 'aws_cloudfront_distribution':
+        compType = 'cdn';
+        break;
+      case 'aws_apigatewayv2_api':
+      case 'aws_api_gateway_rest_api':
+        compType = 'api-gateway';
+        break;
+      case 'aws_sqs_queue':
+        compType = 'sqs';
+        break;
+      case 'aws_sns_topic':
+        compType = 'sns';
+        break;
+      case 'aws_route53_zone':
+        compType = 'dns';
+        break;
+      case 'aws_dynamodb_table':
+        compType = 'dynamodb';
+        break;
+      default:
+        continue; // skip unrecognized
+    }
+    
+    const def = getComponentDefinition(compType);
+    if (!def) continue;
+
+    const instName = resource.name || resource.type;
+    const instanceCount = Array.isArray(resource.instances) ? resource.instances.length : 1;
+    const tier = def.tiers[def.defaultTierIndex];
+    
+    const newNode: ArchNode = {
+      id: `tf_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+      type: 'archNode',
+      position: { x: 100 + (Math.random() * 50), y: 100 + yOffset },
+      data: {
+        componentType: def.type,
+        label: instName,
+        category: def.category,
+        icon: def.icon,
+        tier,
+        tierIndex: def.defaultTierIndex,
+        instances: instanceCount > 0 ? instanceCount : 1,
+        scalingType: def.scalingType,
+        reliability: def.reliability,
+        scalingFactor: def.scalingFactor,
+        healthStatus: 'healthy',
+        loadPercent: 0,
+      },
+    };
+    
+    nodes.push(newNode);
+    yOffset += 100;
+  }
+  
+  return { nodes, edges };
 }
 
 // ── CloudFormation Generator ──

@@ -41,6 +41,7 @@ import LandingPage from './components/LandingPage';
 import { ToastProvider, useToastBus, toastBus } from './components/ToastSystem';
 import { ContextMenu, SearchOverlay, ShortcutsOverlay } from './components/InteractiveOverlays';
 import { ErrorBoundary, CanvasErrorBoundary } from './components/ErrorBoundary';
+import { runSecurityScan } from './engine/securityScanner';
 import { captureArchitectureAsImage } from './engine/exportRenderer';
 import { getTemplateById, instantiateTemplate } from './utils/templateLoader';
 import LoginModal from './components/auth/LoginModal';
@@ -437,6 +438,13 @@ function WorkspaceView() {
   const setNodes          = useArchStore(s => s.setNodes);
   const setEdges          = useArchStore(s => s.setEdges);
   const setProjectName    = useArchStore(s => s.setProjectName);
+  const nodes             = useArchStore(s => s.nodes);
+  const edges             = useArchStore(s => s.edges);
+  const setSecurityReport = useArchStore(s => s.setSecurityReport);
+
+  useEffect(() => {
+    setSecurityReport(runSecurityScan(nodes, edges));
+  }, [nodes, edges, setSecurityReport]);
 
   // Initialize simulation events
   useSimulationEvents();

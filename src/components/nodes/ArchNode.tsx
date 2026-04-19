@@ -23,6 +23,7 @@ function ArchNodeComponent({ id, data, selected }: NodeProps) {
   const IconComponent = getIcon(d.icon);
   const greenOpsHeatmap = useArchStore(s => s.greenOpsHeatmap);
   const nodes = useArchStore(s => s.nodes);
+  const computedSecurityReport = useArchStore(s => s.computedSecurityReport);
   
   const healthClass = d.isFailed ? 'failed' : d.isDisabled ? 'disabled' : d.healthStatus;
   const selectedClass = selected ? 'selected' : '';
@@ -51,6 +52,22 @@ function ArchNodeComponent({ id, data, selected }: NodeProps) {
           border: `1px solid ${getCarbonBorderColor(fp.rating)}40`,
         }}>
           {fp.monthlyCO2kg < 1 ? `${Math.round(fp.monthlyCO2kg * 1000)}g` : `${fp.monthlyCO2kg.toFixed(1)}kg`} CO₂
+        </div>
+      );
+    }
+  }
+  
+  // Security Vulnerability Badge
+  let securityBadge: React.ReactNode = null;
+  if (computedSecurityReport && !d.isFailed && !d.isDisabled) {
+    const findings = computedSecurityReport.findings.filter((f: any) => f.affectedNodeIds.includes(id));
+    if (findings.length > 0) {
+      const hasCritical = findings.some((f: any) => f.severity === 'critical');
+      const hasHigh = findings.some((f: any) => f.severity === 'high');
+      const color = hasCritical ? '#ff4444' : hasHigh ? '#ff8c00' : '#fbbf24';
+      securityBadge = (
+        <div className="arch-node-security-badge" style={{ border: `1px solid ${color}` }} title={`${findings.length} security finding(s)`}>
+          <Icons.ShieldAlert size={16} color={color} />
         </div>
       );
     }
@@ -88,6 +105,7 @@ function ArchNodeComponent({ id, data, selected }: NodeProps) {
       
       {versionBadge}
       {carbonBadge}
+      {securityBadge}
       
       <div className="arch-node-header">
         <IconComponent size={18} className="arch-node-icon" />

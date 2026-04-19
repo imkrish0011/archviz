@@ -42,6 +42,7 @@ interface ArchStore {
   cloudProvider: CloudProvider;
   isWhiteLabelReport: boolean;
   isTracing: boolean;
+  computedSecurityReport: any | null;
   
   // ── Snapshots ──
   snapshots: Snapshot[];
@@ -87,6 +88,7 @@ interface ArchStore {
   setCloudProvider: (provider: CloudProvider) => void;
   toggleWhiteLabelReport: () => void;
   toggleTrace: () => void;
+  setSecurityReport: (report: any) => void;
   
   // Deployment actions
   startDeployment: (sourceNodeId: string) => void;
@@ -162,6 +164,7 @@ export const useArchStore = create<ArchStore>((set, get) => ({
   cloudProvider: 'aws',
   isWhiteLabelReport: false,
   isTracing: false,
+  computedSecurityReport: null,
   
   // ── React Flow handlers ──
   onNodesChange: (changes) => {
@@ -487,6 +490,7 @@ export const useArchStore = create<ArchStore>((set, get) => ({
   setCloudProvider: (provider) => set({ cloudProvider: provider }),
   toggleWhiteLabelReport: () => set({ isWhiteLabelReport: !get().isWhiteLabelReport }),
   toggleTrace: () => set({ isTracing: !get().isTracing }),
+  setSecurityReport: (report) => set({ computedSecurityReport: report }),
   
   // ── Snapshots ──
   takeSnapshot: (label) => {

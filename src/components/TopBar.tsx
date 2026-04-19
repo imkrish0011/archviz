@@ -16,6 +16,8 @@ import { runSimulation } from '../engine/simulator';
 import { toastBus } from './ToastSystem';
 import { useAuth } from '../hooks/useAuth';
 import { saveProject, updateProject } from '../services/projectService';
+import { calculateTotalCost, formatCost } from '../engine/costEngine';
+import { parseTfState } from '../engine/terraformGenerator';
 
 /** Wrap any export action with an auth check. If not logged in, opens the
  *  login modal and stores the action as a pending export to fire after login. */
@@ -42,6 +44,9 @@ export default function TopBar() {
   const leftSidebarOpen = useArchStore(s => s.leftSidebarOpen);
   const clearCanvas = useArchStore(s => s.clearCanvas);
   const nodes = useArchStore(s => s.nodes);
+  const edges = useArchStore(s => s.edges);
+  const setNodes = useArchStore(s => s.setNodes);
+  const setEdges = useArchStore(s => s.setEdges);
   const undo = useArchStore(s => s.undo);
   const redo = useArchStore(s => s.redo);
   const undoStack = useArchStore(s => s.undoStack);
@@ -181,7 +186,37 @@ export default function TopBar() {
     setShowExportDropdown(false);
   };
 
+  const currentCost = calculateTotalCost(nodes, edges);
   const rps = Math.round(simulationConfig.concurrentUsers * simulationConfig.rpsMultiplier);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImportTfState = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const json = JSON.parse(event.target?.result as string);
+        const { nodes: parsedNodes, edges: parsedEdges } = parseTfState(json);
+        if (parsedNodes.length === 0) {
+          toastBus.emit('No compatible AWS resources found in tfstate', 'warning');
+          return;
+        }
+        setNodes(parsedNodes);
+        setEdges(parsedEdges);
+        toastBus.emit(`Imported ${parsedNodes.length} resources from tfstate`, 'success');
+        // Give React a tick to update the DOM, then auto-layout
+        setTimeout(() => runAutoLayout('LR'), 50);
+      } catch (err) {
+        toastBus.emit('Invalid terraform.tfstate file', 'error');
+        console.error(err);
+      }
+    };
+    reader.readAsText(file);
+    // Reset input
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    setShowExportDropdown(false);
+  };
   
   return (
     <div className="topbar">
@@ -229,6 +264,10 @@ export default function TopBar() {
         <div className="topbar-divider" />
         <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', color: 'var(--accent)' }}>
           {rps.toLocaleString()} rps
+        </span>
+        <div className="topbar-divider" />
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', color: '#34d399', fontWeight: 'bold' }}>
+          {formatCost(currentCost)}/mo
         </span>
       </div>
       
@@ -373,6 +412,19 @@ export default function TopBar() {
                 <FileCode size={16} />
                 Export to Terraform
               </button>
+              <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
+              <button className="sim-dropdown-item" onClick={() => fileInputRef.current?.click()} style={{ color: '#60a5fa' }}>
+                <Upload size={16} />
+                Import terraform.tfstate
+              </button>
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                className="hidden" 
+                style={{ display: 'none' }}
+                accept=".tfstate,.json"
+                onChange={handleImportTfState} 
+              />
               <button className="sim-dropdown-item" onClick={() => {
                 setShowExportDropdown(false);
                 if (nodes.length === 0) { toastBus.emit('Add components to canvas first', 'warning'); return; }
