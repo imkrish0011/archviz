@@ -15,12 +15,22 @@ export function getComponentCost(node: ArchNode, load: number = 0, provider: Clo
   }
   
   // Calculate dynamic serverless execution costs
-  const serverlessTypes = ['lambda', 'api-gateway', 'cloudflare-workers', 'step-functions'];
-  if (serverlessTypes.includes(node.data.componentType) && node.data.tier.costPerMillionRequests) {
-    // Math: load (requests-per-second) * seconds_in_month * cost_per_million / 1,000,000
+  const serverlessTypes = ['lambda', 'api-gateway', 'cloudflare-workers', 'step-functions', 'vercel', 'netlify', 'cloudflare-pages', 'supabase', 'planetscale', 'firebase'];
+  if (serverlessTypes.includes(node.data.componentType)) {
     const monthlyRequests = load * 2.628e6;
-    const dynamicCost = (monthlyRequests * node.data.tier.costPerMillionRequests) / 1000000;
-    baseCost += dynamicCost;
+    if (node.data.tier.costPerMillionRequests) {
+      // Math: load (requests-per-second) * seconds_in_month * cost_per_million / 1,000,000
+      const dynamicCost = (monthlyRequests * node.data.tier.costPerMillionRequests) / 1000000;
+      baseCost += dynamicCost;
+    } else {
+      // PaaS fallback: usually they have a free capacity limit (assume 1M reqs) and then charge overage
+      const freeCapacity = node.data.tier.capacity || 1000000;
+      if (monthlyRequests > freeCapacity) {
+        const overage = monthlyRequests - freeCapacity;
+        // Typical serverless overage price: ~$2 per million reqs
+        baseCost += (overage / 1000000) * 2.0;
+      }
+    }
   }
   
   // Storage Types

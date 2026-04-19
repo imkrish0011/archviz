@@ -238,6 +238,25 @@ export const starterTemplates: Template[] = [
       { id: 'sl-e3', source: 'sl-2', target: 'sl-4' },
       { id: 'sl-e4', source: 'sl-3', target: 'sl-5' }
     ]
+  },
+  // ── MODERN STARTUP WEB APP ──
+  {
+    id: 'startup-web',
+    name: 'Modern Web App (Startup)',
+    category: 'starter',
+    description: 'Extremely fast to build, infinitely scalable frontend-heavy stack.',
+    keyInsight: 'Serverless PaaS (Netlify/Vercel) + BaaS (Supabase/Firebase) allows a 1-person team to scale to millions of users without managing servers. But beware of massive cost spikes during DDoS or viral traffic!',
+    baselineCost: 20,
+    nodeCount: 3,
+    nodes: [
+      { id: 'sw-1', type: 'archNode', position: { x: 50, y: 200 }, componentType: 'nextjs', architecturalNote: 'React application code with Server-Side Rendering (SSR).' },
+      { id: 'sw-2', type: 'archNode', position: { x: 250, y: 200 }, componentType: 'vercel', tierIndex: 1, architecturalNote: 'Vercel automatically deploys, provides global Edge CDNs, and serverless API routes.' },
+      { id: 'sw-3', type: 'archNode', position: { x: 450, y: 200 }, componentType: 'supabase', tierIndex: 1, architecturalNote: 'Supabase provides PostgreSQL, Auth, and Storage. Replaces an entire backend engineering team for early startups.' }
+    ],
+    edges: [
+      { id: 'sw-e1', source: 'sw-1', target: 'sw-2' },
+      { id: 'sw-e2', source: 'sw-2', target: 'sw-3' }
+    ]
   }
 ];
 

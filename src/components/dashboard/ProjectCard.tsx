@@ -19,11 +19,10 @@ interface ProjectCardProps {
 
 /* ─── Context menu rendered in a portal at click coordinates ─── */
 function ContextMenu({
-  x, y, project,
+  x, y,
   onOpen, onRename, onDelete, onDuplicate, onClose, confirmingDelete,
 }: {
   x: number; y: number;
-  project: CloudProject;
   onOpen: () => void; onRename: () => void;
   onDelete: () => void; onDuplicate: () => void;
   onClose: () => void;
@@ -102,7 +101,6 @@ export default function ProjectCard({
   const menu = menuPos ? (
     <ContextMenu
       x={menuPos.x} y={menuPos.y}
-      project={project}
       onOpen={() => onOpen(project.id)}
       onRename={() => setRenaming(true)}
       onDuplicate={() => onDuplicate(project.id)}

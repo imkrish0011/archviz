@@ -7,7 +7,7 @@ import {
   Zap, ServerCrash, Trash2, CloudOff, DatabaseZap, XCircle,
   PanelLeft, Undo2, Redo2, Download, Image, Maximize, Keyboard,
   BrainCircuit, ShieldAlert, FileCode, LayoutGrid, Leaf, MapPin,
-  Cloud, FileText, Container, MoreHorizontal, Activity, LogIn,
+  FileText, Container, MoreHorizontal, Activity, LogIn,
   LayoutDashboard, CheckSquare, Square
 } from 'lucide-react';
 import { downloadTerraform, downloadCloudFormation, downloadDockerCompose, downloadKubernetesManifests } from '../engine/terraformGenerator';
@@ -62,18 +62,15 @@ export default function TopBar() {
   
   const [showSimDropdown, setShowSimDropdown] = useState(false);
   const [showExportDropdown, setShowExportDropdown] = useState(false);
-  const [showCloudDropdown, setShowCloudDropdown] = useState(false);
   const [showMoreDropdown, setShowMoreDropdown] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [cloudProjectId, setCloudProjectId] = useState<string | null>(null);
   const simRef = useRef<HTMLDivElement>(null);
   const exportRef = useRef<HTMLDivElement>(null);
-  const cloudRef = useRef<HTMLDivElement>(null);
   const moreRef = useRef<HTMLDivElement>(null);
 
   const cloudProvider = useArchStore(s => s.cloudProvider);
-  const setCloudProvider = useArchStore(s => s.setCloudProvider);
   const isWhiteLabelReport = useArchStore(s => s.isWhiteLabelReport);
   const toggleWhiteLabelReport = useArchStore(s => s.toggleWhiteLabelReport);
 
@@ -88,9 +85,6 @@ export default function TopBar() {
       }
       if (exportRef.current && !exportRef.current.contains(e.target as Node)) {
         setShowExportDropdown(false);
-      }
-      if (cloudRef.current && !cloudRef.current.contains(e.target as Node)) {
-        setShowCloudDropdown(false);
       }
       if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
         setShowMoreDropdown(false);

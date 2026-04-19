@@ -696,17 +696,19 @@ export const useArchStore = create<ArchStore>((set, get) => ({
       selectedNodeId: null,
       rightPanelOpen: false,
       templatePickerOpen: false,
+      undoStack: [],   // clear history — new project context
+      redoStack: [],
     });
     setTimeout(() => get().takeSnapshot('Template loaded'), 200);
   },
   
   clearCanvas: () => {
-    if (get().nodes.length > 0) get().pushHistory();
     set({
       nodes: [],
       edges: [],
       selectedNodeId: null,
       rightPanelOpen: false,
+      undoStack: [],   // wipe history so Undo can't resurrect a previous project
       redoStack: [],
     });
   },

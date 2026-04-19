@@ -2184,6 +2184,149 @@ const componentLibrary: ComponentDefinition[] = [
     tiers: [{ id: 'meta-note', label: 'Documentation', monthlyCost: 0.00, capacity: 0, latency: 0 }],
     defaultTierIndex: 0,
   },
+  // ═══════════════════════════════════════════════════
+  // FRONTEND PAAS
+  // ═══════════════════════════════════════════════════
+  {
+    type: 'vercel',
+    label: 'Vercel',
+    category: 'frontend-paas',
+    icon: 'Cloud',
+    description: 'Serverless platform for frontend frameworks and edge APIs',
+    scalingType: 'horizontal',
+    reliability: 0.9999,
+    scalingFactor: 1.0,
+    baseLatency: 10,
+    tiers: [
+      { id: 'vercel-free', label: 'Hobby', monthlyCost: 0, capacity: 100000, latency: 50 },
+      { id: 'vercel-pro', label: 'Pro', monthlyCost: 20, capacity: 1000000, latency: 15 },
+      { id: 'vercel-ent', label: 'Enterprise', monthlyCost: 3000, capacity: 10000000, latency: 10 },
+    ],
+    defaultTierIndex: 1,
+  },
+  {
+    type: 'netlify',
+    label: 'Netlify',
+    category: 'frontend-paas',
+    icon: 'CloudLightning',
+    description: 'Global CDN + Edge computing for modern web apps',
+    scalingType: 'horizontal',
+    reliability: 0.9999,
+    scalingFactor: 1.0,
+    baseLatency: 12,
+    tiers: [
+      { id: 'netlify-free', label: 'Starter', monthlyCost: 0, capacity: 100000, latency: 55 },
+      { id: 'netlify-pro', label: 'Pro', monthlyCost: 19, capacity: 1000000, latency: 15 },
+    ],
+    defaultTierIndex: 1,
+  },
+  {
+    type: 'cloudflare-pages',
+    label: 'Cloudflare Pages',
+    category: 'frontend-paas',
+    icon: 'Globe2',
+    description: 'Jamstack platform globally distributed on Cloudflare edge network',
+    scalingType: 'horizontal',
+    reliability: 0.9999,
+    scalingFactor: 1.0,
+    baseLatency: 5,
+    tiers: [
+      { id: 'cf-pages-free', label: 'Free', monthlyCost: 0, capacity: 500000, latency: 10 },
+      { id: 'cf-pages-pro', label: 'Pro', monthlyCost: 20, capacity: 5000000, latency: 5 },
+    ],
+    defaultTierIndex: 0,
+  },
+  {
+    type: 'supabase',
+    label: 'Supabase',
+    category: 'frontend-paas',
+    icon: 'Database',
+    description: 'Open source Firebase alternative powered by PostgreSQL',
+    scalingType: 'horizontal', // It scales its connection pool, but really it's DBaaS
+    reliability: 0.995,
+    scalingFactor: 1.2,
+    baseLatency: 15,
+    tiers: [
+      { id: 'supa-free', label: 'Free', monthlyCost: 0, capacity: 500, latency: 25, ram: '500 MB', cpu: 'Shared' },
+      { id: 'supa-pro', label: 'Pro', monthlyCost: 25, capacity: 5000, latency: 15, ram: '8 GB', cpu: '2 vCPU' },
+      { id: 'supa-team', label: 'Team', monthlyCost: 599, capacity: 20000, latency: 10, ram: '32 GB', cpu: '8 vCPU' },
+    ],
+    defaultTierIndex: 1,
+  },
+  {
+    type: 'planetscale',
+    label: 'PlanetScale',
+    category: 'frontend-paas',
+    icon: 'DatabaseZap',
+    description: 'Serverless MySQL platform designed for supreme elasticity',
+    scalingType: 'horizontal',
+    reliability: 0.999,
+    scalingFactor: 1.0,
+    baseLatency: 20,
+    tiers: [
+      { id: 'ps-scaler', label: 'Scaler', monthlyCost: 29, capacity: 10000, latency: 20 },
+      { id: 'ps-pro', label: 'Scaler Pro', monthlyCost: 599, capacity: 100000, latency: 15 },
+    ],
+    defaultTierIndex: 0,
+  },
+  {
+    type: 'firebase',
+    label: 'Firebase',
+    category: 'frontend-paas',
+    icon: 'Flame',
+    description: 'Google BaaS with real-time NoSQL databases (Firestore)',
+    scalingType: 'horizontal',
+    reliability: 0.9999,
+    scalingFactor: 1.0,
+    baseLatency: 35,
+    tiers: [
+      { id: 'fb-spark', label: 'Spark (Free)', monthlyCost: 0, capacity: 1000, latency: 50 },
+      { id: 'fb-blaze', label: 'Blaze (Pay-as-you-go)', monthlyCost: 25, capacity: 50000, latency: 35 },
+    ],
+    defaultTierIndex: 1,
+  },
+  // ═══════════════════════════════════════════════════
+  // FRONTEND FRAMEWORKS
+  // ═══════════════════════════════════════════════════
+  {
+    type: 'nextjs',
+    label: 'Next.js App',
+    category: 'frontend-framework',
+    icon: 'AppWindow',
+    description: 'React framework for server-rendered or statically-exported apps',
+    scalingType: 'horizontal',
+    reliability: 1.0,
+    scalingFactor: 0, // Frameworks don't cost infra directly, they annotate
+    baseLatency: 0,
+    tiers: [{ id: 'next', label: 'Framework Code', monthlyCost: 0, capacity: 0, latency: 0 }],
+    defaultTierIndex: 0,
+  },
+  {
+    type: 'react',
+    label: 'React SPA',
+    category: 'frontend-framework',
+    icon: 'AppWindow',
+    description: 'Single-page application client code',
+    scalingType: 'horizontal',
+    reliability: 1.0,
+    scalingFactor: 0,
+    baseLatency: 0,
+    tiers: [{ id: 'react', label: 'Framework Code', monthlyCost: 0, capacity: 0, latency: 0 }],
+    defaultTierIndex: 0,
+  },
+  {
+    type: 'vue',
+    label: 'Vue.js App',
+    category: 'frontend-framework',
+    icon: 'AppWindow',
+    description: 'Progressive JavaScript framework client code',
+    scalingType: 'horizontal',
+    reliability: 1.0,
+    scalingFactor: 0,
+    baseLatency: 0,
+    tiers: [{ id: 'vue', label: 'Framework Code', monthlyCost: 0, capacity: 0, latency: 0 }],
+    defaultTierIndex: 0,
+  },
 ];
 
 export function getComponentDefinition(type: string): ComponentDefinition | undefined {
@@ -2195,12 +2338,18 @@ export function getComponentsByCategory(category: ComponentCategory): ComponentD
 }
 
 export function getAllCategories(): ComponentCategory[] {
-  return ['client', 'compute', 'storage', 'network', 'messaging', 'observability', 'security', 'pipeline', 'boundary', 'deployment', 'meta'];
+  return [
+    'client', 'frontend-framework', 'frontend-paas', 'compute', 'storage', 
+    'network', 'messaging', 'observability', 'security', 'pipeline', 
+    'boundary', 'deployment', 'meta'
+  ];
 }
 
 export function getCategoryLabel(category: ComponentCategory): string {
   const labels: Record<ComponentCategory, string> = {
     client: 'Client/User',
+    'frontend-framework': 'Frontend Frameworks',
+    'frontend-paas': 'Serverless & PaaS',
     compute: 'Compute',
     storage: 'Storage',
     network: 'Network',

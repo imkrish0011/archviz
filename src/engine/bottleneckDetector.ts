@@ -33,7 +33,16 @@ export function detectBottlenecks(
     const load = nodeLoads.get(node.id) || 0;
     const capacity = node.data.tier.capacity;
     const instances = node.data.instances;
-    const loadPercent = calculateLoadPercent(load, capacity, instances);
+    
+    const serverlessTypes = ['vercel', 'netlify', 'cloudflare-pages', 'supabase', 'planetscale', 'firebase', 'lambda', 'cloudflare-workers'];
+    
+    let loadPercent = calculateLoadPercent(load, capacity, instances);
+    
+    // Serverless types are infinitely scalable in terms of load, preventing them from failing during spikes.
+    if (serverlessTypes.includes(node.data.componentType)) {
+      loadPercent = Math.min(loadPercent, 50); // Cap load percent so they always show as healthy
+    }
+    
     const status = getHealthStatus(loadPercent);
     
     if (loadPercent > 60) {
@@ -63,7 +72,7 @@ export function calculateNodeLoads(
   dbLoads: Map<string, number>
 ): Map<string, number> {
   const loads = new Map<string, number>();
-  const dbTypes = ['postgresql', 'mysql', 'mongodb', 'cassandra', 'dynamodb', 'aurora-serverless', 'bigtable', 'elasticsearch'];
+  const dbTypes = ['postgresql', 'mysql', 'mongodb', 'cassandra', 'dynamodb', 'aurora-serverless', 'bigtable', 'elasticsearch', 'supabase', 'planetscale', 'firebase'];
   const cacheTypes = ['redis'];
   const observabilityTypes = ['cloudwatch', 'datadog'];
   
@@ -83,10 +92,10 @@ export function calculateNodeLoads(
       const sameType = nodes.filter(n => cacheTypes.includes(n.data.componentType) && !n.data.isDisabled && !n.data.isFailed);
       const shareCount = sameType.length || 1;
       loads.set(node.id, Math.round(rps / shareCount));
-    } else if (observabilityTypes.includes(type)) {
-      // Observability tools don't consume RPS
+    } else if (observabilityTypes.includes(type) || node.data.category === 'frontend-framework' || node.data.category === 'meta') {
+      // Frameworks, meta, and observability tools don't consume simulated RPS infrastructure load directly
       loads.set(node.id, 0);
-    } else if (type === 'load-balancer' || type === 'cdn' || type === 'api-gateway' || type === 'dns') {
+    } else if (['load-balancer', 'cdn', 'api-gateway', 'dns', 'vercel', 'netlify', 'cloudflare-pages'].includes(type)) {
       // Network components handle full RPS
       loads.set(node.id, rps);
     } else if (type === 'sqs' || type === 'sns' || type === 'kafka' || type === 'message-queue') {

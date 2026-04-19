@@ -10,8 +10,8 @@ import {
   Code2, Gauge, Network,
   Webhook, Container, HardDrive, Radio, CircuitBoard, Flame,
   FileCode, ShieldAlert, Target, Mail, Leaf,
-  Warehouse, PackageOpen, LayoutDashboard, ArrowLeftRight, FileText, Play, X, Cog, LayoutGrid,
-  ChevronDown, Power, FolderOpen, UserCircle, CloudUpload, LogIn
+  Warehouse, PackageOpen, LayoutDashboard, ArrowLeftRight, FileText, Cog, LayoutGrid,
+  FolderOpen, CloudUpload, LogIn
 } from 'lucide-react';
 import '../styles/landing.css';
 import { famousSystemTemplates } from '../data/templates/famousSystemTemplates';
