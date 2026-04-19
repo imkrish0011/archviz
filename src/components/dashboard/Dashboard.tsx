@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { listProjects, deleteProject, renameProject } from '../../services/projectService';
+import { toastBus } from '../ToastSystem';
 import type { CloudProject } from '../../types';
 import ProjectCard from './ProjectCard';
 import { famousSystemTemplates } from '../../data/templates/famousSystemTemplates';
@@ -19,7 +20,7 @@ import { loadTemplateWithAnimation } from '../../utils/templateLoader';
 
 type SortMode = 'updated' | 'created' | 'name';
 type ViewMode  = 'grid' | 'list';
-type Tab = 'projects' | 'templates';
+type Tab = 'projects' | 'templates' | 'account';
 
 /* ── Brand icon map ── */
 const brandIcons: Record<string, React.ComponentType<{ size?: number; strokeWidth?: number }>> = {
@@ -40,15 +41,18 @@ export default function Dashboard() {
   const setEdges = useArchStore(s => s.setEdges);
   const clearRef = useRef<(() => void) | null>(null);
 
-  const [projects, setProjects]   = useState<CloudProject[]>([]);
-  const [loading, setLoading]     = useState(true);
-  const [search, setSearch]       = useState('');
-  const [sort, setSort]           = useState<SortMode>('updated');
-  const [view, setView]           = useState<ViewMode>('grid');
-  const [tab, setTab]             = useState<Tab>('projects');
-  const [deleting, setDeleting]   = useState<string | null>(null);
-  const [userMenu, setUserMenu]   = useState(false);
+  const [projects, setProjects]     = useState<CloudProject[]>([]);
+  const [loading, setLoading]       = useState(true);
+  const [search, setSearch]         = useState('');
+  const [sort, setSort]             = useState<SortMode>('updated');
+  const [view, setView]             = useState<ViewMode>('grid');
+  const [tab, setTab]               = useState<Tab>('projects');
+  const [deleting, setDeleting]     = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null); // id pending confirm
+  const [userMenu, setUserMenu]     = useState(false);
   const [loadingTpl, setLoadingTpl] = useState<string | null>(null);
+
+  const MAX_PROJECTS = 5;
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -68,21 +72,63 @@ export default function Dashboard() {
     return () => { clearTimeout(t); document.removeEventListener('click', h); };
   }, [userMenu]);
 
-  const handleOpen     = (id: string) => navigate(`/app/${id}`);
-  const handleNew      = ()           => navigate('/app');
-  const handleSignOut  = async ()     => { await signOut(); navigate('/'); };
+  /* Auto-dismiss confirm after 5s */
+  useEffect(() => {
+    if (!confirmDelete) return;
+    const t = setTimeout(() => setConfirmDelete(null), 5000);
+    return () => clearTimeout(t);
+  }, [confirmDelete]);
 
+  const handleOpen = (id: string) => navigate(`/app/${id}`);
+
+  const handleNew = () => {
+    if (projects.length >= MAX_PROJECTS) {
+      toastBus.emit(`Project limit reached (${MAX_PROJECTS} max) — delete one to create a new project`, 'warning');
+      return;
+    }
+    navigate('/app');
+  };
+
+  const handleSignOut = async () => { await signOut(); navigate('/'); };
+
+  /* Delete: first click sets confirmDelete, second click executes */
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Delete this project? This cannot be undone.')) return;
+    if (confirmDelete !== id) {
+      setConfirmDelete(id); // ask for confirmation
+      return;
+    }
+    // Confirmed
+    setConfirmDelete(null);
     setDeleting(id);
-    try { await deleteProject(id); setProjects(p => p.filter(x => x.id !== id)); }
-    catch (e) { console.error(e); }
-    finally { setDeleting(null); }
+    try {
+      await deleteProject(id);
+      // Also wipe localStorage if this was the last-saved project
+      try {
+        const saved = localStorage.getItem('archviz-state');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          // If no explicit projectId tracking, just clear local cache too
+          if (parsed?.cloudProjectId === id) {
+            localStorage.removeItem('archviz-state');
+          }
+        }
+      } catch { /* ignore */ }
+      setProjects(p => p.filter(x => x.id !== id));
+      toastBus.emit('Project deleted', 'success');
+    } catch (e) {
+      console.error(e);
+      toastBus.emit('Failed to delete project', 'error');
+    } finally {
+      setDeleting(null);
+    }
   };
 
   const handleRename = async (id: string, name: string) => {
-    try { await renameProject(id, name); setProjects(p => p.map(x => x.id === id ? { ...x, name } : x)); }
-    catch (e) { console.error(e); }
+    try {
+      await renameProject(id, name);
+      setProjects(p => p.map(x => x.id === id ? { ...x, name } : x));
+      toastBus.emit('Renamed successfully', 'success');
+    } catch (e) { console.error(e); }
   };
 
   const handleDuplicate = (id: string) => handleOpen(id);
@@ -106,6 +152,7 @@ export default function Dashboard() {
   const totalNodes = projects.reduce((s, p) => s + p.nodeCount, 0);
   const h = new Date().getHours();
   const greeting = h < 12 ? 'Morning' : h < 17 ? 'Afternoon' : 'Evening';
+  const atLimit   = projects.length >= MAX_PROJECTS;
 
   return (
     <div className="db-root">
@@ -172,7 +219,7 @@ export default function Dashboard() {
           <MoreVertical size={13} className="db-user-more" />
           {userMenu && (
             <div className="db-user-menu" onClick={e => e.stopPropagation()}>
-              <button className="db-user-menu-item"><Activity size={12} /> Account</button>
+              <button className="db-user-menu-item" onClick={() => { setTab('account'); setUserMenu(false); }}><Activity size={12} /> Account</button>
               <div className="db-user-menu-sep" />
               <button className="db-user-menu-item db-user-menu-item--danger" onClick={handleSignOut}>
                 <LogOut size={12} /> Sign Out
@@ -207,33 +254,43 @@ export default function Dashboard() {
                 <option value="name">Name A–Z</option>
               </select>
             </>}
+            {tab === 'account' && (
+              <span style={{ fontSize: 13, color: 'var(--db-text-4)', fontWeight: 500 }}>Account Management</span>
+            )}
           </div>
         </header>
 
-        {/* Hero — always visible, CSS animation only */}
-        <section className="db-hero">
-          <div className="db-hero-text">
-            <div className="db-hero-eyebrow">
-              <span className="db-hero-eyebrow-dot" />
-              Good {greeting}, {firstName}
+        {/* Hero — visible for projects and templates */}
+        {tab !== 'account' && (
+          <section className="db-hero">
+            <div className="db-hero-text">
+              <div className="db-hero-eyebrow">
+                <span className="db-hero-eyebrow-dot" />
+                Good {greeting}, {firstName}
+              </div>
+              <h1 className="db-hero-title">
+                Architecture<br />
+                <span className="db-hero-title-sub">Command Center.</span>
+              </h1>
+              <p className="db-hero-sub">
+                {tab === 'projects'
+                  ? projects.length > 0
+                    ? `${projects.length} project${projects.length !== 1 ? 's' : ''} · ${totalNodes} components across all designs`
+                    : 'Design, simulate, and ship cloud architectures at scale.'
+                  : `${famousSystemTemplates.length + starterTemplates.length} ready-to-use architecture templates.`
+                }
+              </p>
             </div>
-            <h1 className="db-hero-title">
-              Architecture<br />
-              <span className="db-hero-title-sub">Command Center.</span>
-            </h1>
-            <p className="db-hero-sub">
-              {tab === 'projects'
-                ? projects.length > 0
-                  ? `${projects.length} project${projects.length !== 1 ? 's' : ''} · ${totalNodes} components across all designs`
-                  : 'Design, simulate, and ship cloud architectures at scale.'
-                : `${famousSystemTemplates.length + starterTemplates.length} ready-to-use architecture templates.`
-              }
-            </p>
-          </div>
-          <button className="db-hero-cta" onClick={handleNew}>
-            <Plus size={15} /> New Project <ArrowRight size={13} style={{ opacity: 0.5 }} />
-          </button>
-        </section>
+            {atLimit
+              ? <div className="db-hero-cta" style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.4)', cursor: 'not-allowed', boxShadow: 'none' }}>
+                  <Server size={14}/> {MAX_PROJECTS}/{MAX_PROJECTS} Projects
+                </div>
+              : <button className="db-hero-cta" onClick={handleNew}>
+                  <Plus size={15} /> New Project <ArrowRight size={13} style={{ opacity: 0.5 }} />
+                </button>
+            }
+          </section>
+        )}
 
         {/* Stats bar — projects only */}
         {tab === 'projects' && !loading && projects.length > 0 && (
@@ -298,11 +355,13 @@ export default function Dashboard() {
             ) : (
               <div className={view === 'grid' ? 'db-grid' : 'db-list'}>
                 {view === 'grid' && (
-                  <button className="db-new-card" onClick={handleNew}>
+                  <button className="db-new-card" onClick={handleNew} disabled={atLimit} title={atLimit ? `Limit of ${MAX_PROJECTS} projects reached` : 'New project'}>
                     <div className="db-new-card-inner">
-                      <div className="db-new-card-icon"><Plus size={22} /></div>
-                      <span className="db-new-card-label">New Project</span>
-                      <span className="db-new-card-sub">Blank canvas</span>
+                      <div className="db-new-card-icon">
+                        {atLimit ? <Server size={20} /> : <Plus size={22} />}
+                      </div>
+                      <span className="db-new-card-label">{atLimit ? 'Limit reached' : 'New Project'}</span>
+                      <span className="db-new-card-sub">{atLimit ? `${MAX_PROJECTS}/${MAX_PROJECTS} used` : 'Blank canvas'}</span>
                     </div>
                   </button>
                 )}
@@ -315,6 +374,7 @@ export default function Dashboard() {
                       project={project} view={view}
                       onOpen={handleOpen} onDelete={handleDelete}
                       onRename={handleRename} onDuplicate={handleDuplicate}
+                      confirmingDelete={confirmDelete === project.id}
                     />
                   </div>
                 ))}
@@ -417,6 +477,81 @@ export default function Dashboard() {
                     </button>
                   );
                 })}
+            </div>
+          </section>
+        )}
+
+        {/* ══ ACCOUNT TAB ══ */}
+        {tab === 'account' && (
+          <section className="db-account-section">
+            <div className="db-acc-header">
+              <div className="db-acc-avatar-large">
+                {user?.photoURL
+                  ? <img src={user.photoURL} alt="avatar" />
+                  : <div>{firstName.charAt(0).toUpperCase()}</div>
+                }
+              </div>
+              <div className="db-acc-title-area">
+                <h2 className="db-acc-name">{user?.displayName ?? 'Architect'}</h2>
+                <span className="db-acc-email">{user?.email ?? 'user@archviz.com'}</span>
+                <div className="db-acc-badge">PRO PLAN</div>
+              </div>
+            </div>
+
+            <div className="db-acc-grid">
+              
+              <div className="db-acc-card">
+                <h3 className="db-acc-card-title"><Activity size={16} /> Usage Metrics</h3>
+                
+                <div className="db-acc-stats-split">
+                  <div className="db-acc-stats-main">
+                    <div className="db-acc-stats">
+                      <div className="db-acc-stat">
+                        <span className="db-acc-val">{projects.length} <span style={{ opacity: 0.3, fontSize: 18 }}>/ {MAX_PROJECTS}</span></span>
+                        <span className="db-acc-lbl">Projects Active</span>
+                      </div>
+                      <div className="db-acc-stat">
+                        <span className="db-acc-val">{totalNodes}</span>
+                        <span className="db-acc-lbl">Total Components</span>
+                      </div>
+                      <div className="db-acc-stat">
+                        <span className="db-acc-val">4.2<span style={{fontSize: 14, marginLeft: 3, opacity: 0.4}}>MB</span></span>
+                        <span className="db-acc-lbl">Storage Used</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="db-acc-progress-wrap">
+                    <div className="db-acc-progress-label">
+                      <span>Cloud Limit</span>
+                      <span>{Math.round((projects.length / MAX_PROJECTS) * 100)}%</span>
+                    </div>
+                    <div className="db-acc-progress-bar">
+                      <div className="db-acc-progress-fill" style={{ width: `${(projects.length / MAX_PROJECTS) * 100}%` }} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="db-acc-card db-acc-card--billing">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
+                  <h3 className="db-acc-card-title" style={{ margin: 0 }}><CreditCard size={16} /> Billing & Subscription</h3>
+                </div>
+                
+                <div className="db-acc-billing-split">
+                  <div className="db-acc-billing-text">
+                    <h4 style={{ color: '#fff', margin: '0 0 8px', fontSize: 20 }}>ArchViz Pro Trial</h4>
+                    <p className="db-acc-desc">
+                      Unlock limits. You currently have access to infinite blank canvases, live architecture simulation, and infinite high-res exports.
+                    </p>
+                  </div>
+                  <div className="db-acc-action-col">
+                    <button className="db-acc-btn db-acc-btn--primary">Upgrade to Enterprise</button>
+                    <button className="db-acc-btn">Manage Billing</button>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </section>
         )}

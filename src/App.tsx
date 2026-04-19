@@ -9,7 +9,7 @@ import {
   ConnectionLineType
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate, useParams } from 'react-router-dom';
 
 import './styles/index.css';
 import './styles/reactflow.css';
@@ -45,6 +45,7 @@ import { captureArchitectureAsImage } from './engine/exportRenderer';
 import { getTemplateById, instantiateTemplate } from './utils/templateLoader';
 import LoginModal from './components/auth/LoginModal';
 import Dashboard from './components/dashboard/Dashboard';
+import { loadProject } from './services/projectService';
 import { Loader2 } from 'lucide-react';
 
 const nodeTypes = { archNode: ArchNodeComponent, groupNode: GroupNode, zoneNode: ZoneNode, stickyNote: StickyNoteNode };
@@ -427,27 +428,53 @@ function toggleFullscreen() {
 function WorkspaceView() {
   // Bridge bus → toast context
   useToastBus();
-  
-  const rightPanelOpen = useArchStore(s => s.rightPanelOpen);
-  const leftSidebarOpen = useArchStore(s => s.leftSidebarOpen);
-  const loadFromLocalStorage = useArchStore(s => s.loadFromLocalStorage);
-  const selectedNodeId = useArchStore(s => s.selectedNodeId);
-  
+  const { projectId } = useParams<{ projectId?: string }>();
+
+  const rightPanelOpen    = useArchStore(s => s.rightPanelOpen);
+  const leftSidebarOpen   = useArchStore(s => s.leftSidebarOpen);
+  const selectedNodeId    = useArchStore(s => s.selectedNodeId);
+  const clearCanvas       = useArchStore(s => s.clearCanvas);
+  const setNodes          = useArchStore(s => s.setNodes);
+  const setEdges          = useArchStore(s => s.setEdges);
+  const setProjectName    = useArchStore(s => s.setProjectName);
+
   // Initialize simulation events
   useSimulationEvents();
   useDeploymentSimulator();
-  
-  // Load saved state on mount
+
+  // On mount: either start fresh or load the cloud project
   useEffect(() => {
-    loadFromLocalStorage();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  
+    if (!projectId) {
+      // NEW project — always start with a clean canvas
+      clearCanvas();
+      setProjectName('Untitled Architecture');
+    } else {
+      // OPEN existing — load from Firestore
+      loadProject(projectId).then(data => {
+        if (data) {
+          setNodes(data.nodes as any);
+          setEdges(data.edges as any);
+          setProjectName(data.name);
+        } else {
+          // Project not found — clear and show fresh canvas
+          clearCanvas();
+          setProjectName('Untitled Architecture');
+          toastBus.emit('Project not found — starting fresh', 'warning');
+        }
+      }).catch(() => {
+        clearCanvas();
+        setProjectName('Untitled Architecture');
+        toastBus.emit('Failed to load project', 'error');
+      });
+    }
+  }, [projectId]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const layoutClasses = [
     'app-layout',
-    rightPanelOpen ? 'right-panel-open' : '',
+    rightPanelOpen  ? 'right-panel-open'   : '',
     !leftSidebarOpen ? 'left-sidebar-hidden' : '',
   ].filter(Boolean).join(' ');
-  
+
   return (
     <div className={layoutClasses}>
       <TopBar />
@@ -455,7 +482,7 @@ function WorkspaceView() {
       <FlowCanvas />
       {rightPanelOpen && <RightPanel />}
       <BottomInsightBar />
-      
+
       {/* Overlays */}
       <RecommendationPanel />
       <TemplatePickerModal />
@@ -466,10 +493,11 @@ function WorkspaceView() {
       <ContextMenu />
       <SearchOverlay />
       <ShortcutsOverlay />
-      
-      {/* A11y Live Region for screen readers */}
-      <div aria-live="polite" className="sr-only" style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', border: 0 }}>
-        {selectedNodeId ? `Node selected.` : ''}
+
+      {/* A11y */}
+      <div aria-live="polite" className="sr-only"
+        style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap', border: 0 }}>
+        {selectedNodeId ? 'Node selected.' : ''}
       </div>
     </div>
   );

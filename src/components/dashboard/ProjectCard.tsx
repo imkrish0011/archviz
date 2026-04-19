@@ -14,18 +14,20 @@ interface ProjectCardProps {
   onDelete: (id: string) => void;
   onRename: (id: string, name: string) => void;
   onDuplicate: (id: string) => void;
+  confirmingDelete?: boolean; // true = waiting for second click to confirm
 }
 
 /* ─── Context menu rendered in a portal at click coordinates ─── */
 function ContextMenu({
   x, y, project,
-  onOpen, onRename, onDelete, onDuplicate, onClose,
+  onOpen, onRename, onDelete, onDuplicate, onClose, confirmingDelete,
 }: {
   x: number; y: number;
   project: CloudProject;
   onOpen: () => void; onRename: () => void;
   onDelete: () => void; onDuplicate: () => void;
   onClose: () => void;
+  confirmingDelete?: boolean;
 }) {
   const menuRef = useRef<HTMLDivElement>(null);
   const MENU_W = 158;
@@ -61,8 +63,12 @@ function ContextMenu({
         <Copy size={13} /> Duplicate
       </button>
       <div className="pc-context-sep" />
-      <button className="pc-context-item pc-context-item--danger" onClick={() => { onDelete(); onClose(); }}>
-        <Trash2 size={13} /> Delete
+      <button
+        className={`pc-context-item ${confirmingDelete ? 'pc-context-item--confirming' : 'pc-context-item--danger'}`}
+        onClick={() => { onDelete(); if (confirmingDelete) onClose(); }}
+      >
+        <Trash2 size={13} />
+        {confirmingDelete ? 'Click again to confirm' : 'Delete'}
       </button>
     </div>,
     document.body
@@ -71,7 +77,7 @@ function ContextMenu({
 
 export default function ProjectCard({
   project, view = 'grid',
-  onOpen, onDelete, onRename, onDuplicate
+  onOpen, onDelete, onRename, onDuplicate, confirmingDelete
 }: ProjectCardProps) {
   const [menuPos, setMenuPos]   = useState<{ x: number; y: number } | null>(null);
   const [renaming, setRenaming] = useState(false);
@@ -102,6 +108,7 @@ export default function ProjectCard({
       onDuplicate={() => onDuplicate(project.id)}
       onDelete={() => onDelete(project.id)}
       onClose={() => setMenuPos(null)}
+      confirmingDelete={confirmingDelete}
     />
   ) : null;
 
