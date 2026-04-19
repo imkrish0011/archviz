@@ -1,17 +1,31 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useArchStore } from '../store/useArchStore';
+import { useAuthStore } from '../store/useAuthStore';
 import {
   Save, Upload, Clock, LayoutTemplate, Play, ChevronDown,
   Zap, ServerCrash, Trash2, CloudOff, DatabaseZap, XCircle,
   PanelLeft, Undo2, Redo2, Download, Image, Maximize, Keyboard,
   BrainCircuit, ShieldAlert, FileCode, LayoutGrid, Leaf, MapPin,
-  Cloud, FileText, Container, MoreHorizontal, Activity
+  Cloud, FileText, Container, MoreHorizontal, Activity, LogIn,
+  LayoutDashboard
 } from 'lucide-react';
 import { downloadTerraform, downloadCloudFormation, downloadDockerCompose, downloadKubernetesManifests } from '../engine/terraformGenerator';
 import { generateArchitectureReport } from '../engine/reportGenerator';
 import { runSimulation } from '../engine/simulator';
 import { toastBus } from './ToastSystem';
+import { useAuth } from '../hooks/useAuth';
+
+/** Wrap any export action with an auth check. If not logged in, opens the
+ *  login modal and stores the action as a pending export to fire after login. */
+function withAuth(action: () => void, label: string): void {
+  const { user, openLoginModal } = useAuthStore.getState();
+  if (user) {
+    action();
+  } else {
+    openLoginModal(`Sign in to export: ${label}`, action);
+  }
+}
 
 export default function TopBar() {
   const projectName = useArchStore(s => s.projectName);
@@ -54,6 +68,9 @@ export default function TopBar() {
   const setCloudProvider = useArchStore(s => s.setCloudProvider);
   const isWhiteLabelReport = useArchStore(s => s.isWhiteLabelReport);
   const toggleWhiteLabelReport = useArchStore(s => s.toggleWhiteLabelReport);
+
+  const { user, signOut } = useAuth();
+  const openLoginModal = useAuthStore(s => s.openLoginModal);
   
   // Close dropdowns on outside click
   useEffect(() => {
@@ -280,7 +297,7 @@ export default function TopBar() {
           {isTracing ? 'Tracing...' : 'Trace Flow'}
         </button>
         
-        {/* Export Dropdown */}
+        {/* Export Dropdown — all actions gated behind auth */}
         <div className="sim-dropdown" ref={exportRef}>
           <button className="btn" onClick={() => setShowExportDropdown(!showExportDropdown)}>
             <Download size={14} />
@@ -290,7 +307,10 @@ export default function TopBar() {
           
           {showExportDropdown && (
             <div className="sim-dropdown-menu">
-              <button className="sim-dropdown-item" onClick={handleExportReport} style={{ fontWeight: 'bold', color: 'var(--accent)' }}>
+              <button className="sim-dropdown-item" onClick={() => {
+                setShowExportDropdown(false);
+                withAuth(() => handleExportReport(), 'PDF Report');
+              }} style={{ fontWeight: 'bold', color: 'var(--accent)' }}>
                 <FileText size={16} />
                 Generate Premium Report (PDF)
               </button>
@@ -300,43 +320,49 @@ export default function TopBar() {
                 White-label Pro Export
               </button>
               <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
-              <button className="sim-dropdown-item" onClick={() => { (window as any).__archviz_exportPNG?.(); setShowExportDropdown(false); }}>
+              <button className="sim-dropdown-item" onClick={() => {
+                setShowExportDropdown(false);
+                withAuth(() => { (window as any).__archviz_exportPNG?.(); }, 'PNG Image');
+              }}>
                 <Image size={16} />
                 Export as PNG
               </button>
-              <button className="sim-dropdown-item" onClick={() => { (window as any).__archviz_exportJSON?.(); setShowExportDropdown(false); }}>
+              <button className="sim-dropdown-item" onClick={() => {
+                setShowExportDropdown(false);
+                withAuth(() => { (window as any).__archviz_exportJSON?.(); }, 'JSON');
+              }}>
                 <Download size={16} />
                 Export as JSON
               </button>
               <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
               <button className="sim-dropdown-item" onClick={() => {
-                if (nodes.length === 0) { toastBus.emit('Add components to canvas first', 'warning'); }
-                else { downloadTerraform(nodes, useArchStore.getState().edges, projectName); toastBus.emit('Terraform (.tf) exported!', 'success'); }
                 setShowExportDropdown(false);
+                if (nodes.length === 0) { toastBus.emit('Add components to canvas first', 'warning'); return; }
+                withAuth(() => { downloadTerraform(nodes, useArchStore.getState().edges, projectName); toastBus.emit('Terraform (.tf) exported!', 'success'); }, 'Terraform');
               }}>
                 <FileCode size={16} />
                 Export to Terraform
               </button>
               <button className="sim-dropdown-item" onClick={() => {
-                if (nodes.length === 0) { toastBus.emit('Add components to canvas first', 'warning'); }
-                else { downloadCloudFormation(nodes, useArchStore.getState().edges, projectName); toastBus.emit('CloudFormation (.json) exported!', 'success'); }
                 setShowExportDropdown(false);
+                if (nodes.length === 0) { toastBus.emit('Add components to canvas first', 'warning'); return; }
+                withAuth(() => { downloadCloudFormation(nodes, useArchStore.getState().edges, projectName); toastBus.emit('CloudFormation (.json) exported!', 'success'); }, 'CloudFormation');
               }}>
                 <FileCode size={16} />
                 Export to CloudFormation
               </button>
               <button className="sim-dropdown-item" onClick={() => {
-                if (nodes.length === 0) { toastBus.emit('Add components to canvas first', 'warning'); }
-                else { downloadKubernetesManifests(nodes, useArchStore.getState().edges, projectName); toastBus.emit('K8s Manifests exported!', 'success'); }
                 setShowExportDropdown(false);
+                if (nodes.length === 0) { toastBus.emit('Add components to canvas first', 'warning'); return; }
+                withAuth(() => { downloadKubernetesManifests(nodes, useArchStore.getState().edges, projectName); toastBus.emit('K8s Manifests exported!', 'success'); }, 'Kubernetes Manifests');
               }}>
                 <Container size={16} />
                 Export Kubernetes Manifests
               </button>
               <button className="sim-dropdown-item" onClick={() => {
-                if (nodes.length === 0) { toastBus.emit('Add components to canvas first', 'warning'); }
-                else { downloadDockerCompose(nodes, useArchStore.getState().edges, projectName); toastBus.emit('Docker Compose exported!', 'success'); }
                 setShowExportDropdown(false);
+                if (nodes.length === 0) { toastBus.emit('Add components to canvas first', 'warning'); return; }
+                withAuth(() => { downloadDockerCompose(nodes, useArchStore.getState().edges, projectName); toastBus.emit('Docker Compose exported!', 'success'); }, 'Docker Compose');
               }}>
                 <FileCode size={16} />
                 Export Docker Compose
@@ -406,6 +432,44 @@ export default function TopBar() {
             </div>
           )}
         </div>
+
+        <div className="topbar-divider" />
+
+        {/* User Auth area */}
+        {user ? (
+          <div className="topbar-user">
+            <button
+              className="topbar-user-btn"
+              onClick={() => navigate('/dashboard')}
+              title="My Projects (Dashboard)"
+            >
+              {user.photoURL ? (
+                <img src={user.photoURL} alt="avatar" className="topbar-avatar" />
+              ) : (
+                <div className="topbar-avatar-placeholder">
+                  {(user.displayName ?? 'U').charAt(0).toUpperCase()}
+                </div>
+              )}
+            </button>
+            <div className="topbar-user-dropdown">
+              <button className="sim-dropdown-item" onClick={() => navigate('/dashboard')}>
+                <LayoutDashboard size={14} /> My Projects
+              </button>
+              <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
+              <button className="sim-dropdown-item" style={{ color: 'var(--danger)' }} onClick={async () => { await signOut(); navigate('/'); }}>
+                <LogIn size={14} /> Sign Out
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            className="btn"
+            onClick={() => openLoginModal('Sign in to save and export your architecture')}
+            style={{ background: 'var(--accent)', color: '#fff', border: 'none', fontWeight: 600 }}
+          >
+            <LogIn size={14} /> Sign In
+          </button>
+        )}
       </div>
     </div>
   );

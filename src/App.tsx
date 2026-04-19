@@ -13,11 +13,14 @@ import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 
 import './styles/index.css';
 import './styles/reactflow.css';
+import './styles/auth-dashboard.css';
 
 import { useArchStore } from './store/useArchStore';
 import { useSimulation } from './hooks/useSimulation';
 import { useSimulationEvents } from './hooks/useSimulationEvents';
 import { useDeploymentSimulator } from './hooks/useDeploymentSimulator';
+import { useAuth } from './hooks/useAuth';
+import { useAuthStore } from './store/useAuthStore';
 
 import ArchNodeComponent from './components/nodes/ArchNode';
 import GroupNode from './components/nodes/GroupNode';
@@ -40,9 +43,48 @@ import { ContextMenu, SearchOverlay, ShortcutsOverlay } from './components/Inter
 import { ErrorBoundary, CanvasErrorBoundary } from './components/ErrorBoundary';
 import { captureArchitectureAsImage } from './engine/exportRenderer';
 import { getTemplateById, instantiateTemplate } from './utils/templateLoader';
+import LoginModal from './components/auth/LoginModal';
+import Dashboard from './components/dashboard/Dashboard';
+import { Loader2 } from 'lucide-react';
 
 const nodeTypes = { archNode: ArchNodeComponent, groupNode: GroupNode, zoneNode: ZoneNode, stickyNote: StickyNoteNode };
 const edgeTypes = { default: ArchEdge, custom: ArchEdge };
+
+// ── Auth guards ────────────────────────────────────────────────
+function SmartHomeRoute() {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && user) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, loading, navigate]);
+
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--bg-primary, #0a0a0f)', gap: 12 }}>
+        <Loader2 size={24} style={{ animation: 'spin 1s linear infinite', color: 'var(--accent, #6366f1)' }} />
+        <span style={{ color: 'var(--text-secondary, #888)', fontFamily: 'system-ui' }}>Loading...</span>
+      </div>
+    );
+  }
+  if (user) return null; // redirecting
+  return <LandingView />;
+}
+
+function AuthRequired({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--bg-primary, #0a0a0f)', gap: 12 }}>
+        <Loader2 size={24} style={{ animation: 'spin 1s linear infinite', color: 'var(--accent, #6366f1)' }} />
+      </div>
+    );
+  }
+  if (!user) return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
 
 function FlowCanvas() {
   const nodes = useArchStore(s => s.nodes);
@@ -439,16 +481,32 @@ function LandingView() {
   return <LandingPage onLaunch={() => navigate('/app')} />;
 }
 
+function DashboardView() {
+  useToastBus();
+  return <Dashboard />;
+}
+
+// Initialise auth listener at the top level (runs once globally)
+function AuthInitializer() {
+  useAuth(); // subscribes to onAuthStateChanged
+  const loginModalOpen = useAuthStore(s => s.loginModalOpen);
+  return loginModalOpen ? <LoginModal /> : null;
+}
+
 export default function App() {
   return (
     <ErrorBoundary>
       <ToastProvider>
+        <AuthInitializer />
         <Routes>
-          <Route path="/" element={<LandingView />} />
-          <Route path="/app" element={<WorkspaceView />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="/"          element={<SmartHomeRoute />} />
+          <Route path="/dashboard" element={<AuthRequired><DashboardView /></AuthRequired>} />
+          <Route path="/app"             element={<WorkspaceView />} />
+          <Route path="/app/:projectId"  element={<WorkspaceView />} />
+          <Route path="*"          element={<Navigate to="/" replace />} />
         </Routes>
       </ToastProvider>
     </ErrorBoundary>
   );
 }
+

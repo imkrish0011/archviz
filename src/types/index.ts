@@ -239,3 +239,16 @@ export interface Template {
   nodes: TemplateNodeDef[];
   edges: TemplateEdgeDef[];
 }
+
+// ─── Cloud Project Types ──────────────────────────────────────
+export interface CloudProject {
+  id: string;
+  uid: string;
+  name: string;
+  thumbnail?: string;
+  nodeCount: number;
+  edgeCount: number;
+  isPublic: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
