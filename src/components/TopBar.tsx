@@ -15,6 +15,7 @@ import { generateArchitectureReport } from '../engine/reportGenerator';
 import { runSimulation } from '../engine/simulator';
 import { toastBus } from './ToastSystem';
 import { useAuth } from '../hooks/useAuth';
+import { saveProject, updateProject } from '../services/projectService';
 
 /** Wrap any export action with an auth check. If not logged in, opens the
  *  login modal and stores the action as a pending export to fire after login. */
@@ -59,6 +60,8 @@ export default function TopBar() {
   const [showCloudDropdown, setShowCloudDropdown] = useState(false);
   const [showMoreDropdown, setShowMoreDropdown] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [cloudProjectId, setCloudProjectId] = useState<string | null>(null);
   const simRef = useRef<HTMLDivElement>(null);
   const exportRef = useRef<HTMLDivElement>(null);
   const cloudRef = useRef<HTMLDivElement>(null);
@@ -101,9 +104,36 @@ export default function TopBar() {
     return n.toString();
   };
   
-  const handleSave = useCallback(() => {
+  const handleSave = useCallback(async () => {
+    // Always save locally
     saveToLocalStorage();
-  }, [saveToLocalStorage]);
+
+    if (!user) {
+      openLoginModal('Sign in to save your project to the cloud', async () => {
+        // re-run after login
+        handleSave();
+      });
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const edges = useArchStore.getState().edges;
+      const simCfg = useArchStore.getState().simulationConfig;
+      if (cloudProjectId) {
+        await updateProject(cloudProjectId, nodes, edges, simCfg, projectName);
+      } else {
+        const id = await saveProject(user.uid, projectName, nodes, edges, simCfg);
+        setCloudProjectId(id);
+      }
+      toastBus.emit('Project saved to cloud ☁️', 'success');
+    } catch (err) {
+      console.error('Cloud save failed:', err);
+      toastBus.emit('Cloud save failed — check Firestore rules', 'error');
+    } finally {
+      setIsSaving(false);
+    }
+  }, [saveToLocalStorage, user, cloudProjectId, nodes, projectName, openLoginModal]);
   
   const handleLoad = useCallback(() => {
     loadFromLocalStorage();
@@ -401,7 +431,7 @@ export default function TopBar() {
           {showMoreDropdown && (
             <div className="sim-dropdown-menu" style={{ right: 0, minWidth: '180px' }}>
               <button className="sim-dropdown-item" onClick={() => { handleSave(); setShowMoreDropdown(false); }}>
-                <Save size={16} /> Save Project
+                <Save size={16} /> {isSaving ? 'Saving…' : 'Save Project'}
               </button>
               <button className="sim-dropdown-item" onClick={() => { handleLoad(); setShowMoreDropdown(false); }}>
                 <Upload size={16} /> Load Project

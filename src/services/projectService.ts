@@ -91,26 +91,52 @@ export async function loadProject(projectId: string): Promise<{
 
 // ─── List all projects for a user ──────────────────────────────
 export async function listProjects(uid: string): Promise<CloudProject[]> {
-  const q = query(
-    collection(db, PROJECTS_COLLECTION),
-    where('uid', '==', uid),
-    orderBy('updatedAt', 'desc')
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => {
-    const data = d.data();
-    return {
-      id: d.id,
-      uid: data.uid,
-      name: data.name,
-      thumbnail: data.thumbnail ?? '',
-      nodeCount: data.nodeCount ?? 0,
-      edgeCount: data.edgeCount ?? 0,
-      isPublic: data.isPublic ?? false,
-      createdAt: (data.createdAt as Timestamp)?.toDate() ?? new Date(),
-      updatedAt: (data.updatedAt as Timestamp)?.toDate() ?? new Date(),
-    };
-  });
+  try {
+    // Attempt ordered query (requires composite index in Firestore)
+    const q = query(
+      collection(db, PROJECTS_COLLECTION),
+      where('uid', '==', uid),
+      orderBy('updatedAt', 'desc')
+    );
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => {
+      const data = d.data();
+      return {
+        id: d.id,
+        uid: data.uid,
+        name: data.name,
+        thumbnail: data.thumbnail ?? '',
+        nodeCount: data.nodeCount ?? 0,
+        edgeCount: data.edgeCount ?? 0,
+        isPublic: data.isPublic ?? false,
+        createdAt: (data.createdAt as Timestamp)?.toDate() ?? new Date(),
+        updatedAt: (data.updatedAt as Timestamp)?.toDate() ?? new Date(),
+      };
+    });
+  } catch (err: any) {
+    // Fallback: no orderBy (avoids missing-index error), sort client-side
+    console.warn('listProjects ordered query failed, falling back:', err?.message);
+    const q = query(
+      collection(db, PROJECTS_COLLECTION),
+      where('uid', '==', uid)
+    );
+    const snap = await getDocs(q);
+    const docs = snap.docs.map((d) => {
+      const data = d.data();
+      return {
+        id: d.id,
+        uid: data.uid,
+        name: data.name,
+        thumbnail: data.thumbnail ?? '',
+        nodeCount: data.nodeCount ?? 0,
+        edgeCount: data.edgeCount ?? 0,
+        isPublic: data.isPublic ?? false,
+        createdAt: (data.createdAt as Timestamp)?.toDate() ?? new Date(),
+        updatedAt: (data.updatedAt as Timestamp)?.toDate() ?? new Date(),
+      };
+    });
+    return docs.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+  }
 }
 
 // ─── Delete a project ──────────────────────────────────────────

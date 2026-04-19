@@ -71,20 +71,7 @@ export default function LoginModal() {
           <p className="lm-subtitle">{loginModalMessage || 'Sign in to save your work, access your projects, and unlock professional exports.'}</p>
         </div>
 
-        {/* ── Feature list ── */}
-        <ul className="lm-features">
-          {[
-            'Cloud-saved architecture diagrams',
-            'Figma-style project dashboard',
-            'PDF, PNG & Terraform export',
-            'Sync across any device',
-          ].map(f => (
-            <li key={f} className="lm-feature-item">
-              <span className="lm-feature-check"><Check size={11} /></span>
-              {f}
-            </li>
-          ))}
-        </ul>
+
 
         {/* ── Error ── */}
         {error && (
