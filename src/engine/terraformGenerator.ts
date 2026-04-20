@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-escape */
 import type { ArchNode, ArchEdge } from '../types';
 import { getComponentDefinition } from '../data/componentLibrary';
 
@@ -96,35 +97,119 @@ function getInstanceType(node: ArchNode): string {
   return `"t3.medium"`;
 }
 
-function generateEC2Block(node: ArchNode, name: string): string {
+interface NodeContext {
+  name: string;
+  envVars: string[];
+  iamStatements: string;
+}
+
+function generateEC2RoleBlock(name: string, statements: string): string {
+  if (!statements) return '';
+  return `
+resource "aws_iam_role" "${name}_role" {
+  name = "${name}-ec2-role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = { Service = "ec2.amazonaws.com" }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "${name}_policy" {
+  name = "${name}-policy"
+  role = aws_iam_role.${name}_role.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+${statements}
+    ]
+  })
+}
+
+resource "aws_iam_instance_profile" "${name}_profile" {
+  name = "${name}-profile"
+  role = aws_iam_role.${name}_role.name
+}
+`;
+}
+
+function generateLambdaRoleBlock(name: string, statements: string): string {
+  return `
+resource "aws_iam_role" "${name}_lambda_role" {
+  name = "${name}-lambda-role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = { Service = "lambda.amazonaws.com" }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "${name}_lambda_logs" {
+  role       = aws_iam_role.${name}_lambda_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+${statements ? `
+resource "aws_iam_role_policy" "${name}_lambda_custom_policy" {
+  name = "${name}-custom-policy"
+  role = aws_iam_role.${name}_lambda_role.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+${statements}
+    ]
+  })
+}
+` : ''}
+`;
+}
+
+function generateEC2Block(node: ArchNode, ctx: NodeContext): string {
   const count = node.data.scalingType === 'horizontal' ? node.data.instances : 1;
-  let block = `
+  const roleBlock = generateEC2RoleBlock(ctx.name, ctx.iamStatements);
+  
+  const userData = ctx.envVars.length > 0 ? `
+  user_data = <<-EOF
+    #!/bin/bash
+    echo "# Injected env vars via ArchViz Edge Relationships" >> /etc/profile
+    ${ctx.envVars.map(v => `echo "export ${v}" >> /etc/profile`).join('\n    ')}
+  EOF` : '';
+
+  let block = roleBlock + `
 ${getTierComment(node)}
-module "ec2_instance_${name}" {
+module "ec2_instance_${ctx.name}" {
   source  = "terraform-aws-modules/ec2-instance/aws"
   version = "~> 5.6.0"
 
   name = "${node.data.label}"
-  ami                    = var.ami_id
+  ami                    = data.aws_ami.amazon_linux_2023.id
   instance_type          = ${getInstanceType(node)}
-  vpc_security_group_ids = [aws_security_group.${name}_sg.id]
+  vpc_security_group_ids = [aws_security_group.${ctx.name}_sg.id]
   subnet_id              = module.vpc.private_subnets[0]
+${ctx.iamStatements ? `  iam_instance_profile   = aws_iam_instance_profile.${ctx.name}_profile.name` : ''}${userData}
 `;
 
   if (count > 1) {
-    block = `
+    block = roleBlock + `
 ${getTierComment(node)}
-module "ec2_instance_${name}" {
+module "ec2_instance_${ctx.name}" {
   source  = "terraform-aws-modules/ec2-instance/aws"
   version = "~> 5.6.0"
   
   for_each = toset([for i in range(${count}) : tostring(i)])
 
-  name = "${node.data.label}-\${each.key}"
-  ami                    = var.ami_id
+  name = "${node.data.label}-\$\{each.key}"
+  ami                    = data.aws_ami.amazon_linux_2023.id
   instance_type          = ${getInstanceType(node)}
-  vpc_security_group_ids = [aws_security_group.${name}_sg.id]
+  vpc_security_group_ids = [aws_security_group.${ctx.name}_sg.id]
   subnet_id              = element(module.vpc.private_subnets, tonumber(each.key))
+${ctx.iamStatements ? `  iam_instance_profile   = aws_iam_instance_profile.${ctx.name}_profile.name` : ''}${userData}
 `;
   }
 
@@ -145,24 +230,27 @@ module "ec2_instance_${name}" {
   return block;
 }
 
-function generateRDSBlock(node: ArchNode, name: string): string {
+function generateRDSBlock(node: ArchNode, ctx: NodeContext): string {
   const engine = node.data.componentType === 'postgresql' ? 'postgres' : 'mysql';
   const multiAZ = node.data.multiAZ ? 'true' : 'false';
   const replicas = ('readReplicas' in node.data) ? (node.data as {readReplicas?: number}).readReplicas || 0 : 0;
   const storage = node.data.volumeType === 'io1' ? 'io1' : node.data.volumeType === 'magnetic' ? 'standard' : 'gp3';
+  
+  const customVer = (node.data as Record<string, unknown>).engineVersion;
+  const tfVersion = customVer ? `"${customVer}"` : (engine === 'postgres' ? 'local.postgres_version' : 'local.mysql_version');
 
   let block = `
 ${getTierComment(node)}
-resource "aws_db_instance" "${name}" {
+resource "aws_db_instance" "${ctx.name}" {
   identifier           = "${sanitize(node.data.label)}"
   engine               = "${engine}"
-  engine_version       = "${engine === 'postgres' ? '15.4' : '8.0.35'}"
+  engine_version       = ${tfVersion}
   instance_class       = ${getInstanceType(node)}
   allocated_storage    = 100
   storage_type         = "${storage}"
   multi_az             = ${multiAZ}
   db_subnet_group_name = module.vpc.database_subnet_group
-  vpc_security_group_ids = [aws_security_group.${name}_sg.id]
+  vpc_security_group_ids = [aws_security_group.${ctx.name}_sg.id]
   storage_encrypted    = true
   skip_final_snapshot  = true
 
@@ -176,32 +264,37 @@ resource "aws_db_instance" "${name}" {
   if (replicas > 0) {
     block += `
 
-resource "aws_db_instance" "${name}_replica" {
+resource "aws_db_instance" "${ctx.name}_replica" {
   count                = ${replicas}
-  replicate_source_db  = aws_db_instance.${name}.identifier
+  replicate_source_db  = aws_db_instance.${ctx.name}.identifier
   instance_class       = ${getInstanceType(node)}
   skip_final_snapshot  = true
 
   tags = {
-    Name = "${node.data.label}-replica-\${count.index + 1}"
+    Name = "${node.data.label}-replica-\$\{count.index + 1}"
   }
 }`;
   }
   return block;
 }
 
-function generateLambdaBlock(node: ArchNode, name: string): string {
+function generateLambdaBlock(node: ArchNode, ctx: NodeContext): string {
   const memStr = node.data.tier.label.replace(/\s/g, '');
   const memMB = parseInt(memStr) || 512;
-  return `
+  const roleBlock = generateLambdaRoleBlock(ctx.name, ctx.iamStatements);
+  
+  const customVer = (node.data as Record<string, unknown>).engineVersion;
+  const runtime = customVer ? `"${customVer}"` : `local.node_version`;
+
+  return roleBlock + `
 ${getTierComment(node)}
-resource "aws_lambda_function" "${name}" {
+resource "aws_lambda_function" "${ctx.name}" {
   function_name = "${sanitize(node.data.label)}"
-  runtime       = "nodejs20.x"
+  runtime       = ${runtime}
   handler       = "index.handler"
   memory_size   = ${memMB}
   timeout       = 30
-  role          = aws_iam_role.lambda_exec.arn
+  role          = aws_iam_role.${ctx.name}_lambda_role.arn
 
   filename         = "lambda_payload.zip"
   source_code_hash = filebase64sha256("lambda_payload.zip")
@@ -209,6 +302,12 @@ resource "aws_lambda_function" "${name}" {
   environment {
     variables = {
       ENVIRONMENT = var.environment
+${ctx.envVars.map(v => {
+      const parts = v.split('=');
+      const key = parts[0];
+      const val = parts.slice(1).join('=');
+      return `      ${key} = "${val}"`;
+    }).join('\n')}
     }
   }
 
@@ -219,10 +318,10 @@ resource "aws_lambda_function" "${name}" {
 }`;
 }
 
-function generateElastiCacheBlock(node: ArchNode, name: string): string {
+function generateElastiCacheBlock(node: ArchNode, ctx: NodeContext): string {
   return `
 ${getTierComment(node)}
-resource "aws_elasticache_cluster" "${name}" {
+resource "aws_elasticache_cluster" "${ctx.name}" {
   cluster_id           = "${sanitize(node.data.label)}"
   engine               = "redis"
   node_type            = ${getInstanceType(node)}
@@ -230,7 +329,7 @@ resource "aws_elasticache_cluster" "${name}" {
   parameter_group_name = "default.redis7"
   port                 = 6379
   subnet_group_name    = module.vpc.elasticache_subnet_group_name
-  security_group_ids   = [aws_security_group.${name}_sg.id]
+  security_group_ids   = [aws_security_group.${ctx.name}_sg.id]
 
   tags = {
     Name      = "${node.data.label}"
@@ -239,11 +338,11 @@ resource "aws_elasticache_cluster" "${name}" {
 }`;
 }
 
-function generateS3Block(node: ArchNode, name: string): string {
+function generateS3Block(node: ArchNode, ctx: NodeContext): string {
   return `
 ${getTierComment(node)}
-resource "aws_s3_bucket" "${name}" {
-  bucket = "\${var.project_name}-${sanitize(node.data.label)}"
+resource "aws_s3_bucket" "${ctx.name}" {
+  bucket = "\$\{var.project_name}-${sanitize(node.data.label)}"
 
   tags = {
     Name      = "${node.data.label}"
@@ -251,8 +350,8 @@ resource "aws_s3_bucket" "${name}" {
   }
 }
 
-resource "aws_s3_bucket_server_side_encryption_configuration" "${name}_enc" {
-  bucket = aws_s3_bucket.${name}.id
+resource "aws_s3_bucket_server_side_encryption_configuration" "${ctx.name}_enc" {
+  bucket = aws_s3_bucket.${ctx.name}.id
 
   rule {
     apply_server_side_encryption_by_default {
@@ -261,22 +360,22 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "${name}_enc" {
   }
 }
 
-resource "aws_s3_bucket_versioning" "${name}_ver" {
-  bucket = aws_s3_bucket.${name}.id
+resource "aws_s3_bucket_versioning" "${ctx.name}_ver" {
+  bucket = aws_s3_bucket.${ctx.name}.id
   versioning_configuration {
     status = "Enabled"
   }
 }`;
 }
 
-function generateALBBlock(node: ArchNode, name: string): string {
+function generateALBBlock(node: ArchNode, ctx: NodeContext): string {
   return `
 ${getTierComment(node)}
-resource "aws_lb" "${name}" {
+resource "aws_lb" "${ctx.name}" {
   name               = "${sanitize(node.data.label)}"
   internal           = false
   load_balancer_type = "application"
-  security_groups    = [aws_security_group.${name}_sg.id]
+  security_groups    = [aws_security_group.${ctx.name}_sg.id]
   subnets            = module.vpc.public_subnets
 
   tags = {
@@ -285,8 +384,8 @@ resource "aws_lb" "${name}" {
   }
 }
 
-resource "aws_lb_listener" "${name}_listener" {
-  load_balancer_arn = aws_lb.${name}.arn
+resource "aws_lb_listener" "${ctx.name}_listener" {
+  load_balancer_arn = aws_lb.${ctx.name}.arn
   port              = 443
   protocol          = "HTTPS"
   ssl_policy        = "ELBSecurityPolicy-TLS13-1-2-2021-06"
@@ -294,26 +393,26 @@ resource "aws_lb_listener" "${name}_listener" {
 
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.${name}_tg.arn
+    target_group_arn = aws_lb_target_group.${ctx.name}_tg.arn
   }
 }
 
-resource "aws_lb_target_group" "${name}_tg" {
-  name     = "${name}-tg"
+resource "aws_lb_target_group" "${ctx.name}_tg" {
+  name     = "${ctx.name}-tg"
   port     = 80
   protocol = "HTTP"
   vpc_id   = module.vpc.vpc_id
 }`;
 }
 
-function generateGenericBlock(node: ArchNode, name: string): string {
+function generateGenericBlock(node: ArchNode, ctx: NodeContext): string {
   const mapping = tfResourceMap[node.data.componentType];
   if (!mapping) {
-    return `\n# ${node.data.label} — No Terraform mapping available (external service)`;
+    return `\n# ${node.data.label} — No Terraform mapping available (external service)\n`;
   }
   return `
 ${getTierComment(node)}
-resource "${mapping.resource}" "${name}" {
+resource "${mapping.resource}" "${ctx.name}" {
   # ${mapping.service}: ${node.data.label}
   # Configure according to ${mapping.service} documentation
 
@@ -325,19 +424,86 @@ resource "${mapping.resource}" "${name}" {
 }
 
 // ── Main Generator ──
-export function generateTerraform(nodes: ArchNode[], _edges: ArchEdge[], _projectName: string): Record<string, string> {
+export function generateTerraform(nodes: ArchNode[], edges: ArchEdge[], _projectName: string): Record<string, string> {
   const mainLines: string[] = [];
   const outputsLines: string[] = [];
 
-  // Group mappings
   const publicSubnets = nodes.filter(n => n.data.componentType === 'groupNode' && n.data.label.toLowerCase().includes('public'));
   const privateSubnets = nodes.filter(n => n.data.componentType === 'groupNode' && n.data.label.toLowerCase().includes('private'));
   const numPub = Math.max(1, publicSubnets.length);
   const numPriv = Math.max(1, privateSubnets.length);
 
+  const nodeNames = new Map<string, string>();
+  const usedNames = new Set<string>();
+  for (const node of nodes) {
+    if (node.data.componentType === 'groupNode') continue;
+    let name = sanitize(node.data.label);
+    if (usedNames.has(name)) { name = `${name}_${node.id.slice(-4)}`; }
+    usedNames.add(name);
+    nodeNames.set(node.id, name);
+  }
+
+  const contextMap = new Map<string, NodeContext>();
+  for (const node of nodes) {
+    if (node.data.componentType === 'groupNode') continue;
+    const name = nodeNames.get(node.id)!;
+    const envVars: string[] = [];
+    let iamStatements = "";
+    
+    const outgoing = edges.filter(e => e.source === node.id);
+    outgoing.forEach(e => {
+        const tgt = nodes.find(n => n.id === e.target);
+        if (!tgt) return;
+        const tgtName = nodeNames.get(tgt.id)!;
+        const tgtType = tgt.data.componentType;
+        
+        if (['postgresql', 'mysql'].includes(tgtType)) {
+            envVars.push(`DB_URL=\$\{aws_db_instance.${tgtName}.endpoint}`);
+        } else if (tgtType === 'redis') {
+            envVars.push(`REDIS_URL=\$\{aws_elasticache_cluster.${tgtName}.cache_nodes[0].address}`);
+        } else if (tgtType === 's3') {
+            envVars.push(`S3_BUCKET=\$\{aws_s3_bucket.${tgtName}.bucket}`);
+            iamStatements += `
+      {
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:ListBucket"
+        ]
+        Effect   = "Allow"
+        Resource = [
+          aws_s3_bucket.${tgtName}.arn,
+          "\$\{aws_s3_bucket.${tgtName}.arn}/*"
+        ]
+      },`;
+        } else if (tgtType === 'dynamodb') {
+            envVars.push(`DYNAMODB_TABLE=\$\{aws_dynamodb_table.${tgtName}.name}`);
+            iamStatements += `
+      {
+        Action = [
+          "dynamodb:PutItem",
+          "dynamodb:GetItem",
+          "dynamodb:Scan",
+          "dynamodb:Query"
+        ]
+        Effect   = "Allow"
+        Resource = [aws_dynamodb_table.${tgtName}.arn]
+      },`;
+        }
+    });
+    
+    contextMap.set(node.id, { name, envVars, iamStatements });
+  }
+
   const variablesContent = `# ═══════════════════════════════════════════════════════════════
 # Variables Configuration
 # ═══════════════════════════════════════════════════════════════
+
+locals {
+  postgres_version = "15.4"
+  mysql_version    = "8.0.35"
+  node_version     = "nodejs20.x"
+}
 
 variable "aws_region" {
   description = "AWS Region"
@@ -357,12 +523,6 @@ variable "project_name" {
   default     = "${sanitize(_projectName)}"
 }
 
-variable "ami_id" {
-  description = "AMI ID for EC2 instances"
-  type        = string
-  default     = "ami-0c02fb55956c7d316"  # Amazon Linux 2023
-}
-
 variable "certificate_arn" {
   description = "ACM Certificate ARN for HTTPS listeners"
   type        = string
@@ -376,7 +536,7 @@ variable "certificate_arn" {
 # Date: ${new Date().toISOString()}
 # ═══════════════════════════════════════════════════════════════
 # Components: ${nodes.length}
-# Connections: ${_edges.length}
+# Connections: ${edges.length}
 # ═══════════════════════════════════════════════════════════════
 
 terraform {
@@ -393,15 +553,25 @@ provider "aws" {
   region = var.aws_region
 }
 
-# ── Networking Module ──────────────────────────────────────────
+# ── Dynamic AMI Fetching ───────────────────────────────────────
+data "aws_ami" "amazon_linux_2023" {
+  most_recent = true
+  owners      = ["amazon"]
 
+  filter {
+    name   = "name"
+    values = ["al2023-ami-2023.*-x86_64"]
+  }
+}
+
+# ── Networking Module ──────────────────────────────────────────
 data "aws_availability_zones" "available" {}
 
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "~> 5.0"
 
-  name = "\${var.project_name}-vpc"
+  name = "\$\{var.project_name}-vpc"
   cidr = "10.0.0.0/16"
 
   azs             = slice(data.aws_availability_zones.available.names, 0, ${Math.max(numPub, numPriv)})
@@ -417,19 +587,6 @@ module "vpc" {
     Environment = var.environment
     ManagedBy   = "archviz-terraform"
   }
-}
-
-resource "aws_iam_role" "lambda_exec" {
-  name = "\${var.project_name}-lambda-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
-      Principal = { Service = "lambda.amazonaws.com" }
-    }]
-  })
 }
 `);
 
@@ -448,32 +605,77 @@ output "architecture_summary" {
   description = "Architecture Metadata Summary"
   value = {
     total_components = ${nodes.length}
-    total_connections = ${_edges.length}
+    total_connections = ${edges.length}
     generated_by     = "ArchViz"
   }
 }
 `);
 
-  const usedNames = new Set<string>();
-
   for (const node of nodes) {
     if (node.data.componentType === 'groupNode') continue;
 
-    let name = sanitize(node.data.label);
-    if (usedNames.has(name)) { name = `${name}_${node.id.slice(-4)}`; }
-    usedNames.add(name);
+    const ctx = contextMap.get(node.id)!;
+    const type = node.data.componentType;
+    const isDB = ['postgresql', 'mysql', 'mongodb', 'cassandra', 'aurora-serverless', 'dynamodb'].includes(type) || ['redis', 'elasticsearch'].includes(type);
 
-    mainLines.push(`
-resource "aws_security_group" "${name}_sg" {
-  name_prefix = "${name}-sg-"
-  vpc_id      = module.vpc.vpc_id
-
+    let sgIngress = "";
+    
+    if (isDB) {
+      const incomingEdges = edges.filter(e => e.target === node.id);
+      const sourceNodes = incomingEdges.map(e => nodes.find(n => n.id === e.source)).filter(Boolean) as ArchNode[];
+      
+      if (sourceNodes.length > 0) {
+        sourceNodes.forEach(src => {
+            const srcName = nodeNames.get(src.id)!;
+            const portMap: Record<string, number> = { 'postgresql': 5432, 'mysql': 3306, 'mongodb': 27017, 'redis': 6379, 'elasticsearch': 9200 };
+            const port = portMap[type] || 443;
+            sgIngress += `
+  ingress {
+    from_port       = ${port}
+    to_port         = ${port}
+    protocol        = "tcp"
+    security_groups = [aws_security_group.${srcName}_sg.id]
+    description     = "Allow traffic from ${srcName}"
+  }`;
+        });
+      } else {
+        sgIngress += `
+  # Warning: No incoming connections defined in architecture for this DB
+  # Restricting all ingress by default. Override if needed.`;
+      }
+    } else {
+      sgIngress += `
   ingress {
     from_port   = 0
     to_port     = 65535
     protocol    = "tcp"
     cidr_blocks = ["10.0.0.0/16"]
+    description = "Internal VPC traffic"
+  }`;
+      if (type === 'load-balancer') {
+          sgIngress += `
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Public HTTP"
   }
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Public HTTPS"
+  }`;
+      }
+    }
+
+    mainLines.push(`
+resource "aws_security_group" "${ctx.name}_sg" {
+  name_prefix = "${ctx.name}-sg-"
+  vpc_id      = module.vpc.vpc_id
+${sgIngress}
 
   egress {
     from_port   = 0
@@ -483,38 +685,36 @@ resource "aws_security_group" "${name}_sg" {
   }
 
   tags = {
-    Name = "${name}-sg"
+    Name = "${ctx.name}-sg"
   }
 }`);
 
-    const type = node.data.componentType;
-
     if (['api-server', 'web-server', 'worker', 'websocket-server', 'graphql-server', 'game-server', 'ml-worker'].includes(type)) {
-      mainLines.push(generateEC2Block(node, name));
+      mainLines.push(generateEC2Block(node, ctx));
     } else if (['postgresql', 'mysql'].includes(type)) {
-      mainLines.push(generateRDSBlock(node, name));
+      mainLines.push(generateRDSBlock(node, ctx));
       outputsLines.push(`
-output "rds_endpoint_${name}" {
-  description = "RDS Endpoint for ${name}"
-  value       = aws_db_instance.${name}.endpoint
+output "rds_endpoint_${ctx.name}" {
+  description = "RDS Endpoint for ${ctx.name}"
+  value       = aws_db_instance.${ctx.name}.endpoint
 }`);
     } else if (type === 'lambda') {
-      mainLines.push(generateLambdaBlock(node, name));
+      mainLines.push(generateLambdaBlock(node, ctx));
     } else if (type === 'redis') {
-      mainLines.push(generateElastiCacheBlock(node, name));
+      mainLines.push(generateElastiCacheBlock(node, ctx));
     } else if (type === 's3') {
-      mainLines.push(generateS3Block(node, name));
+      mainLines.push(generateS3Block(node, ctx));
     } else if (type === 'load-balancer') {
-      mainLines.push(generateALBBlock(node, name));
+      mainLines.push(generateALBBlock(node, ctx));
       outputsLines.push(`
-output "alb_dns_${name}" {
-  description = "DNS connection point for Load Balancer: ${name}"
-  value       = aws_lb.${name}.dns_name
+output "alb_dns_${ctx.name}" {
+  description = "DNS connection point for Load Balancer: ${ctx.name}"
+  value       = aws_lb.${ctx.name}.dns_name
 }`);
     } else if (['client-browser', 'mobile-app', 'external-api', 'stripe-api', 'openai-api'].includes(type)) {
       mainLines.push(`\n# ${node.data.label} — External client (no infrastructure required)`);
     } else {
-      mainLines.push(generateGenericBlock(node, name));
+      mainLines.push(generateGenericBlock(node, ctx));
     }
   }
 
@@ -529,67 +729,30 @@ export function parseTfState(stateJson: { resources?: Array<{ mode?: string; typ
   const nodes: ArchNode[] = [];
   const edges: ArchEdge[] = [];
   
-  if (!stateJson || !Array.isArray(stateJson.resources)) {
-    return { nodes, edges };
-  }
+  if (!stateJson || !Array.isArray(stateJson.resources)) return { nodes, edges };
 
   let yOffset = 0;
   
   for (const resource of stateJson.resources) {
     if (resource.mode !== 'managed') continue;
-    
     let compType = '';
     
-    // Simple heuristic mapper for reverse-engineering AWS
     switch (resource.type) {
-      case 'aws_instance':
-        compType = 'api-server';
-        break;
-      case 'aws_db_instance':
-        compType = 'postgresql'; // or mysql depending on engine if we parse instances
-        break;
-      case 'aws_lb':
-      case 'aws_elb':
-      case 'aws_alb':
-        compType = 'load-balancer';
-        break;
-      case 'aws_s3_bucket':
-        compType = 's3';
-        break;
-      case 'aws_lambda_function':
-        compType = 'lambda';
-        break;
-      case 'aws_elasticache_cluster':
-      case 'aws_elasticache_replication_group':
-        compType = 'redis';
-        break;
-      case 'aws_ecs_service':
-        compType = 'ecs-fargate';
-        break;
-      case 'aws_eks_cluster':
-        compType = 'kubernetes-cluster';
-        break;
-      case 'aws_cloudfront_distribution':
-        compType = 'cdn';
-        break;
-      case 'aws_apigatewayv2_api':
-      case 'aws_api_gateway_rest_api':
-        compType = 'api-gateway';
-        break;
-      case 'aws_sqs_queue':
-        compType = 'sqs';
-        break;
-      case 'aws_sns_topic':
-        compType = 'sns';
-        break;
-      case 'aws_route53_zone':
-        compType = 'dns';
-        break;
-      case 'aws_dynamodb_table':
-        compType = 'dynamodb';
-        break;
-      default:
-        continue; // skip unrecognized
+      case 'aws_instance': compType = 'api-server'; break;
+      case 'aws_db_instance': compType = 'postgresql'; break;
+      case 'aws_lb': case 'aws_elb': case 'aws_alb': compType = 'load-balancer'; break;
+      case 'aws_s3_bucket': compType = 's3'; break;
+      case 'aws_lambda_function': compType = 'lambda'; break;
+      case 'aws_elasticache_cluster': case 'aws_elasticache_replication_group': compType = 'redis'; break;
+      case 'aws_ecs_service': compType = 'ecs-fargate'; break;
+      case 'aws_eks_cluster': compType = 'kubernetes-cluster'; break;
+      case 'aws_cloudfront_distribution': compType = 'cdn'; break;
+      case 'aws_apigatewayv2_api': case 'aws_api_gateway_rest_api': compType = 'api-gateway'; break;
+      case 'aws_sqs_queue': compType = 'sqs'; break;
+      case 'aws_sns_topic': compType = 'sns'; break;
+      case 'aws_route53_zone': compType = 'dns'; break;
+      case 'aws_dynamodb_table': compType = 'dynamodb'; break;
+      default: continue;
     }
     
     const def = getComponentDefinition(compType);
@@ -604,35 +767,24 @@ export function parseTfState(stateJson: { resources?: Array<{ mode?: string; typ
       type: 'archNode',
       position: { x: 100 + (Math.random() * 50), y: 100 + yOffset },
       data: {
-        componentType: def.type,
-        label: instName,
-        category: def.category,
-        icon: def.icon,
-        tier,
-        tierIndex: def.defaultTierIndex,
-        instances: instanceCount > 0 ? instanceCount : 1,
-        scalingType: def.scalingType,
-        reliability: def.reliability,
-        scalingFactor: def.scalingFactor,
-        healthStatus: 'healthy',
-        loadPercent: 0,
+        componentType: def.type, label: instName, category: def.category, icon: def.icon,
+        tier, tierIndex: def.defaultTierIndex, instances: instanceCount > 0 ? instanceCount : 1,
+        scalingType: def.scalingType, reliability: def.reliability, scalingFactor: def.scalingFactor,
+        healthStatus: 'healthy', loadPercent: 0,
       },
     };
     
     nodes.push(newNode);
     yOffset += 100;
   }
-  
   return { nodes, edges };
 }
 
-// ── CloudFormation Generator ──
 export function generateCloudFormation(nodes: ArchNode[], _edges: ArchEdge[], projectName: string): string {
   const resources: Record<string, unknown> = {};
 
   for (const node of nodes) {
     if (node.data.componentType === 'groupNode') continue;
-
     const name = sanitize(node.data.label).replace(/_/g, '');
     const type = node.data.componentType;
 
@@ -654,21 +806,13 @@ export function generateCloudFormation(nodes: ArchNode[], _edges: ArchEdge[], pr
         Properties: {
           Engine: type === 'postgresql' ? 'postgres' : 'mysql',
           DBInstanceClass: node.data.tier.label.startsWith('db.') ? node.data.tier.label : 'db.t3.medium',
-          AllocatedStorage: 100,
-          MultiAZ: !!node.data.multiAZ,
-          StorageEncrypted: true,
+          AllocatedStorage: 100, MultiAZ: !!node.data.multiAZ, StorageEncrypted: true,
         },
       };
     } else if (type === 's3') {
       resources[name] = {
         Type: 'AWS::S3::Bucket',
-        Properties: {
-          BucketEncryption: {
-            ServerSideEncryptionConfiguration: [{
-              ServerSideEncryptionByDefault: { SSEAlgorithm: 'aws:kms' },
-            }],
-          },
-        },
+        Properties: { BucketEncryption: { ServerSideEncryptionConfiguration: [{ ServerSideEncryptionByDefault: { SSEAlgorithm: 'aws:kms' } }] } },
       };
     } else if (type === 'load-balancer') {
       resources[name] = {
@@ -683,10 +827,7 @@ export function generateCloudFormation(nodes: ArchNode[], _edges: ArchEdge[], pr
     } else if (type === 'lambda') {
       resources[name] = {
         Type: 'AWS::Lambda::Function',
-        Properties: {
-          Runtime: 'nodejs20.x', Handler: 'index.handler',
-          MemorySize: parseInt(node.data.tier.label) || 512,
-        },
+        Properties: { Runtime: 'nodejs20.x', Handler: 'index.handler', MemorySize: parseInt(node.data.tier.label) || 512 },
       };
     }
   }
@@ -706,11 +847,8 @@ export function generateCloudFormation(nodes: ArchNode[], _edges: ArchEdge[], pr
   return JSON.stringify(template, null, 2);
 }
 
-// ── Download helpers ──
 export function downloadTerraform(nodes: ArchNode[], edges: ArchEdge[], projectName: string) {
   const fileContents = generateTerraform(nodes, edges, projectName);
-  
-  // Create and click anchors recursively for each file to mimic multi-file project download
   for (const [filename, content] of Object.entries(fileContents)) {
     const blob = new Blob([content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
@@ -733,7 +871,6 @@ export function downloadCloudFormation(nodes: ArchNode[], edges: ArchEdge[], pro
   URL.revokeObjectURL(url);
 }
 
-// ── Docker Compose Generator ──
 interface DockerService {
   image?: string;
   ports?: string[];
@@ -741,9 +878,7 @@ interface DockerService {
   volumes?: string[];
   command?: string;
   working_dir?: string;
-  deploy?: {
-    replicas: number;
-  };
+  deploy?: { replicas: number; };
 }
 
 export function generateDockerCompose(nodes: ArchNode[], _edges: ArchEdge[], projectName: string): string {
@@ -760,21 +895,19 @@ export function generateDockerCompose(nodes: ArchNode[], _edges: ArchEdge[], pro
         image: `my-registry.local/${name}:latest`,
         ports: ['8080:8080'],
         environment: ['NODE_ENV=development'],
-        deploy: {
-          replicas: node.data.scalingType === 'horizontal' ? node.data.instances : 1
-        }
+        deploy: { replicas: node.data.scalingType === 'horizontal' ? node.data.instances : 1 }
       };
     } else if (['postgresql'].includes(type)) {
       services[name] = {
         image: 'postgres:15',
-        environment: ['POSTGRES_USER=admin', 'POSTGRES_PASSWORD=secret'],
+        environment: ['POSTGRES_USER=\$\{POSTGRES_USER:-admin}', 'POSTGRES_PASSWORD=\$\{POSTGRES_PASSWORD:-secret}', 'POSTGRES_DB=\$\{POSTGRES_DB:-mydb}'],
         ports: ['5432:5432'],
         volumes: [`${name}_data:/var/lib/postgresql/data`]
       };
     } else if (['mysql'].includes(type)) {
       services[name] = {
         image: 'mysql:8',
-        environment: ['MYSQL_ROOT_PASSWORD=secret'],
+        environment: ['MYSQL_ROOT_PASSWORD=\$\{MYSQL_ROOT_PASSWORD:-secret}', 'MYSQL_DATABASE=\$\{MYSQL_DATABASE:-mydb}'],
         ports: ['3306:3306'],
         volumes: [`${name}_data:/var/lib/mysql`]
       };
@@ -799,8 +932,8 @@ export function generateDockerCompose(nodes: ArchNode[], _edges: ArchEdge[], pro
 
   const volumeNames = Object.keys(services).filter(k => (services[k] as {volumes?: string[]}).volumes).map(k => `${k}_data`);
 
-  // Generate generic YAML manually to avoid dependency
-  let yaml = `version: '3.8'\nname: ${sanitize(projectName)}\n\nservices:\n`;
+  let yaml = `# NOTE: Ensure you use a .env file to inject actual values for interpolations (e.g. POSTGRES_PASSWORD)\nversion: '3.8'\nname: ${sanitize(projectName)}\n\nservices:\n`;
+
   for (const [sName, sDef] of Object.entries(services)) {
     yaml += `  ${sName}:\n`;
     if (sDef.image) yaml += `    image: ${sDef.image}\n`;
@@ -830,8 +963,8 @@ export function generateDockerCompose(nodes: ArchNode[], _edges: ArchEdge[], pro
   return yaml;
 }
 
-// ── Kubernetes Manifest Generator ──
-export function generateKubernetesManifests(nodes: ArchNode[], _edges: ArchEdge[], _projectName: string): string { // eslint-disable-line @typescript-eslint/no-unused-vars
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function generateKubernetesManifests(nodes: ArchNode[], edges: ArchEdge[], _projectName: string): string {
   let manifests = '';
 
   for (const node of nodes) {
@@ -848,14 +981,19 @@ export function generateKubernetesManifests(nodes: ArchNode[], _edges: ArchEdge[
     manifests += `    spec:\n      containers:\n      - name: ${name}\n        image: ${name}:latest\n`;
     manifests += `        ports:\n        - containerPort: 8080\n---\n`;
 
+    const isCompute = ['api-server', 'web-server', 'websocket-server', 'graphql-server'].includes(node.data.componentType);
+    const incomingEdges = edges.filter(e => e.target === node.id);
+    const isBehindLb = incomingEdges.some(e => {
+        const srcNode = nodes.find(n => n.id === e.source);
+        return srcNode && srcNode.data.componentType === 'load-balancer';
+    });
+
+    const svcType = (isCompute && !isBehindLb) ? 'LoadBalancer' : 'ClusterIP';
+
     // Service
     manifests += `apiVersion: v1\nkind: Service\nmetadata:\n  name: ${name}-svc\n  namespace: default\n`;
     manifests += `spec:\n  selector:\n    app: ${name}\n  ports:\n    - protocol: TCP\n      port: 80\n      targetPort: 8080\n`;
-    if (node.data.category === 'compute') {
-      manifests += `  type: ClusterIP\n---\n`;
-    } else {
-      manifests += `  type: ClusterIP\n---\n`;
-    }
+    manifests += `  type: ${svcType}\n---\n`;
   }
 
   return manifests || '# No applicable workloads found for Kubernetes manifest generation.';
@@ -866,7 +1004,7 @@ export function downloadDockerCompose(nodes: ArchNode[], edges: ArchEdge[], proj
   const blob = new Blob([content], { type: 'text/yaml' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
-  link.download = `docker-compose.yml`;
+  link.download = "docker-compose.yml";
   link.href = url;
   link.click();
   URL.revokeObjectURL(url);
@@ -877,7 +1015,7 @@ export function downloadKubernetesManifests(nodes: ArchNode[], edges: ArchEdge[]
   const blob = new Blob([content], { type: 'text/yaml' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
-  link.download = `k8s-manifests.yaml`;
+  link.download = "k8s-manifests.yaml";
   link.href = url;
   link.click();
   URL.revokeObjectURL(url);
