@@ -21,6 +21,10 @@
 </p>
 
 <p align="center">
+  <a href="https://www.producthunt.com/products/archviz?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-archviz" target="_blank" rel="noopener noreferrer"><img alt="ArchViz - Figma for cloud architecture — simulate, cost, export. | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1128028&amp;theme=dark&amp;t=1776698844073"></a>
+</p>
+
+<p align="center">
   <a href="https://archviz-studio.vercel.app" target="_blank">
     <img src="./public/preview.png" alt="ArchViz Preview Workspace" width="100%" style="border-radius: 8px;" />
   </a>
