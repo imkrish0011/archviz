@@ -147,73 +147,69 @@ Each component includes:
 
 ## 🏛️ Architecture
 
-```
+```text
 src/
 ├── components/          # React UI components
-│   ├── nodes/           # Custom ReactFlow node renders
-│   ├── ErrorBoundary.tsx  # App & Canvas crash recovery
-│   ├── TopBar.tsx       # Toolbar with actions
-│   ├── LeftSidebar.tsx  # Component palette (drag source)
-│   ├── RightPanel.tsx   # Node configuration panel
-│   ├── BottomInsightBar.tsx  # Live metrics display
+│   ├── auth/            # Auth components (LoginModal)
+│   ├── dashboard/       # Cloud dashboard & project cards
+│   ├── panels/          # Node configuration panels
+│   ├── nodes/           # Custom ReactFlow nodes (ArchNode, GroupNode)
+│   ├── edges/           # Custom ReactFlow edges
+│   ├── workspace/       # Workspace items (ZoneNode)
 │   ├── LandingPage.tsx  # Marketing landing page
-│   ├── SecurityPanel.tsx  # Security scan results
-│   └── ...              # Modals, overlays, toast system
+│   └── ...              # Layouts, Overlays, Modals, Toasts
 │
 ├── engine/              # Pure-logic simulation modules
 │   ├── simulator.ts     # Orchestrator — runs all engines
 │   ├── costEngine.ts    # AWS pricing calculations
-│   ├── trafficModel.ts  # RPS & user traffic modeling
-│   ├── latencyModel.ts  # End-to-end latency calculation
-│   ├── bottleneckDetector.ts  # Load % and health detection
-│   ├── failureModel.ts  # Reliability & SPOF analysis
-│   ├── scalingModel.ts  # Auto-scaling simulation
-│   ├── slaCalculator.ts # SLA composite & nines
+│   ├── carbonEngine.ts  # Carbon footprint estimation
+│   ├── deploymentSimulator.ts # CI/CD rollout simulation
 │   ├── securityScanner.ts  # Compliance scanning
-│   ├── connectionValidator.ts  # Anti-pattern rules
-│   ├── recommendationEngine.ts  # AI-like suggestions
-│   ├── terraformGenerator.ts    # HCL & CFN export
-│   └── autoLayout.ts    # Dagre-powered graph layout
+│   ├── terraformGenerator.ts # IaC export
+│   └── ...              # Traffic, latency, bottlenecks, auto-layout
 │
-├── store/
-│   └── useArchStore.ts  # Zustand store (source of truth)
+├── store/               # Zustand state management
+│   ├── useArchStore.ts  # Architecture & graph state
+│   └── useAuthStore.ts  # Firebase user & session state
 │
-├── hooks/
-│   ├── useSimulation.ts       # Memoized simulation hook
-│   ├── useSimulationEvents.ts # Chaos event handlers
-│   └── useValidation.ts       # Zod form validation hook
+├── hooks/               # Custom React hooks
+│   ├── useAuth.ts             # Firebase auth abstraction
+│   ├── useDeploymentSimulator.ts # CI/CD deployment context
+│   └── ...              # Simulation, events, validation
+│   
+├── lib/
+│   └── firebase.ts      # Firebase initialization & config
+│
+├── services/
+│   └── projectService.ts # Cloud database operations
 │
 ├── utils/
-│   ├── validationSchemas.ts   # Zod schemas for all fields
-│   └── templateLoader.ts      # Template → graph converter
+│   ├── validationSchemas.ts   # Zod schemas for validation
+│   └── templateLoader.ts      # Architecture template parser
 │
 ├── data/
 │   ├── componentLibrary.ts    # 40+ component definitions
-│   └── templates/             # Pre-built architecture templates
+│   └── templates/             # Starter templates, snippets
 │
 ├── types/
-│   └── index.ts               # TypeScript type definitions
+│   └── index.ts               # TypeScript generic typings
 │
 ├── tests/                     # Vitest test suites
-│   ├── costEngine.test.ts     # 16 tests
-│   ├── connectionValidator.test.ts  # 8 tests
-│   ├── terraformGenerator.test.ts   # 14 tests
-│   └── validationSchemas.test.ts    # 31 tests
+│   ├── costEngine.test.ts
+│   ├── connectionValidator.test.ts
+│   └── ...
 │
 └── styles/
-    ├── index.css              # Design system (Midnight Obsidian)
+    ├── auth-dashboard.css     # Web portal styling
+    ├── index.css              # Obsidian design system core
     ├── landing.css            # Landing page styles
-    └── reactflow.css          # ReactFlow customizations
+    └── reactflow.css          # Canvas overrides
 ```
 
 ### State Management
-All application state is managed through a single **Zustand store** (`useArchStore`):
-- Graph state (nodes, edges)
-- UI state (panel visibility, selection)
-- Simulation config (users, RPS, cache hit rate)
-- Undo/Redo stack
-- LocalStorage persistence
-- Version history snapshots
+Application state is highly segregated into discrete **Zustand stores**:
+- **`useArchStore`**: Graph state (nodes/edges), undo/redo stack, and simulation config.
+- **`useAuthStore`**: Global user session, auth initialization state, and cloud database mapping.
 
 ---
 
@@ -293,7 +289,7 @@ npm run test:watch
 
 ## 📄 License
 
-MIT — Use it, fork it, build on it. No restrictions.
+**© Copyright**. This project is copyrighted material, licensed under the **MIT License**. Use it, fork it, build on it. No restrictions.
 
 ---
 
