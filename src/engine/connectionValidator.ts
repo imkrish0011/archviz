@@ -1,8 +1,8 @@
 import type { ArchNodeData } from '../types';
 
 /**
- * Connection Validator — prevents architectural anti-patterns at the
- * component level, not just the category level.
+ * Connection Validator — prevents architectural anti-patterns leveraging 
+ * dynamic component category metadata.
  */
 
 export interface ValidationResult {
@@ -12,69 +12,6 @@ export interface ValidationResult {
   suggestion?: string;
 }
 
-interface AntiPatternRule {
-  sourceTypes: string[];      // component types that trigger this rule
-  targetTypes: string[];      // component types they cannot connect TO
-  level: 'error' | 'warning';
-  message: string;
-  suggestion: string;
-}
-
-/**
- * Component-level anti-pattern rules.
- * Category-level rules already exist in the store; these are finer-grained.
- */
-const antiPatterns: AntiPatternRule[] = [
-  // Frontend → Database (direct)
-  {
-    sourceTypes: ['web-frontend', 'mobile-client', 'iot-device'],
-    targetTypes: ['rds-postgres', 'rds-mysql', 'dynamodb', 'mongodb', 'neo4j', 'influxdb', 'elasticsearch'],
-    level: 'error',
-    message: 'Client cannot connect directly to a database.',
-    suggestion: 'Route through an API Gateway or Backend service for security.',
-  },
-  // Frontend → messaging queue (direct)
-  {
-    sourceTypes: ['web-frontend', 'mobile-client'],
-    targetTypes: ['sqs-queue', 'sns-topic', 'apache-kafka', 'amazon-kinesis', 'rabbitmq', 'amazon-eventbridge'],
-    level: 'error',
-    message: 'Client-side apps should not push directly to queues.',
-    suggestion: 'Use a backend API or serverless function as a proxy.',
-  },
-  // Lambda → RDS without VPC context (warning only)
-  {
-    sourceTypes: ['lambda'],
-    targetTypes: ['rds-postgres', 'rds-mysql'],
-    level: 'warning',
-    message: 'Lambda connecting to RDS requires VPC configuration.',
-    suggestion: 'Consider placing Lambda inside a VPC subnet or use RDS Data API.',
-  },
-  // Anything → Glacier (latency warning)
-  {
-    sourceTypes: ['*'],
-    targetTypes: ['amazon-glacier'],
-    level: 'warning',
-    message: 'Glacier retrieval can take hours. Not suitable for real-time access.',
-    suggestion: 'Use S3 Standard or S3-IA for frequently accessed data.',
-  },
-  // Direct compute-to-compute without load balancer or gateway
-  {
-    sourceTypes: ['ec2', 'ecs-fargate', 'aws-fargate', 'kubernetes'],
-    targetTypes: ['ec2', 'ecs-fargate', 'aws-fargate', 'kubernetes'],
-    level: 'warning',
-    message: 'Direct service-to-service calls lack load balancing.',
-    suggestion: 'Place an internal Load Balancer or Service Mesh between compute nodes.',
-  },
-  // Cache as a primary data store (connecting storage → cache backwards)
-  {
-    sourceTypes: ['redis', 'memcached'],
-    targetTypes: ['web-frontend', 'mobile-client'],
-    level: 'error',
-    message: 'Cache should not serve clients directly.',
-    suggestion: 'Clients should query a backend that checks the cache layer.',
-  },
-];
-
 /**
  * Validates a proposed connection between two nodes.
  * Returns an object indicating if the connection is allowed + any warnings.
@@ -83,6 +20,8 @@ export function validateConnection(
   sourceData: ArchNodeData,
   targetData: ArchNodeData,
 ): ValidationResult {
+  const srcCat = sourceData.category;
+  const tgtCat = targetData.category;
   const srcType = sourceData.componentType;
   const tgtType = targetData.componentType;
 
@@ -95,18 +34,76 @@ export function validateConnection(
     };
   }
 
-  for (const rule of antiPatterns) {
-    const sourceMatches = rule.sourceTypes.includes('*') || rule.sourceTypes.includes(srcType);
-    const targetMatches = rule.targetTypes.includes(tgtType);
+  const isFrontend = ['frontend', 'client', 'frontend-framework'].includes(srcCat) || srcType.includes('client');
+  const isStorage = ['storage', 'database'].includes(tgtCat);
+  const isMessaging = ['messaging', 'queue'].includes(tgtCat);
 
-    if (sourceMatches && targetMatches) {
+  // Frontend -> Database (direct)
+  if (isFrontend && isStorage) {
+    // Exception for Frontend PaaS like Supabase/Firebase which allow direct client connections
+    if (['supabase', 'firebase', 'planetscale'].includes(tgtType)) {
+      return { allowed: true, level: 'info', message: '' };
+    }
+    return {
+      allowed: false,
+      level: 'error',
+      message: 'Client cannot connect directly to a traditional database.',
+      suggestion: 'Route through an API Gateway, Backend service, or use a Serverless BaaS.',
+    };
+  }
+
+  // Frontend -> Messaging
+  if (isFrontend && isMessaging) {
+    return {
+      allowed: false,
+      level: 'error',
+      message: 'Client-side apps should not push directly to queues.',
+      suggestion: 'Use a backend API or serverless function as a proxy.',
+    };
+  }
+
+  // Compute -> Compute (without load balancer)
+  const isComputeSrc = ['compute', 'serverless'].includes(srcCat);
+  const isComputeTgt = ['compute', 'serverless'].includes(tgtCat);
+  if (isComputeSrc && isComputeTgt) {
+    return {
+      allowed: true, // Warnings are allowed
+      level: 'warning',
+      message: 'Direct service-to-service calls lack load balancing.',
+      suggestion: 'Place an internal Load Balancer or Service Mesh between compute nodes.',
+    };
+  }
+
+  // Cache backwards connection (cache -> frontend)
+  if (srcType.includes('redis') || srcType.includes('memcached') || srcCat === 'cache') {
+    if (['frontend', 'client', 'frontend-framework'].includes(tgtCat)) {
       return {
-        allowed: rule.level !== 'error',
-        level: rule.level,
-        message: rule.message,
-        suggestion: rule.suggestion,
+        allowed: false,
+        level: 'error',
+        message: 'Cache should not serve clients directly.',
+        suggestion: 'Clients should query a backend that checks the cache layer.',
       };
     }
+  }
+
+  // Lambda -> RDS without VPC context (warning)
+  if (srcType === 'lambda' && (tgtType.includes('postgresql') || tgtType.includes('mysql') || tgtType.includes('rds'))) {
+    return {
+      allowed: true,
+      level: 'warning',
+      message: 'Lambda connecting to RDS requires VPC configuration.',
+      suggestion: 'Consider placing Lambda inside a VPC subnet or use RDS Data API.',
+    };
+  }
+
+  // Glacier warning
+  if (tgtType.includes('glacier')) {
+    return {
+      allowed: true,
+      level: 'warning',
+      message: 'Glacier retrieval can take hours. Not suitable for real-time access.',
+      suggestion: 'Use S3 Standard or S3-IA for frequently accessed data.',
+    };
   }
 
   // No anti-pattern triggered — connection is clean

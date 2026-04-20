@@ -199,7 +199,7 @@ export async function generateArchitectureReport({
       pdf.text(`Active Findings (${metrics.warnings.length})`, margin, currentY);
       currentY += 10;
 
-      metrics.warnings.forEach((warn: any) => {
+      metrics.warnings.forEach((warn: { type: string; message: string }) => {
         if (currentY > pageHeight - 40) { 
           pdf.addPage(); 
           drawHeader('Security & Compliance (Cont.)');

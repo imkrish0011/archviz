@@ -55,7 +55,7 @@ describe('getComponentCost', () => {
   });
 
   it('applies Multi-AZ premium', () => {
-    const node = makeNode({ instances: 1, multiAZ: true } as any);
+    const node = makeNode({ instances: 1, multiAZ: true } as unknown as Partial<ArchNode['data']>);
     expect(getComponentCost(node)).toBe(150); // 100 * 1.5
   });
 
@@ -80,7 +80,7 @@ describe('getComponentCost', () => {
       category: 'storage',
       instances: 1,
       readReplicas: 2,
-    } as any);
+    } as unknown as Partial<ArchNode['data']>);
     // instances = 1 + (2 * 0.7) = 2.4
     // cost = 100 * 2.4 = 240
     expect(getComponentCost(node)).toBe(240);
@@ -90,16 +90,16 @@ describe('getComponentCost', () => {
 describe('calculateTotalCost', () => {
   it('sums costs of all enabled nodes', () => {
     const nodes = [
-      makeNode({ instances: 1 }, { id: 'a' } as any),
-      makeNode({ instances: 2 }, { id: 'b' } as any),
+      makeNode({ instances: 1 }, { id: 'a' } as unknown as Partial<ArchNode['data']>),
+      makeNode({ instances: 2 }, { id: 'b' } as unknown as Partial<ArchNode['data']>),
     ];
     expect(calculateTotalCost(nodes)).toBe(300); // 100 + 200
   });
 
   it('excludes disabled nodes', () => {
     const nodes = [
-      makeNode({ instances: 1 }, { id: 'a' } as any),
-      makeNode({ instances: 2, isDisabled: true }, { id: 'b' } as any),
+      makeNode({ instances: 1 }, { id: 'a' } as unknown as Partial<ArchNode['data']>),
+      makeNode({ instances: 2, isDisabled: true }, { id: 'b' } as unknown as Partial<ArchNode['data']>),
     ];
     expect(calculateTotalCost(nodes)).toBe(100); // only node a
   });

@@ -11,7 +11,7 @@ const groupColors: Record<string, { border: string; bg: string; label: string }>
 };
 
 function GroupNode({ data, selected }: NodeProps) {
-  const d = data as any;
+  const d = data as unknown as Record<string, unknown>;
   const groupType = d.componentType || 'vpc';
   const colors = groupColors[groupType] || groupColors.vpc;
   const label = d.label || colors.label;

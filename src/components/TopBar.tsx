@@ -389,7 +389,7 @@ export default function TopBar() {
               
               <button className="sim-dropdown-item" onClick={() => {
                 setShowExportDropdown(false);
-                withAuth(() => { (window as any).__archviz_exportPNG?.(); }, 'PNG Image');
+                withAuth(() => { (window as unknown as Record<string, () => void>).__archviz_exportPNG?.(); }, 'PNG Image');
               }}>
                 <Image size={16} />
                 Export as PNG
@@ -397,7 +397,7 @@ export default function TopBar() {
               
               <button className="sim-dropdown-item" onClick={() => {
                 setShowExportDropdown(false);
-                withAuth(() => { (window as any).__archviz_exportJSON?.(); }, 'JSON');
+                withAuth(() => { (window as unknown as Record<string, () => void>).__archviz_exportJSON?.(); }, 'JSON');
               }}>
                 <Download size={16} />
                 Export as JSON
@@ -500,10 +500,10 @@ export default function TopBar() {
               <button className="sim-dropdown-item" onClick={() => { toggleVersionHistory(); setShowMoreDropdown(false); }}>
                 <Clock size={16} /> Version History
               </button>
-              <button className="sim-dropdown-item" onClick={() => { (window as any).__archviz_toggleFullscreen?.(); setShowMoreDropdown(false); }}>
+              <button className="sim-dropdown-item" onClick={() => { (window as unknown as Record<string, () => void>).__archviz_toggleFullscreen?.(); setShowMoreDropdown(false); }}>
                 <Maximize size={16} /> Fullscreen
               </button>
-              <button className="sim-dropdown-item" onClick={() => { (window as any).__archviz_toggleShortcuts?.(); setShowMoreDropdown(false); }}>
+              <button className="sim-dropdown-item" onClick={() => { (window as unknown as Record<string, () => void>).__archviz_toggleShortcuts?.(); setShowMoreDropdown(false); }}>
                 <Keyboard size={16} /> Shortcuts
               </button>
               <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />

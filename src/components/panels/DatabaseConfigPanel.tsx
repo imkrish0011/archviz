@@ -2,7 +2,7 @@ import PanelSection from './PanelSection';
 import { validateField, connectionTimeoutSchema } from '../../utils/validationSchemas';
 
 interface Props {
-  data: any;
+  data: unknown;
   update: (key: string, value: unknown) => void;
 }
 

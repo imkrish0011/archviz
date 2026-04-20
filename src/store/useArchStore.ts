@@ -42,7 +42,7 @@ interface ArchStore {
   cloudProvider: CloudProvider;
   isWhiteLabelReport: boolean;
   isTracing: boolean;
-  computedSecurityReport: any | null;
+  computedSecurityReport: unknown | null;
   
   // ── Snapshots ──
   snapshots: Snapshot[];
@@ -88,7 +88,7 @@ interface ArchStore {
   setCloudProvider: (provider: CloudProvider) => void;
   toggleWhiteLabelReport: () => void;
   toggleTrace: () => void;
-  setSecurityReport: (report: any) => void;
+  setSecurityReport: (report: unknown) => void;
   
   // Deployment actions
   startDeployment: (sourceNodeId: string) => void;
@@ -564,7 +564,7 @@ export const useArchStore = create<ArchStore>((set, get) => ({
             data: {
               ...edge.data,
               config: {
-                ...((edge.data as any)?.config || {}),
+                ...((edge.data as unknown)?.config || {}),
                 trafficWeight: 0,
                 edgeLabel: undefined,
               }
@@ -621,7 +621,7 @@ export const useArchStore = create<ArchStore>((set, get) => ({
     // Clear trafficWeight overrides
     const cleanEdges = finalEdges.map(e => {
       if (deploymentState.cloneNodeIds.includes(e.target)) {
-        const config = { ...((e.data as any)?.config || {}) };
+        const config = { ...((e.data as unknown)?.config || {}) };
         delete config.trafficWeight;
         return {
           ...e,
@@ -669,7 +669,7 @@ export const useArchStore = create<ArchStore>((set, get) => ({
       .filter(e => !deploymentState.cloneNodeIds.includes(e.target))
       .map(e => {
         if (deploymentState.sourceNodeIds.includes(e.target)) {
-          const config = { ...((e.data as any)?.config || {}) };
+          const config = { ...((e.data as unknown)?.config || {}) };
           delete config.trafficWeight;
           return {
             ...e,
@@ -782,7 +782,7 @@ export const useArchStore = create<ArchStore>((set, get) => ({
       edges: get().edges.map(e => {
         if (e.id === edgeId) {
           const baseData = e.data || {};
-          const prevConfig = (baseData as any).config || (e as any).config || {};
+          const prevConfig = (baseData as unknown).config || (e as unknown).config || {};
           const mergedConfig = { ...prevConfig, ...config };
           
           let animation = e.animated;
@@ -836,7 +836,7 @@ export const useArchStore = create<ArchStore>((set, get) => ({
       
       // Fix cache dimension issues by stripping React Flow internal measurements
       const rawNodes = data.nodes || [];
-      const cleanNodes = rawNodes.map((n: any) => ({
+      const cleanNodes = rawNodes.map((n: import('../types').ArchNode) => ({
         ...n,
         measured: undefined,
         width: undefined,

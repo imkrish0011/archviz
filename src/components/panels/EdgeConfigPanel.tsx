@@ -23,7 +23,7 @@ export default function EdgeConfigPanel() {
   const edge = edges.find(e => e.id === selectedEdgeId);
   if (!edge) return null;
 
-  const config: EdgeConfig = (edge as any).config || {};
+  const config: EdgeConfig = (edge as unknown as Record<string, unknown>).config || {};
   const sourceNode = nodes.find(n => n.id === edge.source);
   const targetNode = nodes.find(n => n.id === edge.target);
 
@@ -71,7 +71,7 @@ export default function EdgeConfigPanel() {
           <select
             className="form-select"
             value={config.connectionType || 'default'}
-            onChange={e => updateEdgeConfig(edge.id, { connectionType: (e.target.value || undefined) as any })}
+            onChange={e => updateEdgeConfig(edge.id, { connectionType: (e.target.value || undefined) as unknown as Record<string, unknown> })}
           >
             {connectionTypes.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
           </select>
@@ -81,7 +81,7 @@ export default function EdgeConfigPanel() {
           <select
             className="form-select"
             value={config.protocol || ''}
-            onChange={e => updateEdgeConfig(edge.id, { protocol: (e.target.value || undefined) as any })}
+            onChange={e => updateEdgeConfig(edge.id, { protocol: (e.target.value || undefined) as unknown as Record<string, unknown> })}
           >
             <option value="">— Select —</option>
             {protocols.map(p => <option key={p} value={p}>{p}</option>)}
@@ -92,7 +92,7 @@ export default function EdgeConfigPanel() {
           <select
             className="form-select"
             value={config.dataFlow || ''}
-            onChange={e => updateEdgeConfig(edge.id, { dataFlow: (e.target.value || undefined) as any })}
+            onChange={e => updateEdgeConfig(edge.id, { dataFlow: (e.target.value || undefined) as unknown as Record<string, unknown> })}
           >
             <option value="">— Select —</option>
             {dataFlows.map(d => <option key={d} value={d}>{d}</option>)}

@@ -35,7 +35,7 @@ export default function LoginModal() {
       await signInWithGoogle();
       runPendingExport();
       closeLoginModal();
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError('Sign-in failed. Please try again or check your Google account settings.');
       console.error(err);
     } finally {

@@ -113,9 +113,9 @@ export async function listProjects(uid: string): Promise<CloudProject[]> {
         updatedAt: (data.updatedAt as Timestamp)?.toDate() ?? new Date(),
       };
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     // Fallback: no orderBy (avoids missing-index error), sort client-side
-    console.warn('listProjects ordered query failed, falling back:', err?.message);
+    console.warn('listProjects ordered query failed, falling back:', (err as Error)?.message);
     const q = query(
       collection(db, PROJECTS_COLLECTION),
       where('uid', '==', uid)

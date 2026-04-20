@@ -1,7 +1,7 @@
 import PanelSection from './PanelSection';
 
 interface Props {
-  data: any;
+  data: unknown;
   update: (key: string, value: unknown) => void;
 }
 

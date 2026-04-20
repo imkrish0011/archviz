@@ -82,7 +82,7 @@ export default function RightPanel() {
   };
 
   const update = (key: string, value: unknown) => {
-    updateNodeData(node.id, { [key]: value } as any);
+    updateNodeData(node.id, { [key]: value } as Partial<import('../types').ArchNodeData>);
   };
 
   const handleDuplicate = () => {
@@ -97,7 +97,7 @@ export default function RightPanel() {
     selectNode(newNodeId);
   };
 
-  const data = node.data as any;
+  const data = node.data as Record<string, unknown>;
   const catColor = `var(--cat-${def.category})`;
   const catMuted = `var(--cat-${def.category}-muted)`;
 
@@ -129,7 +129,7 @@ export default function RightPanel() {
               boxShadow: `0 0 12px ${catColor}15`,
             }}>
               {(() => {
-                const IconComp = (Icons as any)[def.icon] || Icons.Box;
+                const IconComp = (Icons as unknown as Record<string, import('react').ElementType>)[def.icon] || Icons.Box;
                 return <IconComp size={16} style={{ color: catColor }} />;
               })()}
             </div>

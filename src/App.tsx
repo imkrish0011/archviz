@@ -109,7 +109,7 @@ function FlowCanvas() {
   
   // Expose instance for export utilities
   useEffect(() => {
-    (window as any).__archviz_rfInstance = reactFlowInstance;
+    (window as unknown as Record<string, unknown>).__archviz_rfInstance = reactFlowInstance;
   }, [reactFlowInstance]);
   
   // Update node health status on every simulation tick
@@ -386,7 +386,7 @@ async function exportCanvasAsPNG() {
   
   try {
     toastBus.emit('Rendering Architecture...', 'info');
-    const dataUrl = await captureArchitectureAsImage(state.nodes as any, state.edges as any);
+    const dataUrl = await captureArchitectureAsImage(state.nodes as unknown as import('./types').ArchNode[], state.edges as unknown as import('./types').ArchEdge[]);
     
     const link = document.createElement('a');
     link.download = `${state.projectName || 'architecture'}.png`;
@@ -422,9 +422,9 @@ function toggleFullscreen() {
 }
 
 // Expose globally for TopBar buttons
-(window as any).__archviz_exportPNG = exportCanvasAsPNG;
-(window as any).__archviz_exportJSON = exportAsJSON;
-(window as any).__archviz_toggleFullscreen = toggleFullscreen;
+(window as unknown as Record<string, unknown>).__archviz_exportPNG = exportCanvasAsPNG;
+(window as unknown as Record<string, unknown>).__archviz_exportJSON = exportAsJSON;
+(window as unknown as Record<string, unknown>).__archviz_toggleFullscreen = toggleFullscreen;
 
 function WorkspaceView() {
   // Bridge bus → toast context
@@ -460,8 +460,8 @@ function WorkspaceView() {
       // OPEN existing — load from Firestore
       loadProject(projectId).then(data => {
         if (data) {
-          setNodes(data.nodes as any);
-          setEdges(data.edges as any);
+          setNodes(data.nodes as unknown as import('./types').ArchNode[]);
+          setEdges(data.edges as unknown as import('./types').ArchEdge[]);
           setProjectName(data.name);
         } else {
           // Project not found — clear and show fresh canvas

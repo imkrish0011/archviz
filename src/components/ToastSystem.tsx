@@ -123,7 +123,7 @@ export function useToastBus() {
     });
 
     // 2. Listen to window-level custom events (for modules that can't import the bus)
-    const handleWindowEvent = (e: any) => {
+    const handleWindowEvent = (e: unknown) => {
       const { message, type } = e.detail;
       switch (type) {
         case 'success': toast.success(message); break;

@@ -4,7 +4,7 @@ import { validateField, backupRetentionSchema } from '../../utils/validationSche
 
 interface Props {
   node: ArchNode;
-  data: any;
+  data: unknown;
   handleCacheRateChange?: (rate: number) => void;
   update: (key: string, value: unknown) => void;
 }

@@ -162,15 +162,15 @@ describe('generateCloudFormation', () => {
     const resourceNames = Object.keys(resources);
     expect(resourceNames.length).toBeGreaterThan(0);
     // Find the EC2 resource
-    const ec2Resource = Object.values(resources).find((r: any) => r.Type === 'AWS::EC2::Instance');
+    const ec2Resource = Object.values(resources).find((r: unknown) => (r as {Type?: string}).Type === 'AWS::EC2::Instance');
     expect(ec2Resource).toBeDefined();
   });
 
   it('generates RDS resource for postgresql', () => {
     const nodes = [makeNode('postgresql', 'Main DB', 'n1')];
     const cfn = JSON.parse(generateCloudFormation(nodes, [], 'Test'));
-    const rds = Object.values(cfn.Resources).find((r: any) => r.Type === 'AWS::RDS::DBInstance');
+    const rds = Object.values(cfn.Resources).find((r: unknown) => (r as {Type?: string}).Type === 'AWS::RDS::DBInstance');
     expect(rds).toBeDefined();
-    expect((rds as any).Properties.Engine).toBe('postgres');
+    expect((rds as {Properties?: {Engine?: string}}).Properties?.Engine).toBe('postgres');
   });
 });

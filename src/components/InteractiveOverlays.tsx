@@ -226,7 +226,7 @@ export function ShortcutsOverlay() {
 
   useEffect(() => {
     // Expose global toggle for TopBar button
-    (window as any).__archviz_toggleShortcuts = () => setOpen(v => !v);
+    (window as unknown as Record<string, unknown>).__archviz_toggleShortcuts = () => setOpen(v => !v);
     
     function handleKey(e: KeyboardEvent) {
       if (document.activeElement?.tagName === 'INPUT' || 

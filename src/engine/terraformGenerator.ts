@@ -63,6 +63,17 @@ const tfResourceMap: Record<string, { resource: string; service: string }> = {
   'auth0':               { resource: 'auth0_client',              service: 'Auth0' },
   'aws-cognito':         { resource: 'aws_cognito_user_pool',     service: 'Cognito' },
   'hashicorp-vault':     { resource: 'vault_mount',               service: 'Vault' },
+
+  // Frontend & PaaS
+  'nextjs':              { resource: 'vercel_project',            service: 'Vercel' },
+  'react':               { resource: 'aws_s3_bucket_website_configuration', service: 'S3 Website' },
+  'vue':                 { resource: 'aws_s3_bucket_website_configuration', service: 'S3 Website' },
+  'vercel':              { resource: 'vercel_project',            service: 'Vercel' },
+  'netlify':             { resource: 'netlify_site',              service: 'Netlify' },
+  'cloudflare-pages':    { resource: 'cloudflare_pages_project',  service: 'Cloudflare Pages' },
+  'supabase':            { resource: 'supabase_project',          service: 'Supabase' },
+  'planetscale':         { resource: 'planetscale_database',      service: 'PlanetScale' },
+  'firebase':            { resource: 'google_firebase_project',   service: 'Firebase' },
 };
 
 function sanitize(name: string): string {
@@ -137,7 +148,7 @@ module "ec2_instance_${name}" {
 function generateRDSBlock(node: ArchNode, name: string): string {
   const engine = node.data.componentType === 'postgresql' ? 'postgres' : 'mysql';
   const multiAZ = node.data.multiAZ ? 'true' : 'false';
-  const replicas = (node.data as any).readReplicas || 0;
+  const replicas = ('readReplicas' in node.data) ? (node.data as {readReplicas?: number}).readReplicas || 0 : 0;
   const storage = node.data.volumeType === 'io1' ? 'io1' : node.data.volumeType === 'magnetic' ? 'standard' : 'gp3';
 
   let block = `
@@ -514,7 +525,7 @@ output "alb_dns_${name}" {
   };
 }
 
-export function parseTfState(stateJson: any): { nodes: ArchNode[], edges: ArchEdge[] } {
+export function parseTfState(stateJson: { resources?: Array<{ mode?: string; type?: string; instances?: Array<{ attributes?: Record<string, unknown> }> }> } | null): { nodes: ArchNode[], edges: ArchEdge[] } {
   const nodes: ArchNode[] = [];
   const edges: ArchEdge[] = [];
   
@@ -617,7 +628,7 @@ export function parseTfState(stateJson: any): { nodes: ArchNode[], edges: ArchEd
 
 // ── CloudFormation Generator ──
 export function generateCloudFormation(nodes: ArchNode[], _edges: ArchEdge[], projectName: string): string {
-  const resources: Record<string, any> = {};
+  const resources: Record<string, unknown> = {};
 
   for (const node of nodes) {
     if (node.data.componentType === 'groupNode') continue;
@@ -724,7 +735,7 @@ export function downloadCloudFormation(nodes: ArchNode[], edges: ArchEdge[], pro
 
 // ── Docker Compose Generator ──
 export function generateDockerCompose(nodes: ArchNode[], _edges: ArchEdge[], projectName: string): string {
-  const services: Record<string, any> = {};
+  const services: Record<string, unknown> = {};
 
   for (const node of nodes) {
     if (node.data.componentType === 'groupNode') continue;
@@ -759,10 +770,22 @@ export function generateDockerCompose(nodes: ArchNode[], _edges: ArchEdge[], pro
       services[name] = { image: 'redis:7-alpine', ports: ['6379:6379'] };
     } else if (['s3'].includes(type)) {
       services[name] = { image: 'minio/minio', command: 'server /data', ports: ['9000:9000'] };
+    } else if (['mongodb'].includes(type)) {
+      services[name] = { image: 'mongo:6', ports: ['27017:27017'], volumes: [`${name}_data:/data/db`] };
+    } else if (['cassandra'].includes(type)) {
+      services[name] = { image: 'cassandra:4', ports: ['9042:9042'], volumes: [`${name}_data:/var/lib/cassandra`] };
+    } else if (['elasticsearch'].includes(type)) {
+      services[name] = { image: 'elasticsearch:8.10.2', environment: ['discovery.type=single-node'], ports: ['9200:9200', '9300:9300'], volumes: [`${name}_data:/usr/share/elasticsearch/data`] };
+    } else if (['kafka'].includes(type)) {
+      services[name] = { image: 'confluentinc/cp-kafka:latest', ports: ['9092:9092'], environment: ['KAFKA_BROKER_ID=1', 'KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181', 'KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092', 'KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1'] };
+    } else if (['rabbitmq', 'message-queue'].includes(type)) {
+      services[name] = { image: 'rabbitmq:3-management-alpine', ports: ['5672:5672', '15672:15672'] };
+    } else if (['nextjs', 'react', 'vue'].includes(type)) {
+      services[name] = { image: 'node:20-alpine', command: 'npm run dev', ports: ['3000:3000'], volumes: ['./frontend:/app'], working_dir: '/app' };
     }
   }
 
-  const volumeNames = Object.keys(services).filter(k => services[k].volumes).map(k => `${k}_data`);
+  const volumeNames = Object.keys(services).filter(k => (services[k] as {volumes?: string[]}).volumes).map(k => `${k}_data`);
 
   // Generate generic YAML manually to avoid dependency
   let yaml = `version: '3.8'\nname: ${sanitize(projectName)}\n\nservices:\n`;

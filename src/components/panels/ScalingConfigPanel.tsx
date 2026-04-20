@@ -4,7 +4,7 @@ import { validateField, cooldownPeriodSchema } from '../../utils/validationSchem
 
 interface Props {
   node: ArchNode;
-  data: any;
+  data: unknown;
   update: (key: string, value: unknown) => void;
 }
 
