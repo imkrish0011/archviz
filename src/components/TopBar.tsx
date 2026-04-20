@@ -425,16 +425,25 @@ export default function TopBar() {
               <button className="sim-dropdown-item" onClick={() => {
                 setShowExportDropdown(false);
                 if (nodes.length === 0) { toastBus.emit('Add components to canvas first', 'warning'); return; }
-                withAuth(() => { downloadTerraform(nodes, useArchStore.getState().edges, projectName); toastBus.emit('Terraform (.tf) exported!', 'success'); }, 'Terraform');
+                withAuth(() => { downloadTerraform(nodes, useArchStore.getState().edges, projectName, 'files'); toastBus.emit('Terraform files exported!', 'success'); }, 'Terraform');
               }}>
                 <FileCode size={16} />
-                Export to Terraform
+                Export Terraform Files
+              </button>
+
+              <button className="sim-dropdown-item" onClick={() => {
+                setShowExportDropdown(false);
+                if (nodes.length === 0) { toastBus.emit('Add components to canvas first', 'warning'); return; }
+                withAuth(() => { downloadTerraform(nodes, useArchStore.getState().edges, projectName, 'zip'); toastBus.emit('Terraform ZIP exported!', 'success'); }, 'Terraform ZIP');
+              }}>
+                <FileCode size={16} />
+                Export Terraform ZIP
               </button>
               
               <button className="sim-dropdown-item" onClick={() => {
                 setShowExportDropdown(false);
                 if (nodes.length === 0) { toastBus.emit('Add components to canvas first', 'warning'); return; }
-                withAuth(() => { downloadCloudFormation(nodes, useArchStore.getState().edges, projectName); toastBus.emit('CloudFormation (.json) exported!', 'success'); }, 'CloudFormation');
+                withAuth(() => { downloadCloudFormation(nodes, useArchStore.getState().edges, projectName); toastBus.emit('CloudFormation (.yaml) exported!', 'success'); }, 'CloudFormation');
               }}>
                 <FileCode size={16} />
                 Export to CloudFormation
