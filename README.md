@@ -213,48 +213,6 @@ Application state is highly segregated into discrete **Zustand stores**:
 
 ---
 
-## 🚀 Getting Started
-
-### Prerequisites
-- **Node.js** 18+ 
-- **npm** 9+
-
-### Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/imkrish0011/archviz.git
-cd archviz
-
-# Install dependencies
-npm install
-
-# Start dev server
-npm run dev
-```
-
-The app will open at `http://localhost:5173`.
-
-### Build for Production
-
-```bash
-npm run build
-npm run preview
-```
-
----
-
-## 🧪 Testing
-
-ArchViz has a comprehensive test suite powered by **Vitest**:
-
-```bash
-# Run all tests
-npm test
-
-# Run in watch mode
-npm run test:watch
-```
 
 ### Test Coverage
 
