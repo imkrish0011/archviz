@@ -15,6 +15,18 @@
 </p>
 
 <p align="center">
+  <a href="https://archviz-studio.vercel.app" target="_blank">
+    <img src="https://img.shields.io/badge/Live%20Demo-archviz--studio.vercel.app-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Demo" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://archviz-studio.vercel.app" target="_blank">
+    <img src="./public/preview.png" alt="ArchViz Preview Workspace" width="100%" style="border-radius: 8px;" />
+  </a>
+</p>
+
+<p align="center">
   <a href="#-features">Features</a> •
   <a href="#-simulation-engine">Simulation Engine</a> •
   <a href="#-component-library">Components</a> •
