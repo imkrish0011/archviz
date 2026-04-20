@@ -289,7 +289,7 @@ npm run test:watch
 
 ## 📄 License
 
-**© Copyright**. This project is copyrighted material, licensed under the **MIT License**. Use it, fork it, build on it. No restrictions.
+**© Copyright**. This project is copyrighted material, licensed under the **MIT License**.
 
 ---
 
