@@ -33,16 +33,33 @@ describe('generateTerraform', () => {
     expect(result).toHaveProperty('outputsTf');
   });
 
-  it('includes the required_providers terraform header block', () => {
+  it('includes required providers and an s3 backend', () => {
     const result = generateTerraform([], [], 'Test Project');
     expect(result.mainTf).toContain('required_providers');
-    expect(result.mainTf).toContain('required_version = ">= 1.5.0"');
+    expect(result.mainTf).toContain('backend "s3"');
     expect(result.mainTf).toContain('hashicorp/aws');
+    expect(result.mainTf).toContain('hashicorp/random');
   });
 
-  it('adds a sensitive db_password variable', () => {
+  it('uses a dynamic aws_ami lookup instead of a fake ami id', () => {
+    const result = generateTerraform([makeNode('api-server', 'API', 'api-1')], [], 'App');
+    expect(result.mainTf).toContain('data "aws_ami" "latest_amazon_linux"');
+    expect(result.mainTf).toContain('ami                         = data.aws_ami.latest_amazon_linux.id');
+    expect(result.mainTf).not.toContain('ami-1234567890abcdef0');
+  });
+
+  it('creates public and private routing with nat gateways', () => {
+    const result = generateTerraform([], [], 'Networking');
+    expect(result.mainTf).toContain('resource "aws_nat_gateway" "main"');
+    expect(result.mainTf).toContain('resource "aws_route_table" "public"');
+    expect(result.mainTf).toContain('resource "aws_route_table" "private"');
+    expect(result.mainTf).toContain('gateway_id = aws_internet_gateway.main.id');
+    expect(result.mainTf).toContain('nat_gateway_id = aws_nat_gateway.main[count.index % length(aws_nat_gateway.main)].id');
+  });
+
+  it('adds a sensitive per-database password variable', () => {
     const result = generateTerraform([makeNode('postgresql', 'Main DB', 'db-1')], [], 'App');
-    expect(result.variablesTf).toContain('variable "db_password"');
+    expect(result.variablesTf).toContain('variable "main_db_password"');
     expect(result.variablesTf).toContain('sensitive = true');
   });
 
@@ -55,12 +72,34 @@ describe('generateTerraform', () => {
     const result = generateTerraform([makeNode('lambda', 'Auth Lambda', 'lambda-1')], [], 'App');
     expect(result.mainTf).toContain('resource "aws_iam_role" "auth_lambda_lambda_role"');
     expect(result.mainTf).toContain('resource "aws_iam_role_policy_attachment" "auth_lambda_lambda_basic"');
+    expect(result.mainTf).toContain('data "archive_file" "auth_lambda_lambda_zip"');
   });
 
-  it('emits unsupported comments for non-AWS components', () => {
-    const result = generateTerraform([makeNode('pinecone', 'Vector Search', 'pc-1')], [], 'App');
-    expect(result.mainTf).toContain('UNSUPPORTED');
-    expect(result.mainTf).toContain('pinecone-community/pinecone');
+  it('maps cdn, api-gateway, kafka, and cassandra to concrete aws resources', () => {
+    const nodes = [
+      makeNode('cdn', 'CDN Edge', 'cdn-1'),
+      makeNode('api-gateway', 'Public API', 'api-1'),
+      makeNode('kafka', 'Event Stream', 'kafka-1'),
+      makeNode('cassandra', 'Wide Column', 'cass-1'),
+    ];
+    const result = generateTerraform(nodes, [], 'Mappings');
+    expect(result.mainTf).toContain('resource "aws_cloudfront_distribution" "cdn_edge"');
+    expect(result.mainTf).toContain('resource "aws_apigatewayv2_api" "public_api"');
+    expect(result.mainTf).toContain('resource "aws_msk_cluster" "event_stream"');
+    expect(result.mainTf).toContain('resource "aws_keyspaces_keyspace" "wide_column"');
+    expect(result.mainTf).not.toContain('null_resource');
+  });
+
+  it('generates unique s3 bucket naming with random_string', () => {
+    const result = generateTerraform([makeNode('s3', 'Assets Bucket', 's3-1')], [], 'Buckets');
+    expect(result.mainTf).toContain('resource "random_string" "bucket_suffix"');
+    expect(result.mainTf).toContain('random_string.bucket_suffix.result');
+  });
+
+  it('does not emit overly permissive 0-65535 security group rules', () => {
+    const result = generateTerraform([makeNode('api-server', 'API', 'api-1')], [], 'Security');
+    expect(result.mainTf).not.toContain('to_port     = 65535');
+    expect(result.mainTf).not.toContain('from_port   = 0\n    to_port     = 65535');
   });
 
   it('sanitizes resource names to lowercase letters, digits, and underscores', () => {
