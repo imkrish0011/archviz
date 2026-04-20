@@ -2,7 +2,7 @@ import PanelSection from './PanelSection';
 import { validateField, connectionTimeoutSchema } from '../../utils/validationSchemas';
 
 interface Props {
-  data: unknown;
+  data: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
   update: (key: string, value: unknown) => void;
 }
 

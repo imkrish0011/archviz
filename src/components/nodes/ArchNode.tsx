@@ -60,10 +60,10 @@ function ArchNodeComponent({ id, data, selected }: NodeProps) {
   // Security Vulnerability Badge
   let securityBadge: React.ReactNode = null;
   if (computedSecurityReport && !d.isFailed && !d.isDisabled) {
-    const findings = computedSecurityReport.findings.filter((f: unknown) => f.affectedNodeIds.includes(id));
+    const findings = (computedSecurityReport as { findings: Array<{ affectedNodeIds: string[]; severity: string }> }).findings.filter((f) => f.affectedNodeIds.includes(id));
     if (findings.length > 0) {
-      const hasCritical = findings.some((f: unknown) => f.severity === 'critical');
-      const hasHigh = findings.some((f: unknown) => f.severity === 'high');
+      const hasCritical = findings.some((f) => f.severity === 'critical');
+      const hasHigh = findings.some((f) => f.severity === 'high');
       const color = hasCritical ? '#ff4444' : hasHigh ? '#ff8c00' : '#fbbf24';
       securityBadge = (
         <div className="arch-node-security-badge-container" onClick={(e) => {

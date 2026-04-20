@@ -71,7 +71,7 @@ export default function EdgeConfigPanel() {
           <select
             className="form-select"
             value={config.connectionType || 'default'}
-            onChange={e => updateEdgeConfig(edge.id, { connectionType: (e.target.value || undefined) as unknown as Record<string, unknown> })}
+            onChange={e => updateEdgeConfig(edge.id, { connectionType: e.target.value as EdgeConfig['connectionType'] })}
           >
             {connectionTypes.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
           </select>
@@ -81,7 +81,7 @@ export default function EdgeConfigPanel() {
           <select
             className="form-select"
             value={config.protocol || ''}
-            onChange={e => updateEdgeConfig(edge.id, { protocol: (e.target.value || undefined) as unknown as Record<string, unknown> })}
+            onChange={e => updateEdgeConfig(edge.id, { protocol: (e.target.value || undefined) as EdgeConfig['protocol'] })}
           >
             <option value="">— Select —</option>
             {protocols.map(p => <option key={p} value={p}>{p}</option>)}
@@ -92,7 +92,7 @@ export default function EdgeConfigPanel() {
           <select
             className="form-select"
             value={config.dataFlow || ''}
-            onChange={e => updateEdgeConfig(edge.id, { dataFlow: (e.target.value || undefined) as unknown as Record<string, unknown> })}
+            onChange={e => updateEdgeConfig(edge.id, { dataFlow: (e.target.value || undefined) as EdgeConfig['dataFlow'] })}
           >
             <option value="">— Select —</option>
             {dataFlows.map(d => <option key={d} value={d}>{d}</option>)}

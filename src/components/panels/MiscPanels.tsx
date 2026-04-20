@@ -4,7 +4,7 @@ import { validateField, backupRetentionSchema } from '../../utils/validationSche
 
 interface Props {
   node: ArchNode;
-  data: unknown;
+  data: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
   handleCacheRateChange?: (rate: number) => void;
   update: (key: string, value: unknown) => void;
 }

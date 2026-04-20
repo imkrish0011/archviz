@@ -34,9 +34,9 @@ export function validateConnection(
     };
   }
 
-  const isFrontend = ['frontend', 'client', 'frontend-framework'].includes(srcCat) || srcType.includes('client');
-  const isStorage = ['storage', 'database'].includes(tgtCat);
-  const isMessaging = ['messaging', 'queue'].includes(tgtCat);
+  const isFrontend = ['frontend', 'client', 'frontend-framework', 'frontend-paas'].includes(srcCat as string) || srcType.includes('client');
+  const isStorage = ['storage', 'database'].includes(tgtCat as string);
+  const isMessaging = ['messaging', 'queue'].includes(tgtCat as string);
 
   // Frontend -> Database (direct)
   if (isFrontend && isStorage) {
@@ -63,8 +63,8 @@ export function validateConnection(
   }
 
   // Compute -> Compute (without load balancer)
-  const isComputeSrc = ['compute', 'serverless'].includes(srcCat);
-  const isComputeTgt = ['compute', 'serverless'].includes(tgtCat);
+  const isComputeSrc = ['compute', 'serverless'].includes(srcCat as string);
+  const isComputeTgt = ['compute', 'serverless'].includes(tgtCat as string);
   if (isComputeSrc && isComputeTgt) {
     return {
       allowed: true, // Warnings are allowed
@@ -75,8 +75,8 @@ export function validateConnection(
   }
 
   // Cache backwards connection (cache -> frontend)
-  if (srcType.includes('redis') || srcType.includes('memcached') || srcCat === 'cache') {
-    if (['frontend', 'client', 'frontend-framework'].includes(tgtCat)) {
+  if (srcType.includes('redis') || srcType.includes('memcached')) {
+    if (['frontend', 'client', 'frontend-framework', 'frontend-paas'].includes(tgtCat as string)) {
       return {
         allowed: false,
         level: 'error',

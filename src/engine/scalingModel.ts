@@ -38,6 +38,6 @@ export function calculateEffectiveCapacity(node: ArchNode): number {
   return node.data.tier.capacity;
 }
 
-export function getMaxInstances(_node: ArchNode): number {
+export function getMaxInstances(): number {
   return 20; // Practical limit for the UI
 }

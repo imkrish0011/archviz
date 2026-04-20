@@ -97,7 +97,7 @@ export default function RightPanel() {
     selectNode(newNodeId);
   };
 
-  const data = node.data as Record<string, unknown>;
+  const data = node.data as Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
   const catColor = `var(--cat-${def.category})`;
   const catMuted = `var(--cat-${def.category}-muted)`;
 

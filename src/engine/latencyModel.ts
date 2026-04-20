@@ -5,7 +5,7 @@ import type { ArchNode, ArchEdge } from '../types';
  * Calculates total system latency including overload penalties.
  */
 
-let previousNodeLoads = new Map<string, number>();
+const previousNodeLoads = new Map<string, number>();
 
 export function calculateOverloadMultiplier(load: number, capacity: number): number {
   if (capacity <= 0) return 10;

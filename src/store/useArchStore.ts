@@ -201,8 +201,8 @@ export const useArchStore = create<ArchStore>((set, get) => ({
     if (!draggedNode) return;
 
     // Apply any snapped position definitively if it was close
-    let finalX = alignmentLines?.x !== undefined ? alignmentLines.x : position.x;
-    let finalY = alignmentLines?.y !== undefined ? alignmentLines.y : position.y;
+    const finalX = alignmentLines?.x !== undefined ? alignmentLines.x : position.x;
+    const finalY = alignmentLines?.y !== undefined ? alignmentLines.y : position.y;
 
     // Clear alignment visual lines
     set({ alignmentLines: null });
@@ -564,7 +564,8 @@ export const useArchStore = create<ArchStore>((set, get) => ({
             data: {
               ...edge.data,
               config: {
-                ...((edge.data as unknown)?.config || {}),
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                ...((edge.data as Record<string, any>)?.config || {}),
                 trafficWeight: 0,
                 edgeLabel: undefined,
               }
@@ -621,7 +622,8 @@ export const useArchStore = create<ArchStore>((set, get) => ({
     // Clear trafficWeight overrides
     const cleanEdges = finalEdges.map(e => {
       if (deploymentState.cloneNodeIds.includes(e.target)) {
-        const config = { ...((e.data as unknown)?.config || {}) };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const config = { ...((e.data as Record<string, any>)?.config || {}) };
         delete config.trafficWeight;
         return {
           ...e,
@@ -669,7 +671,8 @@ export const useArchStore = create<ArchStore>((set, get) => ({
       .filter(e => !deploymentState.cloneNodeIds.includes(e.target))
       .map(e => {
         if (deploymentState.sourceNodeIds.includes(e.target)) {
-          const config = { ...((e.data as unknown)?.config || {}) };
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const config = { ...((e.data as Record<string, any>)?.config || {}) };
           delete config.trafficWeight;
           return {
             ...e,
@@ -782,11 +785,12 @@ export const useArchStore = create<ArchStore>((set, get) => ({
       edges: get().edges.map(e => {
         if (e.id === edgeId) {
           const baseData = e.data || {};
-          const prevConfig = (baseData as unknown).config || (e as unknown).config || {};
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const prevConfig = (baseData as Record<string, any>).config || (e as Record<string, any>).config || {};
           const mergedConfig = { ...prevConfig, ...config };
           
           let animation = e.animated;
-          let newStyle = { ...e.style };
+          const newStyle = { ...e.style };
           
           if (config.connectionType === 'sync-http') {
             animation = false;

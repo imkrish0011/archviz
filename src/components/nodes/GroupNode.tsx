@@ -11,8 +11,8 @@ const groupColors: Record<string, { border: string; bg: string; label: string }>
 };
 
 function GroupNode({ data, selected }: NodeProps) {
-  const d = data as unknown as Record<string, unknown>;
-  const groupType = d.componentType || 'vpc';
+  const d = data as Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+  const groupType = (d.componentType as string) || 'vpc';
   const colors = groupColors[groupType] || groupColors.vpc;
   const label = d.label || colors.label;
 

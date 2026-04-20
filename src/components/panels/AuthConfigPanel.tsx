@@ -1,7 +1,7 @@
 import PanelSection from './PanelSection';
 
 interface Props {
-  data: unknown;
+  data: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
   update: (key: string, value: unknown) => void;
 }
 

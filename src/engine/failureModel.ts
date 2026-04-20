@@ -65,8 +65,8 @@ export function calculateSystemReliability(
   
   // Failed nodes impact
   const failedNodes = nodes.filter(n => n.data.isFailed);
-  for (const _failed of failedNodes) {
-    reliability *= 0.5;
+  if (failedNodes.length > 0) {
+    reliability *= Math.pow(0.5, failedNodes.length);
   }
   
   // Check for single points of failure in the edge graph
