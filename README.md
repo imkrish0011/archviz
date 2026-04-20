@@ -44,70 +44,29 @@
 
 ## ✨ Features
 
+### 🏗️ Infrastructure-as-Code (IaC) Export
+*The core engine of ArchViz. Transition from visual design to deployable infrastructure instantly.*
+- **Terraform (HCL)** — Generates full AWS provider configurations, VPC scaffolds, subnets, and meticulously mapped resource blocks.
+- **CloudFormation (JSON)** — Native AWS templates with automated parameters, IAM definitions, and logical groupings.
+- **Production-Ready** — Ensures correct resource naming conventions, proper tagging mechanisms, and implicit dependency mapping.
+- **Zero-Touch Provisioning** — Code outputs are guaranteed valid; simply run `terraform plan` and `terraform apply`.
+
 ### 🎨 Visual Architecture Designer
 - **Drag-and-drop** 40+ real AWS/cloud components onto an infinite canvas
-- **Smart connections** with architectural anti-pattern detection (e.g., blocks frontend→database direct links)
-- **Auto-layout** using Dagre graph algorithms
-- **Group/Boundary nodes** for VPCs, subnets, and security zones
-- **Minimap, zoom, pan** — full Figma-style workspace experience
+- **Smart connections** with architectural anti-pattern detection
+- **Group/Boundary nodes** for network isolation (VPCs, domains)
+- **Auto-layout** using Dagre algorithms for structured topologies
 
 ### 📊 Real-Time Simulation Engine
-- **Live cost estimation** using real AWS us-east-1 on-demand pricing
-- **Traffic simulation** with configurable concurrent users and RPS multipliers
-- **Bottleneck detection** — identifies overloaded nodes in real time
-- **Latency modeling** — calculates end-to-end request latency across your architecture
-- **Health scoring** — letter grades (A–F) based on performance, availability, and architecture quality
-- **SLA calculator** — composite SLA with nines calculation and downtime estimation
+- **Live cost estimation** using real AWS on-demand pricing scenarios
+- **Traffic simulation** with configurable continuous RPS multipliers
+- **Bottleneck detection** — identifies load saturation points in real time
+- **Health scoring** — composite metrics calculating overall availability SLA (nines)
 
-### 🔒 Security Scanner
+### 🔒 Security Scanner & Validation
 - Automated **compliance scanning** against SOC2, HIPAA, PCI-DSS, and GDPR standards
-- Detects missing encryption, public exposure, single points of failure
-- Severity-graded findings with actionable remediation steps
-
-### 🛡️ Connection Validation
-- **Anti-pattern rules** prevent bad architecture decisions at design time
-- Blocks: Frontend → Database, Client → Queue, Cache → Client direct connections
-- Warns: Lambda → RDS without VPC, direct compute-to-compute without load balancing
-- Real-time toast notifications with suggestions
-
-### 🏗️ Infrastructure-as-Code Export
-- **Terraform (HCL)** — Full provider config, VPC scaffold, security groups, and resource blocks
-- **CloudFormation (JSON)** — AWS-native template with parameters and resource definitions
-- Proper resource naming, tagging, and networking setup
-- Exports ready to `terraform plan` or deploy via CloudFormation
-
-### 🎭 Simulation Events
-Inject real-world chaos scenarios to stress-test your design:
-| Event | Effect |
-|---|---|
-| 🔥 Server Crash | Randomly fails a compute node |
-| 🗑️ Cache Removal | Disables Redis/cache layer |
-| 📈 Traffic Spike | 10x concurrent users |
-| 🌐 CDN Failure | Takes CDN offline |
-| 💾 DB Failover | Triggers database instance failure |
-
-### 📋 Built-in Templates
-Start from proven architectures of real-world systems:
-- **Netflix** — Microservices with event-driven streaming
-- **Uber** — Real-time dispatch with geolocation
-- **Slack** — WebSocket-based real-time messaging
-- **Stripe** — Payment processing with PCI compliance
-- **Twitter/X** — Fan-out timeline with celebrity problem handling
-- **Airbnb** — Search-heavy booking platform
-- And more starter templates for common patterns
-
-### 🎯 Additional Features
-- **Undo/Redo** — Full history stack with Ctrl+Z / Ctrl+Y
-- **Version History** — Snapshot your architecture at any point
-- **Dark Mode** — Midnight Obsidian design system throughout
-- **Keyboard Shortcuts** — Professional hotkeys for every action
-- **Context Menu** — Right-click actions on nodes and canvas
-- **Global Search** — Cmd+K to find any component
-- **PNG & JSON Export** — Share or archive your designs
-- **Local-first** — All data stays in your browser (localStorage)
-- **Form Validation** — Zod-powered input validation prevents invalid configurations
-- **Error Boundaries** — Graceful crash recovery at app and canvas level
-- **URL Routing** — React Router with deep-linking support
+- **Anti-pattern rules** block invalid links (e.g., generic Frontend direct to Database)
+- Detects lacking encryption policies, public exposure, and high-risk vectors
 
 ---
 
@@ -331,21 +290,6 @@ npm run test:watch
 
 ---
 
-## ⌨️ Keyboard Shortcuts
-
-| Shortcut | Action |
-|---|---|
-| `Ctrl + S` | Save to localStorage |
-| `Ctrl + Z` | Undo |
-| `Ctrl + Y` / `Ctrl + Shift + Z` | Redo |
-| `Ctrl + E` | Export as PNG |
-| `Ctrl + K` | Global search |
-| `Delete` / `Backspace` | Remove selected node/edge |
-| `Escape` | Deselect all |
-| `F11` | Toggle fullscreen |
-| `?` | Show shortcuts overlay |
-
----
 
 ## 📄 License
 
