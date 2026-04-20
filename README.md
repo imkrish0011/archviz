@@ -27,6 +27,10 @@
 </p>
 
 <p align="center">
+  <img src="./src/assets/demo.gif" alt="ArchViz Demo" width="100%" style="border-radius: 8px;" />
+</p>
+
+<p align="center">
   <a href="#-features">Features</a> •
   <a href="#-simulation-engine">Simulation Engine</a> •
   <a href="#-component-library">Components</a> •
