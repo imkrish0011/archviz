@@ -111,18 +111,19 @@ export default function RightPanel() {
       <div 
         className="right-panel-header"
         style={{ 
-          background: `linear-gradient(180deg, var(--cat-${def.category}-subtle) 0%, rgba(12, 11, 15, 0.95) 100%)`,
+          backgroundColor: '#0c0b0f',
+          backgroundImage: `linear-gradient(180deg, var(--cat-${def.category}-subtle) 0%, transparent 100%)`,
           padding: '16px 20px',
           flexDirection: 'column',
           alignItems: 'stretch',
           gap: 12,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
             {/* Category icon glow */}
             <div style={{
-              width: 34, height: 34, borderRadius: 8,
+              width: 34, height: 34, borderRadius: 8, flexShrink: 0,
               background: catMuted,
               border: `1px solid ${catColor}30`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -133,7 +134,7 @@ export default function RightPanel() {
                 return <IconComp size={16} style={{ color: catColor }} />;
               })()}
             </div>
-            <div>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <input
                 value={node.data.label}
                 onChange={e => updateNodeData(node.id, { label: e.target.value })}
@@ -142,16 +143,19 @@ export default function RightPanel() {
                   color: 'var(--text-primary)', fontSize: '0.95rem', fontWeight: 650, width: '100%',
                   outline: 'none', padding: '0', letterSpacing: '-0.01em',
                   fontFamily: 'var(--font-sans)',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden'
                 }}
                 onFocus={e => (e.target.style.borderBottom = `1px solid ${catColor}`)}
                 onBlur={e => (e.target.style.borderBottom = '1px solid transparent')}
               />
-              <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.3)', marginTop: 2, letterSpacing: '0.04em' }}>
+              <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.3)', marginTop: 2, letterSpacing: '0.04em', textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflow: 'hidden' }}>
                 {def.category.toUpperCase()} · {def.type}
               </div>
             </div>
           </div>
-          <button className="btn-icon" onClick={() => selectNode(null)} style={{ color: 'rgba(255,255,255,0.3)' }}>
+          <button className="btn-icon" onClick={() => selectNode(null)} style={{ color: 'rgba(255,255,255,0.3)', flexShrink: 0 }}>
             <X size={16} />
           </button>
         </div>

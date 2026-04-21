@@ -30,12 +30,12 @@ export default function EdgeConfigPanel() {
   return (
     <div className="right-panel">
       {/* Header */}
-      <div className="right-panel-header" style={{ background: 'linear-gradient(180deg, rgba(99, 102, 241, 0.08) 0%, rgba(15, 14, 18, 0.95) 100%)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Link2 size={16} style={{ color: 'var(--accent)' }} />
-          <span style={{ color: 'var(--text-primary)', fontSize: '0.95rem', fontWeight: 600 }}>Connection</span>
+      <div className="right-panel-header" style={{ backgroundColor: '#0c0b0f', backgroundImage: 'linear-gradient(180deg, rgba(99, 102, 241, 0.08) 0%, transparent 100%)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
+          <Link2 size={16} style={{ color: 'var(--accent)', flexShrink: 0 }} />
+          <span style={{ color: 'var(--text-primary)', fontSize: '0.95rem', fontWeight: 600, textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflow: 'hidden' }}>Connection</span>
         </div>
-        <button className="btn-icon" onClick={() => selectEdge(null)}><X size={16} /></button>
+        <button className="btn-icon" onClick={() => selectEdge(null)} style={{ flexShrink: 0 }}><X size={16} /></button>
       </div>
 
       {/* Source → Target */}
