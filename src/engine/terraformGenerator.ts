@@ -1,11 +1,15 @@
 import type { ArchEdge, ArchNode } from '../types';
 import { getComponentDefinition } from '../data/componentLibrary';
 import { generateCloudFormation } from './cloudformationGenerator';
-import { generateTerraform, type TerraformArtifacts } from './hclGenerator';
 import { sanitizeName } from './iacUtils';
 
-export { generateTerraform, generateCloudFormation, sanitizeName };
-export type { TerraformArtifacts };
+export { generateCloudFormation, sanitizeName };
+
+export interface TerraformArtifacts {
+  mainTf: string;
+  variablesTf: string;
+  outputsTf: string;
+}
 
 interface DownloadFile {
   filename: string;
@@ -14,6 +18,743 @@ interface DownloadFile {
 }
 
 type TerraformDownloadMode = 'files' | 'zip';
+
+interface TerraformVariableDefinition {
+  name: string;
+  description: string;
+  type: 'string' | 'number';
+  defaultValue?: string | number;
+}
+
+interface TerraformOutputDefinition {
+  name: string;
+  description: string;
+  value: string;
+}
+
+interface TerraformContext {
+  names: Map<string, string>;
+  nodeById: Map<string, ArchNode>;
+  variables: Map<string, TerraformVariableDefinition>;
+  outputs: TerraformOutputDefinition[];
+  hasEc2Compute: boolean;
+}
+
+export function generateTerraform(nodes: ArchNode[], _edges: ArchEdge[], projectName: string): TerraformArtifacts {
+  const activeNodes = nodes.filter(node => node.data.componentType !== 'groupNode');
+  const names = buildUniqueTerraformNames(activeNodes);
+  const context: TerraformContext = {
+    names,
+    nodeById: new Map(activeNodes.map(node => [node.id, node])),
+    variables: new Map(),
+    outputs: [
+      { name: 'public_subnet_id', description: 'Public subnet ID', value: 'aws_subnet.public.id' },
+      { name: 'vpc_id', description: 'VPC ID', value: 'aws_vpc.main.id' },
+    ],
+    hasEc2Compute: activeNodes.some(node => ['api-server', 'web-server', 'worker'].includes(node.data.componentType)),
+  };
+
+  registerVariable(context, { name: 'aws_region', description: 'AWS region to deploy resources', type: 'string', defaultValue: 'us-east-1' });
+  registerVariable(context, { name: 'private_route_cidr', description: 'CIDR block for private subnet egress routing', type: 'string', defaultValue: '0.0.0.0/0' });
+  registerVariable(context, { name: 'private_subnet_cidr', description: 'Private subnet CIDR block', type: 'string', defaultValue: '10.0.2.0/24' });
+  registerVariable(context, { name: 'project_name', description: 'Project name prefix', type: 'string', defaultValue: sanitizeName(projectName) || 'archviz' });
+  registerVariable(context, { name: 'public_route_cidr', description: 'CIDR block for public internet access', type: 'string', defaultValue: '0.0.0.0/0' });
+  registerVariable(context, { name: 'public_subnet_cidr', description: 'Public subnet CIDR block', type: 'string', defaultValue: '10.0.1.0/24' });
+  registerVariable(context, { name: 'vpc_cidr', description: 'CIDR block for the VPC', type: 'string', defaultValue: '10.0.0.0/16' });
+
+  const computeResources: string[] = [];
+  const storageResources: string[] = [];
+  const networkResources: string[] = [];
+  const messagingResources: string[] = [];
+  const observabilityResources: string[] = [];
+
+  for (const node of activeNodes) {
+    const rendered = renderTerraformNode(node, context);
+    if (!rendered) {
+      continue;
+    }
+
+    switch (rendered.section) {
+      case 'compute':
+        computeResources.push(rendered.content);
+        break;
+      case 'storage':
+        storageResources.push(rendered.content);
+        break;
+      case 'network':
+        networkResources.push(rendered.content);
+        break;
+      case 'messaging':
+        messagingResources.push(rendered.content);
+        break;
+      case 'observability':
+        observabilityResources.push(rendered.content);
+        break;
+    }
+  }
+
+  const mainSections = [
+    renderTerraformBlock(),
+    renderProviderBlock(),
+    context.hasEc2Compute ? renderSsmAmiDataBlock() : '',
+    renderBaseNetworkingBlock(),
+    computeResources.length > 0 ? `# Compute\n\n${computeResources.join('\n\n')}` : '',
+    storageResources.length > 0 ? `# Storage\n\n${storageResources.join('\n\n')}` : '',
+    networkResources.length > 0 ? `# Network Services\n\n${networkResources.join('\n\n')}` : '',
+    messagingResources.length > 0 ? `# Messaging\n\n${messagingResources.join('\n\n')}` : '',
+    observabilityResources.length > 0 ? `# Observability\n\n${observabilityResources.join('\n\n')}` : '',
+  ].filter(Boolean);
+
+  return {
+    mainTf: enhanceUnsupportedComments(mainSections.join('\n\n')),
+    variablesTf: renderVariablesSection(context.variables),
+    outputsTf: renderOutputsSection(context.outputs),
+  };
+}
+
+function renderTerraformBlock(): string {
+  return [
+    'terraform {',
+    '  required_providers {',
+    '    aws = {',
+    '      source  = "hashicorp/aws"',
+    '      version = "~> 5.0"',
+    '    }',
+    '  }',
+    '}',
+  ].join('\n');
+}
+
+function renderProviderBlock(): string {
+  return [
+    'provider "aws" {',
+    '  region = var.aws_region',
+    '}',
+  ].join('\n');
+}
+
+function renderSsmAmiDataBlock(): string {
+  return [
+    'data "aws_ssm_parameter" "amazon_linux_ami" {',
+    '  name = "/aws/service/ami-amazon-linux-latest/al2023-ami-hvm-x86_64-gp2"',
+    '}',
+  ].join('\n');
+}
+
+function renderBaseNetworkingBlock(): string {
+  return [
+    'resource "aws_vpc" "main" {',
+    '  cidr_block           = var.vpc_cidr',
+    '  enable_dns_support   = true',
+    '  enable_dns_hostnames = true',
+    '  tags = {',
+    '    Name      = "${var.project_name}-vpc"',
+    '    Project   = var.project_name',
+    '    ManagedBy = "archviz"',
+    '  }',
+    '}',
+    '',
+    'resource "aws_subnet" "public" {',
+    '  vpc_id                  = aws_vpc.main.id',
+    '  cidr_block              = var.public_subnet_cidr',
+    '  availability_zone       = "${var.aws_region}a"',
+    '  map_public_ip_on_launch = true',
+    '  tags = {',
+    '    Name      = "${var.project_name}-public-subnet"',
+    '    Project   = var.project_name',
+    '    ManagedBy = "archviz"',
+    '  }',
+    '}',
+    '',
+    'resource "aws_subnet" "private" {',
+    '  vpc_id            = aws_vpc.main.id',
+    '  cidr_block        = var.private_subnet_cidr',
+    '  availability_zone = "${var.aws_region}b"',
+    '  tags = {',
+    '    Name      = "${var.project_name}-private-subnet"',
+    '    Project   = var.project_name',
+    '    ManagedBy = "archviz"',
+    '  }',
+    '}',
+    '',
+    'resource "aws_internet_gateway" "main" {',
+    '  vpc_id = aws_vpc.main.id',
+    '  tags = {',
+    '    Name      = "${var.project_name}-igw"',
+    '    Project   = var.project_name',
+    '    ManagedBy = "archviz"',
+    '  }',
+    '}',
+    '',
+    'resource "aws_route_table" "public" {',
+    '  vpc_id = aws_vpc.main.id',
+    '  route {',
+    '    cidr_block = var.public_route_cidr',
+    '    gateway_id = aws_internet_gateway.main.id',
+    '  }',
+    '  tags = {',
+    '    Name      = "${var.project_name}-public-rt"',
+    '    Project   = var.project_name',
+    '    ManagedBy = "archviz"',
+    '  }',
+    '}',
+    '',
+    'resource "aws_route_table_association" "public" {',
+    '  subnet_id      = aws_subnet.public.id',
+    '  route_table_id = aws_route_table.public.id',
+    '}',
+    '',
+    'resource "aws_eip" "nat" {',
+    '  domain     = "vpc"',
+    '  depends_on = [aws_internet_gateway.main]',
+    '  tags = {',
+    '    Name      = "${var.project_name}-nat-eip"',
+    '    Project   = var.project_name',
+    '    ManagedBy = "archviz"',
+    '  }',
+    '}',
+    '',
+    'resource "aws_nat_gateway" "main" {',
+    '  allocation_id = aws_eip.nat.id',
+    '  subnet_id     = aws_subnet.public.id',
+    '  depends_on    = [aws_internet_gateway.main]',
+    '  tags = {',
+    '    Name      = "${var.project_name}-nat"',
+    '    Project   = var.project_name',
+    '    ManagedBy = "archviz"',
+    '  }',
+    '}',
+    '',
+    'resource "aws_route_table" "private" {',
+    '  vpc_id = aws_vpc.main.id',
+    '  route {',
+    '    cidr_block     = var.private_route_cidr',
+    '    nat_gateway_id = aws_nat_gateway.main.id',
+    '  }',
+    '  tags = {',
+    '    Name      = "${var.project_name}-private-rt"',
+    '    Project   = var.project_name',
+    '    ManagedBy = "archviz"',
+    '  }',
+    '}',
+    '',
+    'resource "aws_route_table_association" "private" {',
+    '  subnet_id      = aws_subnet.private.id',
+    '  route_table_id = aws_route_table.private.id',
+    '}',
+  ].join('\n');
+}
+
+function renderTerraformNode(
+  node: ArchNode,
+  context: TerraformContext,
+): { section: 'compute' | 'storage' | 'network' | 'messaging' | 'observability'; content: string } | null {
+  const name = context.names.get(node.id) ?? sanitizeName(node.data.label);
+  const type = node.data.componentType;
+
+  switch (type) {
+    case 'api-server':
+    case 'web-server':
+    case 'worker':
+      registerVariable(context, { name: `${name}_instance_type`, description: `${node.data.label} EC2 instance type`, type: 'string', defaultValue: node.data.tier.label.includes('.') ? node.data.tier.label : 't3.micro' });
+      return {
+        section: 'compute',
+        content: [
+          `resource "aws_instance" "${name}" {`,
+          '  ami           = data.aws_ssm_parameter.amazon_linux_ami.value',
+          `  instance_type = var.${name}_instance_type`,
+          '  subnet_id     = aws_subnet.public.id',
+          '',
+          renderTagsBlock(),
+          '}',
+        ].join('\n'),
+      };
+    case 'lambda':
+      return {
+        section: 'compute',
+        content: [
+          `resource "aws_iam_role" "${name}_lambda_role" {`,
+          `  name = "${name}-lambda-role"`,
+          '  assume_role_policy = jsonencode({',
+          '    Version = "2012-10-17"',
+          '    Statement = [{',
+          '      Action = "sts:AssumeRole"',
+          '      Effect = "Allow"',
+          '      Principal = { Service = "lambda.amazonaws.com" }',
+          '    }]',
+          '  })',
+          '}',
+          '',
+          `resource "aws_lambda_function" "${name}" {`,
+          `  function_name = "${name}"`,
+          '  role          = aws_iam_role.' + `${name}_lambda_role.arn`,
+          '  runtime       = "nodejs20.x"',
+          '  handler       = "index.handler"',
+          '  filename      = "lambda_payload.zip"',
+          '',
+          renderTagsBlock(),
+          '}',
+        ].join('\n'),
+      };
+    case 'ecs-fargate':
+      return {
+        section: 'compute',
+        content: [
+          `resource "aws_ecs_cluster" "${name}" {`,
+          `  name = "${name}"`,
+          '',
+          renderTagsBlock(),
+          '}',
+          '',
+          `resource "aws_ecs_task_definition" "${name}" {`,
+          `  family                   = "${name}"`,
+          '  network_mode             = "awsvpc"',
+          '  requires_compatibilities = ["FARGATE"]',
+          '  cpu                      = "256"',
+          '  memory                   = "512"',
+          '  container_definitions    = jsonencode([{ name = "' + `${name}` + '", image = "public.ecr.aws/docker/library/nginx:latest", essential = true }])',
+          '}',
+        ].join('\n'),
+      };
+    case 'kubernetes-cluster':
+      return {
+        section: 'compute',
+        content: [
+          `resource "aws_iam_role" "${name}_eks_role" {`,
+          `  name = "${name}-eks-role"`,
+          '  assume_role_policy = jsonencode({',
+          '    Version = "2012-10-17"',
+          '    Statement = [{',
+          '      Action = "sts:AssumeRole"',
+          '      Effect = "Allow"',
+          '      Principal = { Service = "eks.amazonaws.com" }',
+          '    }]',
+          '  })',
+          '}',
+          '',
+          `resource "aws_eks_cluster" "${name}" {`,
+          `  name     = "${name}"`,
+          `  role_arn = aws_iam_role.${name}_eks_role.arn`,
+          '  vpc_config {',
+          '    subnet_ids = [aws_subnet.public.id, aws_subnet.private.id]',
+          '  }',
+          '',
+          renderTagsBlock(),
+          '}',
+        ].join('\n'),
+      };
+    case 'app-runner':
+      return {
+        section: 'compute',
+        content: [
+          `resource "aws_apprunner_service" "${name}" {`,
+          `  service_name = "${name}"`,
+          '  source_configuration {',
+          '    image_repository {',
+          '      image_repository_type = "ECR_PUBLIC"',
+          '      image_identifier      = "public.ecr.aws/docker/library/nginx:latest"',
+          '      image_configuration {',
+          '        port = "80"',
+          '      }',
+          '    }',
+          '  }',
+          '',
+          renderTagsBlock(),
+          '}',
+        ].join('\n'),
+      };
+    case 'postgresql':
+    case 'mysql':
+      registerVariable(context, { name: `${name}_engine_version`, description: `${node.data.label} engine version`, type: 'string', defaultValue: node.data.componentType === 'postgresql' ? '15.4' : '8.0' });
+      registerVariable(context, { name: `${name}_instance_class`, description: `${node.data.label} database instance class`, type: 'string', defaultValue: node.data.tier.label.startsWith('db.') ? node.data.tier.label : 'db.t3.micro' });
+      registerVariable(context, { name: `${name}_storage_size`, description: `${node.data.label} allocated storage`, type: 'number', defaultValue: 20 });
+      return {
+        section: 'storage',
+        content: [
+          `resource "aws_db_instance" "${name}" {`,
+          `  identifier         = "${name}"`,
+          `  engine             = "${node.data.componentType === 'postgresql' ? 'postgres' : 'mysql'}"`,
+          `  engine_version     = var.${name}_engine_version`,
+          `  instance_class     = var.${name}_instance_class`,
+          `  allocated_storage  = var.${name}_storage_size`,
+          '  skip_final_snapshot = true',
+          '',
+          renderTagsBlock(),
+          '}',
+        ].join('\n'),
+      };
+    case 'dynamodb':
+      return {
+        section: 'storage',
+        content: [
+          `resource "aws_dynamodb_table" "${name}" {`,
+          `  name         = "${name}"`,
+          '  billing_mode = "PAY_PER_REQUEST"',
+          '  hash_key     = "id"',
+          '  attribute {',
+          '    name = "id"',
+          '    type = "S"',
+          '  }',
+          '',
+          renderTagsBlock(),
+          '}',
+        ].join('\n'),
+      };
+    case 'mongodb':
+      return {
+        section: 'storage',
+        content: [
+          '# Comment: Use MongoDB Atlas or DocumentDB',
+          renderUnsupportedResourceComment(
+            node.data.label,
+            'MongoDB has no direct first-party AWS Terraform resource mapping.',
+            'Use aws_docdb_cluster for an AWS-managed document database, or MongoDB Atlas for native MongoDB compatibility.',
+          ),
+        ].join('\n'),
+      };
+    case 'redis':
+      return {
+        section: 'storage',
+        content: [
+          `resource "aws_elasticache_cluster" "${name}" {`,
+          `  cluster_id           = "${name}"`,
+          '  engine               = "redis"',
+          '  node_type            = "cache.t3.micro"',
+          '  num_cache_nodes      = 1',
+          '  parameter_group_name = "default.redis7"',
+          '',
+          renderTagsBlock(),
+          '}',
+        ].join('\n'),
+      };
+    case 's3':
+      return {
+        section: 'storage',
+        content: [
+          `resource "aws_s3_bucket" "${name}" {`,
+          `  bucket = "${name}-${'${var.project_name}'}"`,
+          '',
+          renderTagsBlock(),
+          '}',
+        ].join('\n'),
+      };
+    case 'elasticsearch':
+      return {
+        section: 'storage',
+        content: [
+          `resource "aws_elasticsearch_domain" "${name}" {`,
+          `  domain_name           = "${name}"`,
+          '  elasticsearch_version = "7.10"',
+          '  cluster_config {',
+          '    instance_type = "t3.small.elasticsearch"',
+          '  }',
+          '',
+          renderTagsBlock(),
+          '}',
+        ].join('\n'),
+      };
+    case 'load-balancer':
+    case 'alb':
+      context.outputs.push({ name: `${name}_dns_name`, description: `${node.data.label} DNS name`, value: `aws_lb.${name}.dns_name` });
+      return {
+        section: 'network',
+        content: [
+          `resource "aws_lb" "${name}" {`,
+          `  name               = "${name}"`,
+          '  internal           = false',
+          '  load_balancer_type = "application"',
+          '  subnets            = [aws_subnet.public.id]',
+          '',
+          renderTagsBlock(),
+          '}',
+          '',
+          `resource "aws_lb_target_group" "${name}_tg" {`,
+          `  name     = "${name}-tg"`,
+          '  port     = 80',
+          '  protocol = "HTTP"',
+          '  vpc_id   = aws_vpc.main.id',
+          '}',
+          '',
+          `resource "aws_lb_listener" "${name}_listener" {`,
+          `  load_balancer_arn = aws_lb.${name}.arn`,
+          '  port              = 80',
+          '  protocol          = "HTTP"',
+          '  default_action {',
+          '    type             = "forward"',
+          `    target_group_arn = aws_lb_target_group.${name}_tg.arn`,
+          '  }',
+          '}',
+        ].join('\n'),
+      };
+    case 'cdn':
+    case 'cloudfront':
+      return {
+        section: 'network',
+        content: [
+          `resource "aws_cloudfront_distribution" "${name}" {`,
+          '  enabled = true',
+          '  origin {',
+          '    domain_name = aws_s3_bucket.' + `${findFirstMappedName(context, ['s3']) ?? name}.bucket_regional_domain_name`,
+          `    origin_id   = "${name}-origin"`,
+          '  }',
+          '  default_cache_behavior {',
+          `    target_origin_id       = "${name}-origin"`,
+          '    viewer_protocol_policy = "redirect-to-https"',
+          '    allowed_methods        = ["GET", "HEAD"]',
+          '    cached_methods         = ["GET", "HEAD"]',
+          '    forwarded_values {',
+          '      query_string = false',
+          '      cookies { forward = "none" }',
+          '    }',
+          '  }',
+          '  restrictions {',
+          '    geo_restriction { restriction_type = "none" }',
+          '  }',
+          '  viewer_certificate { cloudfront_default_certificate = true }',
+          '',
+          renderTagsBlock(),
+          '}',
+        ].join('\n'),
+      };
+    case 'api-gateway':
+      return {
+        section: 'network',
+        content: [
+          `resource "aws_api_gateway_rest_api" "${name}" {`,
+          `  name = "${name}"`,
+          '',
+          renderTagsBlock(),
+          '}',
+        ].join('\n'),
+      };
+    case 'nat-gateway':
+      return null;
+    case 'dns':
+    case 'route53':
+      return {
+        section: 'network',
+        content: [
+          `resource "aws_route53_zone" "${name}" {`,
+          `  name = "${name}.example.com"`,
+          '',
+          renderTagsBlock(),
+          '}',
+        ].join('\n'),
+      };
+    case 'waf':
+      return {
+        section: 'network',
+        content: [
+          `resource "aws_wafv2_web_acl" "${name}" {`,
+          `  name  = "${name}"`,
+          '  scope = "REGIONAL"',
+          '  default_action { allow {} }',
+          '  visibility_config {',
+          '    cloudwatch_metrics_enabled = true',
+          `    metric_name                = "${name}"`,
+          '    sampled_requests_enabled   = true',
+          '  }',
+          '',
+          renderTagsBlock(),
+          '}',
+        ].join('\n'),
+      };
+    case 'security-group':
+      return {
+        section: 'network',
+        content: [
+          `resource "aws_security_group" "${name}" {`,
+          `  name   = "${name}"`,
+          '  vpc_id = aws_vpc.main.id',
+          '',
+          '  ingress {',
+          '    description = "Allow HTTP from within the VPC"',
+          '    from_port   = 80',
+          '    to_port     = 80',
+          '    protocol    = "tcp"',
+          '    cidr_blocks = [var.vpc_cidr]',
+          '  }',
+          '',
+          '  ingress {',
+          '    description = "Allow HTTPS from within the VPC"',
+          '    from_port   = 443',
+          '    to_port     = 443',
+          '    protocol    = "tcp"',
+          '    cidr_blocks = [var.vpc_cidr]',
+          '  }',
+          '',
+          '  ingress {',
+          '    description = "Allow SSH from within the VPC"',
+          '    from_port   = 22',
+          '    to_port     = 22',
+          '    protocol    = "tcp"',
+          '    cidr_blocks = [var.vpc_cidr]',
+          '  }',
+          '',
+          '  egress {',
+          '    description = "Allow outbound traffic"',
+          '    from_port   = 0',
+          '    to_port     = 0',
+          '    protocol    = "-1"',
+          '    cidr_blocks = ["0.0.0.0/0"]',
+          '  }',
+          '',
+          renderTagsBlock(),
+          '}',
+        ].join('\n'),
+      };
+    case 'aws-cognito':
+    case 'cognito':
+      return {
+        section: 'network',
+        content: [
+          `resource "aws_cognito_user_pool" "${name}" {`,
+          `  name = "${name}"`,
+          '',
+          renderTagsBlock(),
+          '}',
+        ].join('\n'),
+      };
+    case 'sqs':
+      return { section: 'messaging', content: [`resource "aws_sqs_queue" "${name}" {`, `  name = "${name}"`, '', renderTagsBlock(), '}'].join('\n') };
+    case 'sns':
+      return { section: 'messaging', content: [`resource "aws_sns_topic" "${name}" {`, `  name = "${name}"`, '', renderTagsBlock(), '}'].join('\n') };
+    case 'kafka':
+    case 'msk':
+      return {
+        section: 'messaging',
+        content: [
+          `resource "aws_msk_cluster" "${name}" {`,
+          `  cluster_name           = "${name}"`,
+          '  kafka_version          = "3.5.1"',
+          '  number_of_broker_nodes = 2',
+          '  broker_node_group_info {',
+          '    instance_type  = "kafka.t3.small"',
+          '    client_subnets = [aws_subnet.public.id, aws_subnet.private.id]',
+          '  }',
+          '',
+          renderTagsBlock(),
+          '}',
+        ].join('\n'),
+      };
+    case 'eventbridge':
+      return {
+        section: 'messaging',
+        content: [
+          `resource "aws_cloudwatch_event_bus" "${name}" {`,
+          `  name = "${name}"`,
+          '',
+          renderTagsBlock(),
+          '}',
+        ].join('\n'),
+      };
+    case 'cloudwatch':
+      return {
+        section: 'observability',
+        content: [
+          `resource "aws_cloudwatch_log_group" "${name}" {`,
+          `  name = "/archviz/${name}"`,
+          '',
+          renderTagsBlock(),
+          '}',
+        ].join('\n'),
+      };
+    case 'vpc':
+    case 'subnet':
+    case 'subnet-public':
+    case 'subnet-private':
+      return null;
+    default:
+      return { section: 'observability', content: `# ${node.data.label} — no direct Terraform resource mapping. Configure manually.` };
+  }
+}
+
+function enhanceUnsupportedComments(terraform: string): string {
+  return terraform.replace(
+    /^# (.+?) â€” no direct Terraform resource mapping\. Configure manually\.$/gm,
+    (_match, label: string) =>
+      renderUnsupportedResourceComment(
+        label,
+        'This service is not currently supported by this Terraform generator.',
+        'Configure the service manually or replace it with the closest supported AWS-managed service.',
+      ),
+  );
+}
+
+function renderUnsupportedResourceComment(label: string, reason: string, suggestion: string): string {
+  return [
+    `# ${label} â€” no direct Terraform resource mapping. Configure manually.`,
+    `# Reason: ${reason}`,
+    `# Suggestion: ${suggestion}`,
+  ].join('\n');
+}
+
+function renderTagsBlock(): string {
+  return [
+    '  tags = {',
+    '    Project   = var.project_name',
+    '    ManagedBy = "archviz"',
+    '  }',
+  ].join('\n');
+}
+
+function registerVariable(context: TerraformContext, definition: TerraformVariableDefinition): void {
+  if (!context.variables.has(definition.name)) {
+    context.variables.set(definition.name, definition);
+  }
+}
+
+function renderVariablesSection(variables: Map<string, TerraformVariableDefinition>): string {
+  return Array.from(variables.values())
+    .sort((left, right) => left.name.localeCompare(right.name))
+    .map(variable => {
+      const lines = [
+        `variable "${variable.name}" {`,
+        `  description = ${JSON.stringify(variable.description)}`,
+        `  type        = ${variable.type}`,
+      ];
+      if (variable.defaultValue !== undefined) {
+        lines.push(`  default     = ${typeof variable.defaultValue === 'string' ? JSON.stringify(variable.defaultValue) : variable.defaultValue}`);
+      }
+      lines.push('}');
+      return lines.join('\n');
+    })
+    .join('\n\n');
+}
+
+function renderOutputsSection(outputs: TerraformOutputDefinition[]): string {
+  return outputs
+    .map(output => [
+      `output "${output.name}" {`,
+      `  description = ${JSON.stringify(output.description)}`,
+      `  value       = ${output.value}`,
+      '}',
+    ].join('\n'))
+    .join('\n\n');
+}
+
+function buildUniqueTerraformNames(nodes: ArchNode[]): Map<string, string> {
+  const names = new Map<string, string>();
+  const seen = new Set<string>();
+  for (const node of nodes) {
+    let name = sanitizeName(node.data.label);
+    if (seen.has(name)) {
+      name = `${name}_${sanitizeName(node.id).slice(-4)}`;
+    }
+    seen.add(name);
+    names.set(node.id, name);
+  }
+  return names;
+}
+
+function findFirstMappedName(context: TerraformContext, types: string[]): string | undefined {
+  for (const [id, node] of context.nodeById.entries()) {
+    if (types.includes(node.data.componentType)) {
+      return context.names.get(id);
+    }
+  }
+  return undefined;
+}
 
 export function parseTfState(
   stateJson: {
