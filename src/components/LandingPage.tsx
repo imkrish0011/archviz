@@ -215,7 +215,7 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
       <nav className="lp-nav">
         <div className="lp-nav-logo">
           <BrainCircuit size={22} />
-          <span>ArchViz β</span>
+          <span>ArchViz   β</span>
         </div>
         <div className="lp-nav-center">
           <div className="lp-nav-links">
@@ -313,8 +313,8 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
               <div style={{ width: 44 }} />
             </div>
             <div className="lp-preview-body">
-              <img 
-                src="/preview.png" 
+              <img
+                src="/preview.png"
                 alt="ArchViz workspace showing system architecture design with nodes, connections, and real-time metrics"
                 className="lp-preview-screenshot"
               />
@@ -581,32 +581,32 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
               <h3>Infrastructure-as-Code Expansion Pack</h3>
               <p>
                 Turn your visual designs into deployable code. Export to <strong>Terraform (.tf)</strong>,
-                <strong> AWS CloudFormation (.json)</strong>, <strong>Kubernetes Manifests (YAML)</strong>, or 
+                <strong> AWS CloudFormation (.json)</strong>, <strong>Kubernetes Manifests (YAML)</strong>, or
                 <strong> Docker Compose</strong> with a single click. Generates VPC scaffolding, deployment templates,
                 security groups, and inter-resource references — a visual cloud compiler.
               </p>
             </AnimatedSection>
-            
+
             <AnimatedSection className="lp-feature-card lp-feature-card-enterprise" delay={0.68}>
               <div className="lp-feature-badge-new">NEW — Enterprise</div>
               <div className="lp-feature-icon" style={{ color: '#06b6d4', textShadow: '0 0 15px rgba(6, 182, 212, 0.5)' }}><Blocks size={24} /></div>
               <h3>Architecture "Snippets"</h3>
               <p>
-                Drag and drop <strong>Micro-Architecture Patterns</strong> directly onto your canvas. Instantly instantiate 
-                best-practice modules like <span style={{ color: 'var(--accent)' }}>Serverless CRUD APIs</span>, 
-                <span style={{ color: 'var(--accent)' }}> CQRS Event Sourcing</span>, 
-                <span style={{ color: 'var(--accent)' }}> RAG AI Pipelines</span>, or 
+                Drag and drop <strong>Micro-Architecture Patterns</strong> directly onto your canvas. Instantly instantiate
+                best-practice modules like <span style={{ color: 'var(--accent)' }}>Serverless CRUD APIs</span>,
+                <span style={{ color: 'var(--accent)' }}> CQRS Event Sourcing</span>,
+                <span style={{ color: 'var(--accent)' }}> RAG AI Pipelines</span>, or
                 <span style={{ color: 'var(--accent)' }}> Real-Time Data Pipelines</span> orchestrated via Kafka and Snowflake with a single click.
               </p>
             </AnimatedSection>
-            
+
             <AnimatedSection className="lp-feature-card lp-feature-card-enterprise" delay={0.69}>
               <div className="lp-feature-badge-new">NEW — Enterprise</div>
               <div className="lp-feature-icon" style={{ color: '#f59e0b', textShadow: '0 0 15px rgba(245, 158, 11, 0.5)' }}><Cloud size={24} /></div>
               <h3>Instant Cost Arbitrage</h3>
               <p>
-                Visually compare what your architecture would cost on <strong>AWS vs. GCP vs. Azure</strong> via the new 
-                1-click Bottom Bar arbitrage interface. See financial variance immediately as the pricing engine automatically 
+                Visually compare what your architecture would cost on <strong>AWS vs. GCP vs. Azure</strong> via the new
+                1-click Bottom Bar arbitrage interface. See financial variance immediately as the pricing engine automatically
                 recalculates instance offsets and egress data fees.
               </p>
             </AnimatedSection>
@@ -616,8 +616,8 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
               <div className="lp-feature-icon" style={{ color: '#10b981' }}><FileText size={24} /></div>
               <h3>Fully-Branded Architecture Reports</h3>
               <p>
-                Generate sleek, multi-page professional PDF reports containing high-res diagrams, 
-                financial breakdowns, carbon footprint, security warnings, and SLA scores. 
+                Generate sleek, multi-page professional PDF reports containing high-res diagrams,
+                financial breakdowns, carbon footprint, security warnings, and SLA scores.
                 Perfect for Solution Architects pitching to clients. Enable <strong>White-labeling</strong> to remove watermarks.
               </p>
             </AnimatedSection>
@@ -678,18 +678,18 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
               <div className="lp-feature-icon" style={{ color: '#818cf8' }}><LayoutGrid size={24} /></div>
               <h3>Precision Grid Alignment</h3>
               <p>
-                Forget messy diagrams. The canvas auto-enforces a 20×20 pixel snap-to-grid physics engine, 
+                Forget messy diagrams. The canvas auto-enforces a 20×20 pixel snap-to-grid physics engine,
                 guaranteeing perfectly symmetrical and professional architectural alignment out of the box.
               </p>
             </AnimatedSection>
-            
+
             <AnimatedSection className="lp-feature-card" delay={1.0}>
               <div className="lp-feature-badge-new" style={{ background: 'rgba(99,102,241,0.1)', color: '#818cf8', borderColor: 'rgba(99,102,241,0.2)' }}>NEW</div>
               <div className="lp-feature-icon" style={{ color: '#10b981' }}><Box size={24} /></div>
               <h3>Enterprise Network Grouping</h3>
               <p>
-                Model logical isolation visually with scalable network boundaries. Drag drop AWS VPCs, 
-                Public/Private Subnets, and On-Premises environments that natively encapsulate and bind 
+                Model logical isolation visually with scalable network boundaries. Drag drop AWS VPCs,
+                Public/Private Subnets, and On-Premises environments that natively encapsulate and bind
                 child components via intelligent spatial grouping logic.
               </p>
             </AnimatedSection>
@@ -699,8 +699,8 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
               <div className="lp-feature-icon" style={{ color: '#ef4444' }}><ArrowRight size={24} /></div>
               <h3>Advanced Data Flow Routing</h3>
               <p>
-                Visually differentiate your traffic flows. Apply edge-based configurations to simulate 
-                Synchronous APIs (Solid), Asynchronous Events (Dashed), and Firewall Boundaries (Dotted) 
+                Visually differentiate your traffic flows. Apply edge-based configurations to simulate
+                Synchronous APIs (Solid), Asynchronous Events (Dashed), and Firewall Boundaries (Dotted)
                 directly from the properties panel.
               </p>
             </AnimatedSection>
