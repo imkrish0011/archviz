@@ -249,6 +249,8 @@
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+  padding-bottom: 2px;
+  display: inline-block;
 }
 
 /* Teal dot accent after logo text */

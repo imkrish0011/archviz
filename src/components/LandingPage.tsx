@@ -215,8 +215,7 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
       <nav className="lp-nav">
         <div className="lp-nav-logo">
           <BrainCircuit size={22} />
-          <span>ArchViz</span>
-          <span className="beta-sign">β</span>
+          <span>ArchViz β</span>
         </div>
         <div className="lp-nav-center">
           <div className="lp-nav-links">
