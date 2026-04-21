@@ -226,6 +226,10 @@ export default function TopBar() {
         >
           <BrainCircuit size={20} className="logo-icon" />
           <span>ArchViz</span>
+          <svg width="34" height="18" viewBox="0 0 36 18" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginLeft: 8, marginTop: 1 }}>
+            <rect width="36" height="18" rx="4" fill="#6366f1" fillOpacity="0.15" stroke="#6366f1" strokeWidth="1" strokeOpacity="0.3"/>
+            <text x="18" y="12.5" fontSize="9" fontWeight="800" fill="#6366f1" textAnchor="middle" fontFamily="system-ui, sans-serif" letterSpacing="0.5">BETA</text>
+          </svg>
         </button>
         <div className="topbar-divider" />
         <button 
