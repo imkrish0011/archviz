@@ -155,7 +155,7 @@ export function generateTerraform(nodes: ArchNode[], edges: ArchEdge[], projectN
 
     const name = names.get(node.id)!;
     const incomingDeps = edges.filter(e => e.target === node.id).map(e => names.get(e.source)).filter(Boolean) as string[];
-    const isHA = node.data.reliability < 0.95 || spofs.includes(node.id) || node.data.multiAZ;
+    const isHA = node.data.reliability < 0.95 || spofs.includes(node.id) || Boolean(node.data.multiAZ);
 
     const sgHcl = renderSecurityGroup(node, name, incomingDeps, variables);
     resources.push(sgHcl);

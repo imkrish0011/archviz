@@ -2,6 +2,7 @@ import type { ArchEdge, ArchNode } from '../types';
 import { getComponentDefinition } from '../data/componentLibrary';
 import { generateCloudFormation } from './cloudformationGenerator';
 import { sanitizeName } from './iacUtils';
+import { generateKubernetesManifestsFull, generateHelmChartFiles } from './helmGenerator';
 
 export { generateCloudFormation, sanitizeName };
 
@@ -1027,41 +1028,8 @@ export function generateDockerCompose(nodes: ArchNode[], _edges: ArchEdge[], pro
   return yaml;
 }
 
-export function generateKubernetesManifests(nodes: ArchNode[], edges: ArchEdge[], _projectName: string): string {
-  let manifests = '';
-
-  for (const node of nodes) {
-    if (node.data.componentType === 'groupNode') {
-      continue;
-    }
-    if (!['api-server', 'web-server', 'worker', 'websocket-server', 'redis', 'postgresql', 'mysql'].includes(node.data.componentType)) {
-      continue;
-    }
-
-    const name = sanitizeName(node.data.label).replace(/_/g, '-');
-    const replicas = node.data.scalingType === 'horizontal' ? node.data.instances : 1;
-
-    manifests += `apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: ${name}\n  namespace: default\n  labels:\n    app: ${name}\n`;
-    manifests += `spec:\n  replicas: ${replicas}\n  selector:\n    matchLabels:\n      app: ${name}\n`;
-    manifests += `  template:\n    metadata:\n      labels:\n        app: ${name}\n`;
-    manifests += `    spec:\n      containers:\n      - name: ${name}\n        image: ${name}:latest\n`;
-    manifests += '        ports:\n        - containerPort: 8080\n---\n';
-
-    const isCompute = ['api-server', 'web-server', 'websocket-server', 'graphql-server'].includes(node.data.componentType);
-    const incomingEdges = edges.filter(edge => edge.target === node.id);
-    const isBehindLb = incomingEdges.some(edge => {
-      const sourceNode = nodes.find(candidate => candidate.id === edge.source);
-      return sourceNode?.data.componentType === 'load-balancer';
-    });
-
-    const serviceType = isCompute && !isBehindLb ? 'LoadBalancer' : 'ClusterIP';
-
-    manifests += `apiVersion: v1\nkind: Service\nmetadata:\n  name: ${name}-svc\n  namespace: default\n`;
-    manifests += 'spec:\n  selector:\n    app: ' + name + '\n  ports:\n    - protocol: TCP\n      port: 80\n      targetPort: 8080\n';
-    manifests += `  type: ${serviceType}\n---\n`;
-  }
-
-  return manifests || '# No applicable workloads found for Kubernetes manifest generation.';
+export function generateKubernetesManifests(nodes: ArchNode[], edges: ArchEdge[], projectName: string): string {
+  return generateKubernetesManifestsFull(nodes, edges, projectName);
 }
 
 export function downloadDockerCompose(nodes: ArchNode[], edges: ArchEdge[], projectName: string): void {
@@ -1078,6 +1046,18 @@ export function downloadKubernetesManifests(nodes: ArchNode[], edges: ArchEdge[]
     content: generateKubernetesManifests(nodes, edges, projectName),
     mimeType: 'text/yaml',
   });
+}
+
+export function downloadHelmChart(nodes: ArchNode[], edges: ArchEdge[], projectName: string): void {
+  const chartFiles = generateHelmChartFiles(nodes, edges, projectName);
+  const downloadFiles = chartFiles.map(f => ({
+    filename: f.path,
+    content: f.content,
+    mimeType: 'text/yaml',
+  }));
+  const blob = createZipBlob(downloadFiles);
+  const chartName = sanitizeName(projectName).replace(/_/g, '-') || 'archviz-app';
+  triggerDownload({ filename: `${chartName}-helm-chart.zip`, content: '', mimeType: 'application/zip' }, blob);
 }
 
 function buildTerraformFiles(artifacts: TerraformArtifacts, projectName: string): DownloadFile[] {

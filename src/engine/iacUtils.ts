@@ -1,4 +1,4 @@
-import type { ArchEdge, ArchNode } from '../types';
+﻿import type { ArchEdge, ArchNode } from '../types';
 
 export interface TerraformVariable {
   name: string;
@@ -293,3 +293,4 @@ function formatYamlScalar(value: string | number | boolean | null): string {
   }
   return value;
 }
+

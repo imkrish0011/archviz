@@ -8,10 +8,10 @@ import {
   PanelLeft, Undo2, Redo2, Download, Image, Maximize, Keyboard,
   BrainCircuit, ShieldAlert, FileCode, LayoutGrid, Leaf, MapPin,
   FileText, Container, MoreHorizontal, Activity, LogIn,
-  LayoutDashboard, CheckSquare, Square
+  LayoutDashboard, CheckSquare, Square, TrendingUp
 } from 'lucide-react';
 import { downloadTerraform, validateArchitecture } from '../engine/hclGenerator';
-import { downloadCloudFormation, downloadDockerCompose, downloadKubernetesManifests } from '../engine/terraformGenerator';
+import { downloadCloudFormation, downloadDockerCompose, downloadKubernetesManifests, downloadHelmChart } from '../engine/terraformGenerator';
 import { generateArchitectureReport } from '../engine/reportGenerator';
 import { runSimulation } from '../engine/simulator';
 import { toastBus } from './ToastSystem';
@@ -19,6 +19,7 @@ import { useAuth } from '../hooks/useAuth';
 import { saveProject, updateProject } from '../services/projectService';
 import { calculateTotalCost, formatCost } from '../engine/costEngine';
 import { parseTfState } from '../engine/terraformGenerator';
+import CostProjectionModal from './CostProjectionModal';
 
 /** Wrap any export action with an auth check. If not logged in, opens the
  *  login modal and stores the action as a pending export to fire after login. */
@@ -67,6 +68,7 @@ export default function TopBar() {
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [cloudProjectId, setCloudProjectId] = useState<string | null>(null);
+  const [showCostProjection, setShowCostProjection] = useState(false);
   const simRef = useRef<HTMLDivElement>(null);
   const exportRef = useRef<HTMLDivElement>(null);
   const moreRef = useRef<HTMLDivElement>(null);
@@ -261,9 +263,22 @@ export default function TopBar() {
           {rps.toLocaleString()} rps
         </span>
         <div className="topbar-divider" />
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', color: '#34d399', fontWeight: 'bold' }}>
+        <button
+          onClick={() => setShowCostProjection(true)}
+          title="Open Cost Projection Chart"
+          style={{
+            fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', color: '#34d399', fontWeight: 'bold',
+            background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.15)',
+            borderRadius: 6, padding: '3px 10px', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', gap: 5,
+            transition: 'all 0.15s',
+          }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(52,211,153,0.14)'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(52,211,153,0.06)'; }}
+        >
           {formatCost(currentCost)}/mo
-        </span>
+          <TrendingUp size={11} />
+        </button>
       </div>
       
       <div className="topbar-right">
@@ -428,7 +443,7 @@ export default function TopBar() {
                 if (nodes.length === 0) { toastBus.emit('Add components to canvas first', 'warning'); return; }
                 const errors = validateArchitecture(nodes, useArchStore.getState().edges);
                 if (errors.length > 0) {
-                  errors.forEach(err => toastBus.emit(err, 'critical'));
+                  errors.forEach(err => toastBus.emit(err, 'error'));
                   return;
                 }
                 withAuth(() => { downloadTerraform(nodes, useArchStore.getState().edges, projectName, 'files'); toastBus.emit('Terraform files exported!', 'success'); }, 'Terraform');
@@ -442,7 +457,7 @@ export default function TopBar() {
                 if (nodes.length === 0) { toastBus.emit('Add components to canvas first', 'warning'); return; }
                 const errors = validateArchitecture(nodes, useArchStore.getState().edges);
                 if (errors.length > 0) {
-                  errors.forEach(err => toastBus.emit(err, 'critical'));
+                  errors.forEach(err => toastBus.emit(err, 'error'));
                   return;
                 }
                 withAuth(() => { downloadTerraform(nodes, useArchStore.getState().edges, projectName, 'zip'); toastBus.emit('Terraform ZIP exported!', 'success'); }, 'Terraform ZIP');
@@ -467,6 +482,15 @@ export default function TopBar() {
               }}>
                 <Container size={16} />
                 Export K8s Manifests
+              </button>
+
+              <button className="sim-dropdown-item" onClick={() => {
+                setShowExportDropdown(false);
+                if (nodes.length === 0) { toastBus.emit('Add components to canvas first', 'warning'); return; }
+                withAuth(() => { downloadHelmChart(nodes, useArchStore.getState().edges, projectName); toastBus.emit('Helm Chart ZIP exported!', 'success'); }, 'Helm Chart');
+              }} style={{ color: '#34d399', background: 'rgba(52,211,153,0.05)', borderRadius: '6px' }}>
+                <Container size={16} />
+                Export Helm Chart ZIP
               </button>
               
               <button className="sim-dropdown-item" onClick={() => {
@@ -581,6 +605,15 @@ export default function TopBar() {
           </button>
         )}
       </div>
+
+      {/* Cost Projection Modal */}
+      {showCostProjection && (
+        <CostProjectionModal
+          currentMonthlyCost={currentCost}
+          currentRps={rps}
+          onClose={() => setShowCostProjection(false)}
+        />
+      )}
     </div>
   );
 }

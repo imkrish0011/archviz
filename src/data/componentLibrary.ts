@@ -2090,10 +2090,9 @@ const componentLibrary: ComponentDefinition[] = [
       { id: 'sfu-oss', label: 'Self-hosted (c6in.2xlarge)', monthlyCost: 280.00, capacity: 5000, latency: 15, cpu: '8 vCPU', ram: '16 GB' },
     ],
     defaultTierIndex: 0,
-  }
-];
-
-export default componentLibrary;
+  },
+  {
+    type: 'databricks',
     label: 'Databricks Lakehouse',
     category: 'storage',
     icon: 'Warehouse',
