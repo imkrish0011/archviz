@@ -384,6 +384,68 @@ export const famousSystemTemplates: Template[] = [
       { id: 'amz-e9', source: 'amz-8', target: 'amz-9' },
       { id: 'amz-e10', source: 'amz-2', target: 'amz-10' }
     ]
+  },
+  // ── AIRBNB ──
+  {
+    id: 'airbnb',
+    name: 'Airbnb',
+    category: 'famous',
+    description: 'Global marketplace for lodging — search, booking, and reviews.',
+    keyInsight: 'Airbnb heavily relies on Elasticsearch for complex geospatial and availability searches, falling back to a sharded MySQL architecture for transactional booking guarantees.',
+    baselineCost: 3500,
+    nodeCount: 9,
+    nodes: [
+      { id: 'ab-client', type: 'archNode', position: { x: 50, y: 250 }, componentType: 'client-browser', architecturalNote: 'User searching for a stay.' },
+      { id: 'ab-1', type: 'archNode', position: { x: 250, y: 150 }, componentType: 'cdn', tierIndex: 1, architecturalNote: 'CDN caches property images heavily.' },
+      { id: 'ab-2', type: 'archNode', position: { x: 250, y: 350 }, componentType: 'api-gateway', architecturalNote: 'API Gateway routes user requests.' },
+      { id: 'ab-3', type: 'archNode', position: { x: 450, y: 350 }, componentType: 'api-server', instances: 4, tierIndex: 2, architecturalNote: 'Core monolithic services splitting into microservices.' },
+      { id: 'ab-4', type: 'archNode', position: { x: 650, y: 200 }, componentType: 'elasticsearch', tierIndex: 1, architecturalNote: 'Elasticsearch powers the search for dates, locations, and filters.' },
+      { id: 'ab-5', type: 'archNode', position: { x: 650, y: 350 }, componentType: 'redis', tierIndex: 1, architecturalNote: 'Caches frequent searches and session data.' },
+      { id: 'ab-6', type: 'archNode', position: { x: 650, y: 500 }, componentType: 'mysql', tierIndex: 2, architecturalNote: 'Sharded MySQL for bookings, payments, and users.' },
+      { id: 'ab-7', type: 'archNode', position: { x: 450, y: 150 }, componentType: 's3', architecturalNote: 'Stores all user and host uploaded images.' },
+      { id: 'ab-8', type: 'archNode', position: { x: 850, y: 350 }, componentType: 'kafka', architecturalNote: 'Event bus for analytics, pricing updates, and search indexing.' }
+    ],
+    edges: [
+      { id: 'ab-e0a', source: 'ab-client', target: 'ab-1' },
+      { id: 'ab-e0b', source: 'ab-client', target: 'ab-2' },
+      { id: 'ab-e1', source: 'ab-1', target: 'ab-7' },
+      { id: 'ab-e2', source: 'ab-2', target: 'ab-3' },
+      { id: 'ab-e3', source: 'ab-3', target: 'ab-4' },
+      { id: 'ab-e4', source: 'ab-3', target: 'ab-5' },
+      { id: 'ab-e5', source: 'ab-3', target: 'ab-6' },
+      { id: 'ab-e6', source: 'ab-3', target: 'ab-8' }
+    ]
+  },
+  // ── PINTEREST ──
+  {
+    id: 'pinterest',
+    name: 'Pinterest',
+    category: 'famous',
+    description: 'Visual discovery engine — infinite scrolling, ML curation, massive image storage.',
+    keyInsight: 'Pinterest uses a sharded MySQL database architecture and heavily caches the feed using Redis and Memcached, powered by huge ML models running on Spark.',
+    baselineCost: 4100,
+    nodeCount: 9,
+    nodes: [
+      { id: 'pin-client', type: 'archNode', position: { x: 50, y: 250 }, componentType: 'mobile-app', architecturalNote: 'User browsing pins.' },
+      { id: 'pin-1', type: 'archNode', position: { x: 250, y: 150 }, componentType: 'cdn', tierIndex: 1, architecturalNote: 'CDN is critical. Billions of images served daily.' },
+      { id: 'pin-2', type: 'archNode', position: { x: 250, y: 350 }, componentType: 'api-gateway', architecturalNote: 'API handles requests and telemetry.' },
+      { id: 'pin-3', type: 'archNode', position: { x: 450, y: 350 }, componentType: 'api-server', instances: 4, tierIndex: 2, architecturalNote: 'API servers render the home feed and handle pin interactions.' },
+      { id: 'pin-4', type: 'archNode', position: { x: 650, y: 350 }, componentType: 'redis', tierIndex: 1, architecturalNote: 'Redis caches the user feeds for quick retrieval.' },
+      { id: 'pin-5', type: 'archNode', position: { x: 650, y: 500 }, componentType: 'mysql', tierIndex: 2, architecturalNote: 'Massively sharded MySQL databases store pin data and user graphs.' },
+      { id: 'pin-6', type: 'archNode', position: { x: 450, y: 150 }, componentType: 's3', tierIndex: 2, architecturalNote: 'S3 stores billions of original and resized images.' },
+      { id: 'pin-7', type: 'archNode', position: { x: 650, y: 200 }, componentType: 'kafka', architecturalNote: 'Kafka ingests user behavior for analytics and recommendations.' },
+      { id: 'pin-8', type: 'archNode', position: { x: 850, y: 200 }, componentType: 'ml-worker', tierIndex: 1, architecturalNote: 'ML workers process data to curate personalized feeds.' }
+    ],
+    edges: [
+      { id: 'pin-e0a', source: 'pin-client', target: 'pin-1' },
+      { id: 'pin-e0b', source: 'pin-client', target: 'pin-2' },
+      { id: 'pin-e1', source: 'pin-1', target: 'pin-6' },
+      { id: 'pin-e2', source: 'pin-2', target: 'pin-3' },
+      { id: 'pin-e3', source: 'pin-3', target: 'pin-4' },
+      { id: 'pin-e4', source: 'pin-3', target: 'pin-5' },
+      { id: 'pin-e5', source: 'pin-3', target: 'pin-7' },
+      { id: 'pin-e6', source: 'pin-7', target: 'pin-8' }
+    ]
   }
 ];
 

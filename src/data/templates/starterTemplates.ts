@@ -257,6 +257,59 @@ export const starterTemplates: Template[] = [
       { id: 'sw-e1', source: 'sw-1', target: 'sw-2' },
       { id: 'sw-e2', source: 'sw-2', target: 'sw-3' }
     ]
+  },
+  // ── IOT DATA PIPELINE ──
+  {
+    id: 'iot-pipeline',
+    name: 'IoT Data Pipeline',
+    category: 'starter',
+    description: 'High-throughput sensor data ingestion and real-time processing.',
+    keyInsight: 'IoT architectures must decouple ingestion from processing. A message queue (like Kafka or MQTT) is essential to absorb spikes in sensor data without dropping packets.',
+    baselineCost: 650,
+    nodeCount: 6,
+    nodes: [
+      { id: 'iot-1', type: 'archNode', position: { x: 50, y: 200 }, componentType: 'api-gateway', architecturalNote: 'Gateway securely accepts thousands of concurrent device connections.' },
+      { id: 'iot-2', type: 'archNode', position: { x: 250, y: 200 }, componentType: 'kafka', tierIndex: 1, architecturalNote: 'Kafka (or similar broker) safely buffers all incoming sensor data.' },
+      { id: 'iot-3', type: 'archNode', position: { x: 450, y: 100 }, componentType: 'worker', instances: 2, architecturalNote: 'Stream processing workers analyze data on the fly (e.g., detecting anomalies).' },
+      { id: 'iot-4', type: 'archNode', position: { x: 450, y: 300 }, componentType: 'worker', instances: 2, architecturalNote: 'Batch workers save raw data for long-term storage and reporting.' },
+      { id: 'iot-5', type: 'archNode', position: { x: 650, y: 100 }, componentType: 'redis', architecturalNote: 'In-memory store for real-time dashboards and alerting thresholds.' },
+      { id: 'iot-6', type: 'archNode', position: { x: 650, y: 300 }, componentType: 'cassandra', tierIndex: 1, architecturalNote: 'Time-series database (Cassandra/Timestream) optimized for high-volume write workloads.' }
+    ],
+    edges: [
+      { id: 'iot-e1', source: 'iot-1', target: 'iot-2' },
+      { id: 'iot-e2', source: 'iot-2', target: 'iot-3' },
+      { id: 'iot-e3', source: 'iot-2', target: 'iot-4' },
+      { id: 'iot-e4', source: 'iot-3', target: 'iot-5' },
+      { id: 'iot-e5', source: 'iot-4', target: 'iot-6' }
+    ]
+  },
+  // ── GAMING BACKEND ──
+  {
+    id: 'gaming-backend',
+    name: 'Gaming Backend',
+    category: 'starter',
+    description: 'Matchmaking, player profiles, and real-time game servers.',
+    keyInsight: 'Separate the player identity/store APIs from the actual real-time UDP game servers. Matchmaking bridges the two by assigning players to server instances.',
+    baselineCost: 800,
+    nodeCount: 7,
+    nodes: [
+      { id: 'gb-1', type: 'archNode', position: { x: 50, y: 250 }, componentType: 'load-balancer', architecturalNote: 'Balances traffic for the REST APIs (profiles, store, matchmaking).' },
+      { id: 'gb-2', type: 'archNode', position: { x: 250, y: 150 }, componentType: 'api-server', instances: 2, architecturalNote: 'Player services (inventory, stats, auth).' },
+      { id: 'gb-3', type: 'archNode', position: { x: 250, y: 350 }, componentType: 'api-server', architecturalNote: 'Matchmaking service groups players into lobbies.' },
+      { id: 'gb-4', type: 'archNode', position: { x: 450, y: 150 }, componentType: 'postgresql', tierIndex: 1, architecturalNote: 'Stores rigid player data, purchases, and persistent progression.' },
+      { id: 'gb-5', type: 'archNode', position: { x: 450, y: 350 }, componentType: 'redis', architecturalNote: 'Stores the matchmaking queue and active lobbies in fast memory.' },
+      { id: 'gb-6', type: 'archNode', position: { x: 650, y: 350 }, componentType: 'game-server', instances: 3, tierIndex: 1, architecturalNote: 'Dedicated UDP Game Servers running the actual simulation.' },
+      { id: 'gb-7', type: 'archNode', position: { x: 850, y: 250 }, componentType: 'kafka', architecturalNote: 'Collects game analytics and telemetry for anti-cheat and balancing.' }
+    ],
+    edges: [
+      { id: 'gb-e1', source: 'gb-1', target: 'gb-2' },
+      { id: 'gb-e2', source: 'gb-1', target: 'gb-3' },
+      { id: 'gb-e3', source: 'gb-2', target: 'gb-4' },
+      { id: 'gb-e4', source: 'gb-3', target: 'gb-5' },
+      { id: 'gb-e5', source: 'gb-3', target: 'gb-6' },
+      { id: 'gb-e6', source: 'gb-6', target: 'gb-7' },
+      { id: 'gb-e7', source: 'gb-2', target: 'gb-7' }
+    ]
   }
 ];
 
