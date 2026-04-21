@@ -137,7 +137,7 @@ export default function Dashboard() {
     setLoadingTpl(tpl.id);
     if (clearRef.current) clearRef.current();
     clearRef.current = loadTemplateWithAnimation(tpl, setNodes, setEdges, () => {});
-    setTimeout(() => navigate('/app'), 220);
+    setTimeout(() => navigate('/app', { state: { fromTemplate: true } }), 220);
   };
 
   const filtered = projects

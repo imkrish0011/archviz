@@ -9,7 +9,7 @@ import {
   ConnectionLineType
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { Routes, Route, Navigate, useNavigate, useParams } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate, useParams, useLocation } from 'react-router-dom';
 
 import './styles/index.css';
 import './styles/reactflow.css';
@@ -430,6 +430,7 @@ function WorkspaceView() {
   // Bridge bus → toast context
   useToastBus();
   const { projectId } = useParams<{ projectId?: string }>();
+  const location = useLocation();
 
   const rightPanelOpen    = useArchStore(s => s.rightPanelOpen);
   const leftSidebarOpen   = useArchStore(s => s.leftSidebarOpen);
@@ -453,9 +454,11 @@ function WorkspaceView() {
   // On mount: either start fresh or load the cloud project
   useEffect(() => {
     if (!projectId) {
-      // NEW project — always start with a clean canvas
-      clearCanvas();
-      setProjectName('Untitled Architecture');
+      // NEW project — always start with a clean canvas unless loading a template
+      if (!location.state?.fromTemplate) {
+        clearCanvas();
+        setProjectName('Untitled Architecture');
+      }
     } else {
       // OPEN existing — load from Firestore
       loadProject(projectId).then(data => {
@@ -514,7 +517,7 @@ function WorkspaceView() {
 function LandingView() {
   useToastBus();
   const navigate = useNavigate();
-  return <LandingPage onLaunch={() => navigate('/app')} />;
+  return <LandingPage onLaunch={(isTemplate?: boolean) => navigate('/app', { state: { fromTemplate: isTemplate } })} />;
 }
 
 function DashboardView() {

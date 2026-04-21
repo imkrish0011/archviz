@@ -121,7 +121,7 @@ const networkItems = [
 ];
 
 interface LandingPageProps {
-  onLaunch: () => void;
+  onLaunch: (isTemplate?: boolean) => void;
 }
 
 /* ── Intersection Observer Hook ── */
@@ -182,7 +182,7 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
             const { nodes, edges } = instantiateTemplate(template);
             loadTemplate(nodes, edges);
             setLoadingId(null);
-            onLaunch();
+            onLaunch(true);
           }
         );
       }, 50);
@@ -192,7 +192,7 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
 
   const handleBlankCanvas = useCallback(() => {
     clearCanvas();
-    onLaunch();
+    onLaunch(false);
   }, [clearCanvas, onLaunch]);
 
   const scrollTo = (id: string) => {
@@ -215,7 +215,7 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
       <nav className="lp-nav">
         <div className="lp-nav-logo">
           <BrainCircuit size={22} />
-          <span>ArchViz   β</span>
+          <span>ArchViz  β</span>
         </div>
         <div className="lp-nav-center">
           <div className="lp-nav-links">
@@ -226,7 +226,7 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
           </div>
         </div>
         <div className="lp-nav-actions">
-          <button className="lp-nav-cta-ghost" onClick={onLaunch}>
+          <button className="lp-nav-cta-ghost" onClick={() => onLaunch()}>
             <Terminal size={14} />
             Workspace
           </button>
