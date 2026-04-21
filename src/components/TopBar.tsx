@@ -10,7 +10,8 @@ import {
   FileText, Container, MoreHorizontal, Activity, LogIn,
   LayoutDashboard, CheckSquare, Square
 } from 'lucide-react';
-import { downloadTerraform, downloadCloudFormation, downloadDockerCompose, downloadKubernetesManifests } from '../engine/terraformGenerator';
+import { downloadTerraform, validateArchitecture } from '../engine/hclGenerator';
+import { downloadCloudFormation, downloadDockerCompose, downloadKubernetesManifests } from '../engine/terraformGenerator';
 import { generateArchitectureReport } from '../engine/reportGenerator';
 import { runSimulation } from '../engine/simulator';
 import { toastBus } from './ToastSystem';
@@ -425,6 +426,11 @@ export default function TopBar() {
               <button className="sim-dropdown-item" onClick={() => {
                 setShowExportDropdown(false);
                 if (nodes.length === 0) { toastBus.emit('Add components to canvas first', 'warning'); return; }
+                const errors = validateArchitecture(nodes, useArchStore.getState().edges);
+                if (errors.length > 0) {
+                  errors.forEach(err => toastBus.emit(err, 'critical'));
+                  return;
+                }
                 withAuth(() => { downloadTerraform(nodes, useArchStore.getState().edges, projectName, 'files'); toastBus.emit('Terraform files exported!', 'success'); }, 'Terraform');
               }}>
                 <FileCode size={16} />
@@ -434,6 +440,11 @@ export default function TopBar() {
               <button className="sim-dropdown-item" onClick={() => {
                 setShowExportDropdown(false);
                 if (nodes.length === 0) { toastBus.emit('Add components to canvas first', 'warning'); return; }
+                const errors = validateArchitecture(nodes, useArchStore.getState().edges);
+                if (errors.length > 0) {
+                  errors.forEach(err => toastBus.emit(err, 'critical'));
+                  return;
+                }
                 withAuth(() => { downloadTerraform(nodes, useArchStore.getState().edges, projectName, 'zip'); toastBus.emit('Terraform ZIP exported!', 'success'); }, 'Terraform ZIP');
               }}>
                 <FileCode size={16} />
