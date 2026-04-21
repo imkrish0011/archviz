@@ -61,7 +61,7 @@ export default function TopBar() {
   const isTracing = useArchStore(s => s.isTracing);
   const toggleTrace = useArchStore(s => s.toggleTrace);
   const navigate = useNavigate();
-  
+
   const [showSimDropdown, setShowSimDropdown] = useState(false);
   const [showExportDropdown, setShowExportDropdown] = useState(false);
   const [showMoreDropdown, setShowMoreDropdown] = useState(false);
@@ -79,7 +79,7 @@ export default function TopBar() {
 
   const { user, signOut } = useAuth();
   const openLoginModal = useAuthStore(s => s.openLoginModal);
-  
+
   // Close dropdowns on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -96,16 +96,16 @@ export default function TopBar() {
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
-  
+
   const userSteps = [100, 500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000, 10000000];
   const currentStepIndex = userSteps.findIndex(s => s >= simulationConfig.concurrentUsers);
-  
+
   const formatUsers = (n: number) => {
     if (n >= 1000000) return `${(n / 1000000).toFixed(0)}M`;
     if (n >= 1000) return `${(n / 1000).toFixed(0)}K`;
     return n.toString();
   };
-  
+
   const handleSave = useCallback(async () => {
     // Always save locally
     saveToLocalStorage();
@@ -136,11 +136,11 @@ export default function TopBar() {
       setIsSaving(false);
     }
   }, [saveToLocalStorage, user, cloudProjectId, nodes, projectName, openLoginModal]);
-  
+
   const handleLoad = useCallback(() => {
     loadFromLocalStorage();
   }, [loadFromLocalStorage]);
-  
+
   const handleClearAll = useCallback(() => {
     if (nodes.length === 0) return;
     if (showClearConfirm) {
@@ -151,12 +151,12 @@ export default function TopBar() {
       setTimeout(() => setShowClearConfirm(false), 3000);
     }
   }, [nodes.length, showClearConfirm, clearCanvas]);
-  
+
   const triggerEvent = (event: 'serverCrash' | 'removeCache' | 'trafficSpike' | 'cdnFailure' | 'dbFailover' | 'regionOutage') => {
     setActiveSimulationEvent(event);
     setShowSimDropdown(false);
   };
-  
+
   const triggerRegionOutage = () => {
     // Find group nodes that could be regions
     const groupNodes = nodes.filter(n => n.type === 'groupNode' || n.data.isGroup);
@@ -165,7 +165,7 @@ export default function TopBar() {
     }
     triggerEvent('regionOutage');
   };
-  
+
   const handleExportReport = async () => {
     if (nodes.length === 0) {
       toastBus.emit('Add components to canvas first', 'warning');
@@ -214,24 +214,23 @@ export default function TopBar() {
     if (fileInputRef.current) fileInputRef.current.value = '';
     setShowExportDropdown(false);
   };
-  
+
   return (
     <div className="topbar">
       <div className="topbar-left">
-        <button 
-          className="topbar-logo" 
+        <button
+          className="topbar-logo"
           onClick={() => navigate('/')}
           style={{ background: 'transparent', border: 'none', cursor: 'pointer', outline: 'none', padding: 0 }}
           title="Return to Landing Page"
         >
           <BrainCircuit size={20} className="logo-icon" />
-          <span>ArchViz</span>
-          <span className="beta-sign">β</span>
+          <span>ArchViz β</span>
         </button>
         <div className="topbar-divider" />
-        <button 
-          className={`btn-icon ${!leftSidebarOpen ? 'active' : ''}`} 
-          onClick={toggleLeftSidebar} 
+        <button
+          className={`btn-icon ${!leftSidebarOpen ? 'active' : ''}`}
+          onClick={toggleLeftSidebar}
           title={leftSidebarOpen ? 'Hide Sidebar' : 'Show Sidebar'}
         >
           <PanelLeft size={16} />
@@ -244,7 +243,7 @@ export default function TopBar() {
           spellCheck={false}
         />
       </div>
-      
+
       <div className="topbar-center">
         <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)' }}>Users</span>
         <input
@@ -281,7 +280,7 @@ export default function TopBar() {
           <TrendingUp size={11} />
         </button>
       </div>
-      
+
       <div className="topbar-right">
         {/* Auto-Layout */}
         <button
@@ -310,16 +309,16 @@ export default function TopBar() {
         >
           <Redo2 size={16} />
         </button>
-        
+
         <div className="topbar-divider" />
-        
+
         <button className="btn" onClick={() => toggleTemplatePicker()}>
           <LayoutTemplate size={14} />
           Templates
         </button>
-        
+
         <div className="topbar-divider" />
-        
+
         {/* Simulate Dropdown */}
         <div className="sim-dropdown" ref={simRef}>
           <button className="btn" onClick={() => setShowSimDropdown(!showSimDropdown)}>
@@ -327,7 +326,7 @@ export default function TopBar() {
             Simulate
             <ChevronDown size={12} />
           </button>
-          
+
           {showSimDropdown && (
             <div className="sim-dropdown-menu">
               <button className="sim-dropdown-item" onClick={() => triggerEvent('serverCrash')}>
@@ -358,9 +357,9 @@ export default function TopBar() {
             </div>
           )}
         </div>
-        
+
         <div className="topbar-divider" />
-        
+
         {/* Trace Request Flow */}
         <button
           className={`btn ${isTracing ? 'btn-trace-active' : ''}`}
@@ -376,7 +375,7 @@ export default function TopBar() {
           <Activity size={14} style={isTracing ? { animation: 'pulse 1.5s ease-in-out infinite' } : undefined} />
           {isTracing ? 'Tracing...' : 'Trace Flow'}
         </button>
-        
+
         {/* Export Dropdown — all actions gated behind auth */}
         <div className="sim-dropdown" ref={exportRef}>
           <button className="btn" onClick={() => setShowExportDropdown(!showExportDropdown)}>
@@ -384,13 +383,13 @@ export default function TopBar() {
             Export
             <ChevronDown size={12} />
           </button>
-          
+
           {showExportDropdown && (
             <div className="sim-dropdown-menu" style={{ minWidth: '240px', padding: '8px', right: 0 }}>
               <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', color: 'var(--text-tertiary)', letterSpacing: '0.05em', padding: '4px 8px 8px', fontWeight: 600 }}>
                 Reports & Media
               </div>
-              
+
               <button className="sim-dropdown-item" onClick={() => {
                 setShowExportDropdown(false);
                 withAuth(() => handleExportReport(), 'PDF Report');
@@ -398,12 +397,12 @@ export default function TopBar() {
                 <FileText size={16} />
                 Premium Report (PDF)
               </button>
-              
+
               <button className="sim-dropdown-item" onClick={() => toggleWhiteLabelReport()}>
                 {isWhiteLabelReport ? <CheckSquare size={16} color="var(--accent)" /> : <Square size={16} />}
                 <span style={{ opacity: isWhiteLabelReport ? 1 : 0.7 }}>White-label PDF Export</span>
               </button>
-              
+
               <button className="sim-dropdown-item" onClick={() => {
                 setShowExportDropdown(false);
                 withAuth(() => { (window as unknown as Record<string, () => void>).__archviz_exportPNG?.(); }, 'PNG Image');
@@ -411,7 +410,7 @@ export default function TopBar() {
                 <Image size={16} />
                 Export as PNG
               </button>
-              
+
               <button className="sim-dropdown-item" onClick={() => {
                 setShowExportDropdown(false);
                 withAuth(() => { (window as unknown as Record<string, () => void>).__archviz_exportJSON?.(); }, 'JSON');
@@ -419,26 +418,26 @@ export default function TopBar() {
                 <Download size={16} />
                 Export as JSON
               </button>
-              
+
               <div style={{ height: 1, background: 'var(--border)', margin: '8px 0' }} />
-              
+
               <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', color: 'var(--text-tertiary)', letterSpacing: '0.05em', padding: '4px 8px 8px', fontWeight: 600 }}>
                 Infrastructure as Code
               </div>
-              
+
               <button className="sim-dropdown-item" onClick={() => fileInputRef.current?.click()} style={{ color: '#60a5fa', background: 'rgba(96, 165, 250, 0.08)', borderRadius: '6px' }}>
                 <Upload size={16} />
                 Import terraform.tfstate
               </button>
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                className="hidden" 
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
                 style={{ display: 'none' }}
                 accept=".tfstate,.json"
-                onChange={handleImportTfState} 
+                onChange={handleImportTfState}
               />
-              
+
               <button className="sim-dropdown-item" onClick={() => {
                 setShowExportDropdown(false);
                 if (nodes.length === 0) { toastBus.emit('Add components to canvas first', 'warning'); return; }
@@ -466,7 +465,7 @@ export default function TopBar() {
                 <FileCode size={16} />
                 Export Terraform ZIP
               </button>
-              
+
               <button className="sim-dropdown-item" onClick={() => {
                 setShowExportDropdown(false);
                 if (nodes.length === 0) { toastBus.emit('Add components to canvas first', 'warning'); return; }
@@ -475,7 +474,7 @@ export default function TopBar() {
                 <FileCode size={16} />
                 Export to CloudFormation
               </button>
-              
+
               <button className="sim-dropdown-item" onClick={() => {
                 setShowExportDropdown(false);
                 if (nodes.length === 0) { toastBus.emit('Add components to canvas first', 'warning'); return; }
@@ -493,7 +492,7 @@ export default function TopBar() {
                 <Container size={16} />
                 Export Helm Chart ZIP
               </button>
-              
+
               <button className="sim-dropdown-item" onClick={() => {
                 setShowExportDropdown(false);
                 if (nodes.length === 0) { toastBus.emit('Add components to canvas first', 'warning'); return; }
@@ -505,34 +504,34 @@ export default function TopBar() {
             </div>
           )}
         </div>
-        
+
         <div className="topbar-divider" />
-        
+
         {/* Security Scan */}
         <button className="btn" onClick={toggleSecurityPanel} title="Security Scanner">
           <ShieldAlert size={14} />
           Security
         </button>
-        
+
         {/* GreenOps Heatmap */}
-        <button 
+        <button
           className={`btn ${greenOpsHeatmap ? 'btn-active-green' : ''}`}
-          onClick={toggleGreenOpsHeatmap} 
+          onClick={toggleGreenOpsHeatmap}
           title="GreenOps Carbon Heatmap"
           style={greenOpsHeatmap ? { background: 'rgba(16,185,129,0.12)', borderColor: 'rgba(16,185,129,0.3)', color: '#10b981' } : {}}
         >
           <Leaf size={14} />
           GreenOps
         </button>
-        
+
         <div className="topbar-divider" />
-        
+
         {/* More Actions Dropdown */}
         <div className="sim-dropdown" ref={moreRef}>
           <button className="btn-icon" onClick={() => setShowMoreDropdown(!showMoreDropdown)} title="More Actions">
             <MoreHorizontal size={16} />
           </button>
-          
+
           {showMoreDropdown && (
             <div className="sim-dropdown-menu" style={{ right: 0, minWidth: '180px' }}>
               <button className="sim-dropdown-item" onClick={() => { handleSave(); setShowMoreDropdown(false); }}>
@@ -552,16 +551,16 @@ export default function TopBar() {
                 <Keyboard size={16} /> Shortcuts
               </button>
               <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
-              <button 
-                className="sim-dropdown-item" 
+              <button
+                className="sim-dropdown-item"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleClearAll();
                   if (showClearConfirm) setShowMoreDropdown(false);
-                }} 
+                }}
                 style={showClearConfirm ? { color: 'var(--danger)', background: 'var(--danger-muted)' } : { color: 'var(--danger)' }}
               >
-                <XCircle size={16} /> 
+                <XCircle size={16} />
                 {showClearConfirm ? 'Click again to clear' : 'Clear Canvas'}
               </button>
             </div>
