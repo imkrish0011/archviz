@@ -86,9 +86,15 @@ function ArchNodeComponent({ id, data, selected }: NodeProps) {
     </div>
   ) : null;
   
+  const bottleneckBadge = isBottlenecked ? (
+    <div className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 z-10 shadow-lg" title="Capacity Exceeded">
+      <Icons.AlertTriangle size={12} strokeWidth={3} />
+    </div>
+  ) : null;
+
   return (
     <motion.div 
-      className={`arch-node ${healthClass} ${selectedClass} ${overloadedClass}`}
+      className={`arch-node ${healthClass} ${selectedClass} ${overloadedClass} ${bottleneckClass}`}
       data-category={d.category}
       style={heatmapStyle}
       initial={{ scale: 0.95, opacity: 0 }}
@@ -112,6 +118,7 @@ function ArchNodeComponent({ id, data, selected }: NodeProps) {
       {versionBadge}
       {carbonBadge}
       {securityBadge}
+      {bottleneckBadge}
       
       <div className="arch-node-header">
         <IconComponent size={18} className="arch-node-icon" />

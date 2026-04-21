@@ -115,3 +115,26 @@ export function calculateNodeLoads(
   
   return loads;
 }
+
+export function getBottleneckedNodeIds(
+  nodes: ArchNode[],
+  simulatedTraffic: number
+): string[] {
+  const bottleneckedIds: string[] = [];
+  
+  for (const node of nodes) {
+    if (node.data.isDisabled || node.data.isFailed) continue;
+    
+    const serverlessTypes = ['vercel', 'netlify', 'cloudflare-pages', 'supabase', 'planetscale', 'firebase', 'lambda', 'cloudflare-workers'];
+    if (serverlessTypes.includes(node.data.componentType)) continue;
+
+    const maxCapacity = (node.data.tier.capacity || 1000) * (node.data.instances || 1);
+    
+    // Compare simulated traffic against the node's maximum capacity
+    if (simulatedTraffic > maxCapacity) {
+      bottleneckedIds.push(node.id);
+    }
+  }
+  
+  return bottleneckedIds;
+}

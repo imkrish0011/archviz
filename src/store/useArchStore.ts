@@ -24,6 +24,7 @@ interface ArchStore {
   
   // ── Simulation Config ──
   simulationConfig: SimulationConfig;
+  simulatedTraffic: number;
   
   // ── UI State ──
   selectedNodeId: string | null;
@@ -72,6 +73,7 @@ interface ArchStore {
   selectNode: (nodeId: string | null) => void;
   selectEdge: (edgeId: string | null) => void;
   setSimulationConfig: (config: Partial<SimulationConfig>) => void;
+  setSimulatedTraffic: (traffic: number) => void;
   setProjectName: (name: string) => void;
   
   // UI toggles
@@ -142,6 +144,7 @@ export const useArchStore = create<ArchStore>((set, get) => ({
     rpsMultiplier: 0.1,
     cacheHitRate: 0.6,
   },
+  simulatedTraffic: 1000,
   selectedNodeId: null,
   selectedEdgeId: null,
   rightPanelOpen: false,
@@ -470,6 +473,7 @@ export const useArchStore = create<ArchStore>((set, get) => ({
       simulationConfig: { ...get().simulationConfig, ...config },
     });
   },
+  setSimulatedTraffic: (traffic) => set({ simulatedTraffic: traffic }),
   
   setProjectName: (name) => set({ projectName: name }),
   

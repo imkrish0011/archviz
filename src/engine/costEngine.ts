@@ -41,6 +41,14 @@ export function getComponentCost(node: ArchNode, load: number = 0, provider: Clo
   let instances = node.data.scalingType === 'horizontal' ? node.data.instances : 1;
   const isDB = ['postgresql', 'mysql', 'mongodb', 'cassandra', 'dynamodb', 'aurora-serverless', 'bigtable'].includes(node.data.componentType);
   
+  // Auto-scaling logic: if load exceeds current capacity, simulate auto-scaling
+  if (node.data.scalingType === 'horizontal' && node.data.tier.capacity && load > 0) {
+    const requiredInstances = Math.ceil(load / node.data.tier.capacity);
+    if (requiredInstances > instances) {
+      instances = requiredInstances;
+    }
+  }
+  
   // Add read replicas for DBs
   if (isDB && node.data.readReplicas) {
     instances += Number(node.data.readReplicas) * 0.7; // Replicas cost ~70%
