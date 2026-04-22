@@ -38,7 +38,7 @@ export function getComponentCost(node: ArchNode, load: number = 0, provider: Clo
   if (node.data.volumeType === 'magnetic') baseCost *= 0.6; // Low cost
   
   if (node.data.storageGB) {
-    baseCost += node.data.storageGB * 0.08;
+    baseCost += Number(node.data.storageGB) * 0.08;
   }
   
   // Calculate quantity of instances

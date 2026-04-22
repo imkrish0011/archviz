@@ -45,7 +45,8 @@ interface ArchStore {
   isTracing: boolean;
   computedSecurityReport: SecurityReport | null;
 
-  // ── Snapshots ──  snapshots: Snapshot[];
+  // ── Snapshots ──
+  snapshots: Snapshot[];
   compareSnapshots: [string, string] | null;
   
   // ── Deployment ──
@@ -89,7 +90,7 @@ interface ArchStore {
   setCloudProvider: (provider: CloudProvider) => void;
   toggleWhiteLabelReport: () => void;
   toggleTrace: () => void;
-  setSecurityReport: (report: unknown) => void;
+  setSecurityReport: (report: SecurityReport | null) => void;
   
   // Deployment actions
   startDeployment: (sourceNodeId: string) => void;
