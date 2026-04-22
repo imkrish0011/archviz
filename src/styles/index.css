@@ -1571,11 +1571,11 @@ html, body, #root {
 
 /* ─── Pulse Animation for Overloaded Nodes ────────────────── */
 @keyframes pulse-danger {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.3); }
-  50% { box-shadow: 0 0 0 8px rgba(248, 113, 113, 0); }
+  0%, 100% { box-shadow: 0 0 15px 5px rgba(255, 69, 0, 0.6); }
+  50% { box-shadow: 0 0 25px 10px rgba(255, 69, 0, 0.9); }
 }
 
-.node-overloaded {
+.node-overloaded, .node-bottlenecked {
   animation: pulse-danger 1.5s ease infinite;
 }
 

@@ -3,6 +3,7 @@ import type { EdgeProps } from '@xyflow/react';
 import { getSmoothStepPath, EdgeLabelRenderer, BaseEdge } from '@xyflow/react';
 import type { EdgeConfig } from '../../types';
 import { useArchStore } from '../../store/useArchStore';
+import { useSimulation } from '../../hooks/useSimulation';
 
 interface ArchEdgeData {
   config?: EdgeConfig;
@@ -11,6 +12,8 @@ interface ArchEdgeData {
 
 export default function ArchEdge({
   id,
+  source,
+  target,
   sourceX,
   sourceY,
   targetX,
@@ -31,6 +34,11 @@ export default function ArchEdge({
   });
 
   const isTracing = useArchStore(s => s.isTracing);
+  const { nodeHealth } = useSimulation();
+
+  const sourceHealth = nodeHealth.get(source);
+  const targetHealth = nodeHealth.get(target);
+  const isBottleneck = (sourceHealth && sourceHealth.loadPercent > 80) || (targetHealth && targetHealth.loadPercent > 80);
 
   const edgeData = data as ArchEdgeData | undefined;
   const config = edgeData?.config || {};
@@ -41,6 +49,12 @@ export default function ArchEdge({
   const edgeStyle = { ...style };
   let className = 'react-flow__edge-path';
   
+  if (isBottleneck) {
+    edgeStyle.stroke = '#ff4500';
+    edgeStyle.filter = 'drop-shadow(0 0 5px rgba(255, 69, 0, 0.8))';
+    className += ' bottleneck-glow';
+  }
+
   switch(connectionType) {
     case 'sync-http':
       edgeStyle.strokeWidth = 3;

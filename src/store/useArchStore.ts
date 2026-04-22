@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { ArchNode, ArchEdge, SimulationConfig, Snapshot, SimulationEvent, EdgeConfig } from '../types';
+import type { ArchNode, ArchEdge, SimulationConfig, Snapshot, SimulationEvent, EdgeConfig, SecurityReport } from '../types';
 import { getComponentDefinition } from '../data/componentLibrary';
 import type { Connection } from '@xyflow/react';
 import { applyNodeChanges, applyEdgeChanges } from '@xyflow/react';
@@ -43,10 +43,9 @@ interface ArchStore {
   cloudProvider: CloudProvider;
   isWhiteLabelReport: boolean;
   isTracing: boolean;
-  computedSecurityReport: unknown | null;
-  
-  // ── Snapshots ──
-  snapshots: Snapshot[];
+  computedSecurityReport: SecurityReport | null;
+
+  // ── Snapshots ──  snapshots: Snapshot[];
   compareSnapshots: [string, string] | null;
   
   // ── Deployment ──

@@ -37,6 +37,10 @@ export function getComponentCost(node: ArchNode, load: number = 0, provider: Clo
   if (node.data.volumeType === 'io1') baseCost *= 2.5; // High performance IOPS charge
   if (node.data.volumeType === 'magnetic') baseCost *= 0.6; // Low cost
   
+  if (node.data.storageGB) {
+    baseCost += node.data.storageGB * 0.08;
+  }
+  
   // Calculate quantity of instances
   let instances = node.data.scalingType === 'horizontal' ? node.data.instances : 1;
   const isDB = ['postgresql', 'mysql', 'mongodb', 'cassandra', 'dynamodb', 'aurora-serverless', 'bigtable'].includes(node.data.componentType);

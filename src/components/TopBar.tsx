@@ -20,6 +20,7 @@ import { saveProject, updateProject } from '../services/projectService';
 import { calculateTotalCost, formatCost } from '../engine/costEngine';
 import { parseTfState } from '../engine/terraformGenerator';
 import CostProjectionModal from './CostProjectionModal';
+import { runSecurityScan } from '../engine/securityScanner';
 
 /** Wrap any export action with an auth check. If not logged in, opens the
  *  login modal and stores the action as a pending export to fire after login. */
@@ -60,6 +61,8 @@ export default function TopBar() {
   const runAutoLayout = useArchStore(s => s.runAutoLayout);
   const isTracing = useArchStore(s => s.isTracing);
   const toggleTrace = useArchStore(s => s.toggleTrace);
+  const setSecurityReport = useArchStore(s => s.setSecurityReport);
+  const computedSecurityReport = useArchStore(s => s.computedSecurityReport);
   const navigate = useNavigate();
 
   const [showSimDropdown, setShowSimDropdown] = useState(false);
@@ -79,6 +82,14 @@ export default function TopBar() {
 
   const { user, signOut } = useAuth();
   const openLoginModal = useAuthStore(s => s.openLoginModal);
+
+  // Security Scanner auto-run
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSecurityReport(runSecurityScan(nodes, edges));
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [nodes, edges, setSecurityReport]);
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -508,10 +519,18 @@ export default function TopBar() {
         <div className="topbar-divider" />
 
         {/* Security Scan */}
-        <button className="btn" onClick={toggleSecurityPanel} title="Security Scanner">
-          <ShieldAlert size={14} />
-          Security
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button className="btn" onClick={toggleSecurityPanel} title="Security Scanner">
+            <ShieldAlert size={14} />
+            Security
+          </button>
+          {computedSecurityReport?.grade === 'A' && (
+            <>
+              <span style={{ fontSize: '10px', background: 'var(--success-muted)', color: 'var(--success)', padding: '2px 6px', borderRadius: '4px', fontWeight: 600, border: '1px solid var(--success-muted)' }}>SOC2 Ready</span>
+              <span style={{ fontSize: '10px', background: 'var(--success-muted)', color: 'var(--success)', padding: '2px 6px', borderRadius: '4px', fontWeight: 600, border: '1px solid var(--success-muted)' }}>HIPAA Ready</span>
+            </>
+          )}
+        </div>
 
         {/* GreenOps Heatmap */}
         <button

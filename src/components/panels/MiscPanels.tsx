@@ -228,6 +228,13 @@ export function NetworkConfigPanel({ node, data, update }: Props) {
           onChange={e => update('connectionTimeout', Number(e.target.value))}
         />
       </div>
+      <div className="form-group">
+        <label className="form-label">IP Ranges (CIDR)</label>
+        <input type="text" className="form-input" placeholder="e.g., 10.0.0.0/16"
+          value={data.ipRanges || ''}
+          onChange={e => update('ipRanges', e.target.value)}
+        />
+      </div>
       {node.data.componentType === 'cdn' && (
         <>
           <div className="form-group">
