@@ -28,6 +28,8 @@ function ArchNodeComponent({ id, data, selected }: NodeProps) {
   const healthClass = d.isFailed ? 'failed' : d.isDisabled ? 'disabled' : d.healthStatus;
   const selectedClass = selected ? 'selected' : '';
   const overloadedClass = d.loadPercent > 80 && !d.isFailed ? 'node-overloaded' : '';
+  const isBottlenecked = d.loadPercent >= 100 && !d.isFailed;
+  const bottleneckClass = isBottlenecked ? 'node-bottlenecked' : '';
   
   // Calculate cost for display
   const mockNode = { data: d, id, type: 'archNode', position: { x: 0, y: 0 } };
