@@ -315,7 +315,7 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
               </div>
               <div className="lp-preview-tab">
                 <Lock size={11} />
-                archviz.app — untitled-project
+                archviz-studio.vercel.app — untitled-project
               </div>
               <div style={{ width: 44 }} />
             </div>
