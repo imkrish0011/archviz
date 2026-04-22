@@ -1,4 +1,4 @@
-import type { ArchNode, ArchEdge, SimulationConfig, SystemMetrics, LetterGrade } from '../types';
+import type { ArchNode, ArchEdge, SimulationConfig, SystemMetrics, LetterGrade, CloudProvider } from '../types';
 import { calculateRPSFromUsers, calculateDBLoads } from './trafficModel';
 import { calculateTotalLatency } from './latencyModel';
 import { calculateTotalCost } from './costEngine';
@@ -24,6 +24,7 @@ export function runSimulation(
   nodes: ArchNode[],
   edges: ArchEdge[],
   config: SimulationConfig,
+  cloudProvider: CloudProvider,
   activeEvent?: string | null
 ): { metrics: SystemMetrics; nodeLoads: Map<string, number>; nodeHealth: Map<string, { loadPercent: number; status: string }> } {
   // 1. Calculate RPS
@@ -36,7 +37,7 @@ export function runSimulation(
   const nodeLoads = calculateNodeLoads(nodes, edges, rps, dbLoads);
   
   // 4. Calculate total cost
-  const totalCost = calculateTotalCost(nodes, edges, nodeLoads);
+  const totalCost = calculateTotalCost(nodes, edges, nodeLoads, cloudProvider);
   
   // 5. Calculate total latency
   const estimatedLatency = calculateTotalLatency(nodes, edges, nodeLoads, activeEvent);

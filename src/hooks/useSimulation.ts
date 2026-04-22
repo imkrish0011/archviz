@@ -12,6 +12,7 @@ export function useSimulation(): {
   const edges = useArchStore(s => s.edges);
   const config = useArchStore(s => s.simulationConfig);
   const activeEvent = useArchStore(s => s.activeSimulationEvent);
+  const cloudProvider = useArchStore(s => s.cloudProvider);
   
   return useMemo(() => {
     if (nodes.length === 0) {
@@ -35,6 +36,6 @@ export function useSimulation(): {
         nodeHealth: new Map(),
       };
     }
-    return runSimulation(nodes, edges, config, activeEvent);
-  }, [nodes, edges, config, activeEvent]);
+    return runSimulation(nodes, edges, config, cloudProvider, activeEvent);
+  }, [nodes, edges, config, cloudProvider, activeEvent]);
 }

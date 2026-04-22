@@ -182,7 +182,7 @@ export default function TopBar() {
       toastBus.emit('Add components to canvas first', 'warning');
       return;
     }
-    const { metrics } = runSimulation(nodes, useArchStore.getState().edges, simulationConfig, null);
+    const { metrics } = runSimulation(nodes, useArchStore.getState().edges, simulationConfig, cloudProvider, null);
     await generateArchitectureReport({
       nodes,
       edges: useArchStore.getState().edges,
@@ -194,7 +194,7 @@ export default function TopBar() {
     setShowExportDropdown(false);
   };
 
-  const currentCost = calculateTotalCost(nodes, edges);
+  const currentCost = calculateTotalCost(nodes, edges, undefined, cloudProvider);
   const rps = Math.round(simulationConfig.concurrentUsers * simulationConfig.rpsMultiplier);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
