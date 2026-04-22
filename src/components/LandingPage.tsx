@@ -286,7 +286,7 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
             </div>
             <div className="lp-trust-divider" />
             <div className="lp-trust-item">
-              <span className="lp-trust-value">10+</span>
+              <span className="lp-trust-value">40+</span>
               <span className="lp-trust-label">Templates</span>
             </div>
             <div className="lp-trust-divider" />
