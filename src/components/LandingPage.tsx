@@ -581,73 +581,6 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
               </p>
             </AnimatedSection>
 
-            {/* ── Enterprise Features ── */}
-            <AnimatedSection className="lp-feature-card lp-feature-card-large lp-feature-card-enterprise" delay={0.65}>
-              <div className="lp-feature-badge-new">NEW — Enterprise</div>
-              <div className="lp-feature-icon" style={{ color: '#6366f1' }}><FileCode size={24} /></div>
-              <h3>Infrastructure-as-Code Expansion Pack</h3>
-              <p>
-                Turn your visual designs into deployable code. Export to <strong>Terraform (.tf)</strong>,
-                <strong> AWS CloudFormation (.json)</strong>, <strong>Kubernetes Manifests (YAML)</strong>, or
-                <strong> Docker Compose</strong> with a single click. Generates VPC scaffolding, deployment templates,
-                security groups, and inter-resource references — a visual cloud compiler.
-              </p>
-            </AnimatedSection>
-
-            <AnimatedSection className="lp-feature-card lp-feature-card-enterprise" delay={0.68}>
-              <div className="lp-feature-badge-new">NEW — Enterprise</div>
-              <div className="lp-feature-icon" style={{ color: '#06b6d4', textShadow: '0 0 15px rgba(6, 182, 212, 0.5)' }}><Blocks size={24} /></div>
-              <h3>Architecture "Snippets"</h3>
-              <p>
-                Drag and drop <strong>Micro-Architecture Patterns</strong> directly onto your canvas. Instantly instantiate
-                best-practice modules like <span style={{ color: 'var(--accent)' }}>Serverless CRUD APIs</span>,
-                <span style={{ color: 'var(--accent)' }}> CQRS Event Sourcing</span>,
-                <span style={{ color: 'var(--accent)' }}> RAG AI Pipelines</span>, or
-                <span style={{ color: 'var(--accent)' }}> Real-Time Data Pipelines</span> orchestrated via Kafka and Snowflake with a single click.
-              </p>
-            </AnimatedSection>
-
-            <AnimatedSection className="lp-feature-card lp-feature-card-enterprise" delay={0.69}>
-              <div className="lp-feature-badge-new">NEW — Enterprise</div>
-              <div className="lp-feature-icon" style={{ color: '#f59e0b', textShadow: '0 0 15px rgba(245, 158, 11, 0.5)' }}><Cloud size={24} /></div>
-              <h3>Instant Cost Arbitrage</h3>
-              <p>
-                Visually compare what your architecture would cost on <strong>AWS vs. GCP vs. Azure</strong> via the new
-                1-click Bottom Bar arbitrage interface. See financial variance immediately as the pricing engine automatically
-                recalculates instance offsets and egress data fees.
-              </p>
-            </AnimatedSection>
-
-            <AnimatedSection className="lp-feature-card lp-feature-card-enterprise" delay={0.70}>
-              <div className="lp-feature-badge-new">NEW — Enterprise</div>
-              <div className="lp-feature-icon" style={{ color: '#10b981' }}><FileText size={24} /></div>
-              <h3>Fully-Branded Architecture Reports</h3>
-              <p>
-                Generate sleek, multi-page professional PDF reports containing high-res diagrams,
-                financial breakdowns, carbon footprint, security warnings, and SLA scores.
-                Perfect for Solution Architects pitching to clients. Enable <strong>White-labeling</strong> to remove watermarks.
-              </p>
-            </AnimatedSection>
-
-            <AnimatedSection className="lp-feature-card lp-feature-card-enterprise" delay={0.7}>
-              <div className="lp-feature-badge-new">NEW — Enterprise</div>
-              <div className="lp-feature-icon" style={{ color: '#ec4899' }}><ShieldAlert size={24} /></div>
-              <h3>Compliance & Security Scanner</h3>
-              <p>
-                25 architectural security rules scan for SOC2, HIPAA, PCI-DSS, GDPR, and NIST compliance violations.
-                Detects publicly routable databases, missing WAF, no MFA, encryption gaps, and more — with remediation guidance.
-              </p>
-            </AnimatedSection>
-
-            <AnimatedSection className="lp-feature-card lp-feature-card-enterprise" delay={0.75}>
-              <div className="lp-feature-badge-new">NEW — Enterprise</div>
-              <div className="lp-feature-icon" style={{ color: '#10b981' }}><Target size={24} /></div>
-              <h3>SLA/SLO Reliability Calculator</h3>
-              <p>
-                Advanced math-driven composite SLA calculator. Analyzes serial and parallel dependency paths,
-                instance redundancy, Multi-AZ boosts, and DR strategies. Displays availability in "nines" notation with downtime estimates.
-              </p>
-            </AnimatedSection>
 
             {/* ── Professionalization Sprint ── */}
             <AnimatedSection className="lp-feature-card" delay={0.8}>
@@ -734,7 +667,7 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
             </div>
           </AnimatedSection>
 
-          <div className="lp-features-grid" style={{ maxWidth: 960 }}>
+          <div className="lp-features-grid">
             <AnimatedSection className="lp-feature-card lp-feature-card-enterprise" delay={0.1}>
               <div className="lp-feature-badge-new" style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', borderColor: 'rgba(239,68,68,0.2)' }}>CHAOS ENGINEERING</div>
               <div className="lp-feature-icon" style={{ color: '#ef4444' }}><MapPin size={24} /></div>
@@ -769,6 +702,74 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
                 rollout — edges animate with traffic weight percentages (100/0 → 50/50 → 0/100), nodes display
                 version badges, and a "Deployment Successful" toast fires on completion. Understand deployment
                 strategies visually, not theoretically.
+              </p>
+            </AnimatedSection>
+
+            {/* ── Enterprise Features ── */}
+            <AnimatedSection className="lp-feature-card lp-feature-card-large lp-feature-card-enterprise" delay={0.4}>
+              <div className="lp-feature-badge-new">NEW — Enterprise</div>
+              <div className="lp-feature-icon" style={{ color: '#6366f1' }}><FileCode size={24} /></div>
+              <h3>Infrastructure-as-Code Expansion Pack</h3>
+              <p>
+                Turn your visual designs into deployable code. Export to <strong>Terraform (.tf)</strong>,
+                <strong> AWS CloudFormation (.json)</strong>, <strong>Kubernetes Manifests (YAML)</strong>, or
+                <strong> Docker Compose</strong> with a single click. Generates VPC scaffolding, deployment templates,
+                security groups, and inter-resource references — a visual cloud compiler.
+              </p>
+            </AnimatedSection>
+
+            <AnimatedSection className="lp-feature-card lp-feature-card-enterprise" delay={0.5}>
+              <div className="lp-feature-badge-new">NEW — Enterprise</div>
+              <div className="lp-feature-icon" style={{ color: '#06b6d4', textShadow: '0 0 15px rgba(6, 182, 212, 0.5)' }}><Blocks size={24} /></div>
+              <h3>Architecture "Snippets"</h3>
+              <p>
+                Drag and drop <strong>Micro-Architecture Patterns</strong> directly onto your canvas. Instantly instantiate
+                best-practice modules like <span style={{ color: 'var(--accent)' }}>Serverless CRUD APIs</span>,
+                <span style={{ color: 'var(--accent)' }}> CQRS Event Sourcing</span>,
+                <span style={{ color: 'var(--accent)' }}> RAG AI Pipelines</span>, or
+                <span style={{ color: 'var(--accent)' }}> Real-Time Data Pipelines</span> orchestrated via Kafka and Snowflake with a single click.
+              </p>
+            </AnimatedSection>
+
+            <AnimatedSection className="lp-feature-card lp-feature-card-enterprise" delay={0.6}>
+              <div className="lp-feature-badge-new">NEW — Enterprise</div>
+              <div className="lp-feature-icon" style={{ color: '#f59e0b', textShadow: '0 0 15px rgba(245, 158, 11, 0.5)' }}><Cloud size={24} /></div>
+              <h3>Instant Cost Arbitrage</h3>
+              <p>
+                Visually compare what your architecture would cost on <strong>AWS vs. GCP vs. Azure</strong> via the new
+                1-click Bottom Bar arbitrage interface. See financial variance immediately as the pricing engine automatically
+                recalculates instance offsets and egress data fees.
+              </p>
+            </AnimatedSection>
+
+            <AnimatedSection className="lp-feature-card lp-feature-card-enterprise" delay={0.7}>
+              <div className="lp-feature-badge-new">NEW — Enterprise</div>
+              <div className="lp-feature-icon" style={{ color: '#10b981' }}><FileText size={24} /></div>
+              <h3>Fully-Branded Architecture Reports</h3>
+              <p>
+                Generate sleek, multi-page professional PDF reports containing high-res diagrams,
+                financial breakdowns, carbon footprint, security warnings, and SLA scores.
+                Perfect for Solution Architects pitching to clients. Enable <strong>White-labeling</strong> to remove watermarks.
+              </p>
+            </AnimatedSection>
+
+            <AnimatedSection className="lp-feature-card lp-feature-card-enterprise" delay={0.8}>
+              <div className="lp-feature-badge-new">NEW — Enterprise</div>
+              <div className="lp-feature-icon" style={{ color: '#ec4899' }}><ShieldAlert size={24} /></div>
+              <h3>Compliance & Security Scanner</h3>
+              <p>
+                25 architectural security rules scan for SOC2, HIPAA, PCI-DSS, GDPR, and NIST compliance violations.
+                Detects publicly routable databases, missing WAF, no MFA, encryption gaps, and more — with remediation guidance.
+              </p>
+            </AnimatedSection>
+
+            <AnimatedSection className="lp-feature-card lp-feature-card-enterprise" delay={0.9}>
+              <div className="lp-feature-badge-new">NEW — Enterprise</div>
+              <div className="lp-feature-icon" style={{ color: '#10b981' }}><Target size={24} /></div>
+              <h3>SLA/SLO Reliability Calculator</h3>
+              <p>
+                Advanced math-driven composite SLA calculator. Analyzes serial and parallel dependency paths,
+                instance redundancy, Multi-AZ boosts, and DR strategies. Displays availability in "nines" notation with downtime estimates.
               </p>
             </AnimatedSection>
           </div>
