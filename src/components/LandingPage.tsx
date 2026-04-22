@@ -547,10 +547,10 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
 
             <AnimatedSection className="lp-feature-card" delay={0.45}>
               <div className="lp-feature-icon"><LayoutTemplate size={24} /></div>
-              <h3>10+ Pre-built Templates</h3>
+              <h3>40+ Pre-built Templates</h3>
               <p>
-                Learn from reverse-engineered architectures of Netflix, Instagram, Uber, Spotify,
-                and more. Or start with proven architectural patterns.
+                Learn from reverse-engineered architectures of Netflix, Instagram, Uber, Fortnite,
+                Valorant, Roblox and more. Or start with proven architectural patterns.
               </p>
             </AnimatedSection>
 
@@ -830,7 +830,7 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
         <AnimatedSection>
           <div className="lp-stats-bar">
             <div className="lp-stat">
-              <div className="lp-stat-value">130+</div>
+              <div className="lp-stat-value">150+</div>
               <div className="lp-stat-label">Cloud Components</div>
             </div>
             <div className="lp-stat">
@@ -847,6 +847,60 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
             </div>
           </div>
         </AnimatedSection>
+
+        <div className="lp-divider" />
+
+        {/* ═══════════════════════════════════════
+         *  COMPONENT LIBRARY SPOTLIGHT
+         * ═══════════════════════════════════════ */}
+        <section className="lp-section">
+          <AnimatedSection>
+            <div className="lp-section-header">
+              <div className="lp-section-label">
+                <Blocks size={13} />
+                Component Library
+              </div>
+              <h2 className="lp-section-title">150+ production-grade<br />cloud components</h2>
+              <p className="lp-section-desc">
+                Every major cloud service, platform, and pattern — fully modelled with real AWS pricing,
+                capacity limits, latency profiles, and reliability scores.
+              </p>
+            </div>
+          </AnimatedSection>
+
+          <AnimatedSection delay={0.08}>
+            <div className="lp-comp-grid">
+              {[
+                { label: 'ALB', sub: 'Layer 7 Load Balancer', icon: Network },
+                { label: 'EKS Cluster', sub: 'Managed Kubernetes', icon: Blocks },
+                { label: 'ECS Container', sub: 'Container Pod', icon: Box },
+                { label: 'ElastiCache Redis', sub: 'Managed Redis Cluster', icon: Zap },
+                { label: 'RDS PostgreSQL', sub: 'Managed Relational DB', icon: Database },
+                { label: 'ECR', sub: 'Container Registry', icon: Code2 },
+                { label: 'User / Client', sub: 'Generic Client Entry', icon: Users },
+                { label: 'API Gateway', sub: 'Managed Gateway', icon: Webhook },
+                { label: 'Lambda', sub: 'Serverless Compute', icon: Zap },
+                { label: 'Kafka', sub: 'Event Streaming', icon: Radio },
+                { label: 'Game Server', sub: 'UDP Low-Latency', icon: Gamepad2 },
+                { label: 'ML / GPU Worker', sub: 'AI Inference', icon: Cpu },
+                { label: 'Cloudflare Workers', sub: 'Edge Compute', icon: Cloud },
+                { label: 'Kubernetes Cluster', sub: 'EKS Orchestration', icon: Blocks },
+                { label: 'WAF / Firewall', sub: 'DDoS + Inspection', icon: Shield },
+                { label: 'Pinecone DB', sub: 'Vector Database', icon: Search },
+                { label: 'Snowflake DW', sub: 'Analytics Warehouse', icon: Database },
+                { label: 'vLLM Server', sub: 'Self-hosted LLM', icon: Cpu },
+              ].map(({ label, sub, icon: Icon }) => (
+                <div key={label} className="lp-comp-card">
+                  <div className="lp-comp-icon"><Icon size={18} strokeWidth={1.5} /></div>
+                  <div className="lp-comp-info">
+                    <span className="lp-comp-name">{label}</span>
+                    <span className="lp-comp-sub">{sub}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </AnimatedSection>
+        </section>
 
         <div className="lp-divider" />
 
@@ -1310,7 +1364,7 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
               </p>
               <div className="lp-free-features">
                 <div className="lp-free-feature"><Check size={14} /> Unlimited designs</div>
-                <div className="lp-free-feature"><Check size={14} /> All 130+ components</div>
+                <div className="lp-free-feature"><Check size={14} /> All 154+ components</div>
                 <div className="lp-free-feature"><Check size={14} /> Full simulation engine</div>
                 <div className="lp-free-feature"><Check size={14} /> All templates included</div>
                 <div className="lp-free-feature"><Check size={14} /> PNG 3× Retina export</div>
