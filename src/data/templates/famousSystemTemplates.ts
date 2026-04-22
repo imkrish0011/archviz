@@ -201,7 +201,7 @@ export const famousSystemTemplates: Template[] = [
   {
     id: 'steam',
     name: 'Steam',
-    category: 'famous',
+    category: 'game',
     description: 'Gaming distribution & multiplayer platform',
     keyInsight: 'Steam strictly separates the heavy CDN game downloads from the ultra low-latency UDP multiplayer match routing.',
     baselineCost: 2800,
@@ -230,7 +230,7 @@ export const famousSystemTemplates: Template[] = [
   {
     id: 'discord',
     name: 'Discord',
-    category: 'famous',
+    category: 'game',
     description: 'Massive voice and text chat platform — WebSockets and ScyllaDB',
     keyInsight: 'Discord stores trillions of messages. They migrated from Cassandra to ScyllaDB to eliminate Java garbage collection pauses during high message throughput.',
     baselineCost: 1900,
@@ -451,7 +451,7 @@ export const famousSystemTemplates: Template[] = [
   {
     id: 'fortnite',
     name: 'Fortnite (Epic Games)',
-    category: 'famous',
+    category: 'game',
     description: 'Battle Royale at planet scale — 350M+ players, global dedicated servers, real-time matchmaking.',
     keyInsight: 'Fortnite runs on AWS with 100+ dedicated game-server regions. Epic uses Gamelift for auto-scaling game sessions and a custom matchmaking service that buckets players by skill (MMR) and ping latency simultaneously.',
     baselineCost: 9800,
@@ -491,7 +491,7 @@ export const famousSystemTemplates: Template[] = [
   {
     id: 'valorant',
     name: 'Valorant (Riot Games)',
-    category: 'famous',
+    category: 'game',
     description: '128-tick competitive FPS — Riot\'s Vanguard anti-cheat, sub-35ms global play.',
     keyInsight: 'Valorant is the first major FPS to run at 128 Hz server tick rate globally. Riot built their own CDN (Riot Direct) — a private fiber-optic backbone connecting data centers across continents to deliver <35ms ping for 90% of players worldwide.',
     baselineCost: 7200,
@@ -529,7 +529,7 @@ export const famousSystemTemplates: Template[] = [
   {
     id: 'roblox',
     name: 'Roblox',
-    category: 'famous',
+    category: 'game',
     description: 'Massively concurrent UGC game platform — 65M+ DAU, 5M+ developer-created experiences.',
     keyInsight: 'Roblox handles 65M+ daily players across 5M+ different user-created games simultaneously. Their biggest infrastructure challenge is not one game at scale, but millions of tiny isolated game servers that each need to spin up and down in under 2 seconds — solved by a custom Kubernetes-based game orchestration layer.',
     baselineCost: 11200,
@@ -569,7 +569,7 @@ export const famousSystemTemplates: Template[] = [
   {
     id: 'world-of-warcraft',
     name: 'World of Warcraft (Blizzard)',
-    category: 'famous',
+    category: 'game',
     description: 'The original planet-scale MMO — persistent shared worlds, realm architecture, Battle.net backbone.',
     keyInsight: 'WoW pioneered realm (shard) server architecture in 2004 — each realm is a separate persistent world. The Battle.net platform acts as a global authentication and social backbone shared across all Blizzard games. WoW Classic proved that a 20-year-old architecture, when properly maintained, can still handle millions of concurrent players.',
     baselineCost: 5800,
@@ -606,7 +606,7 @@ export const famousSystemTemplates: Template[] = [
   {
     id: 'minecraft',
     name: 'Minecraft (Microsoft)',
-    category: 'famous',
+    category: 'game',
     description: 'The world\'s best-selling game — Bedrock marketplace, Xbox Live cross-play, Realms cloud servers.',
     keyInsight: 'Minecraft Bedrock Edition uses Azure Playfab as its game backend — one of the most explicit public case studies of a AAA title running entirely on cloud-managed gaming services. Xbox Live\'s authentication backbone can handle 100M+ accounts across Windows, console, and mobile simultaneously.',
     baselineCost: 4200,
@@ -712,5 +712,8 @@ export const famousSystemTemplates: Template[] = [
     ],
   },
 ];
+
+export const gameTemplates = famousSystemTemplates.filter(t => t.category === 'game');
+export const nonGameFamousTemplates = famousSystemTemplates.filter(t => t.category === 'famous');
 
 export default famousSystemTemplates;

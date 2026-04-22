@@ -14,7 +14,7 @@ import {
   FolderOpen, CloudUpload, LogIn
 } from 'lucide-react';
 import '../styles/landing.css';
-import { famousSystemTemplates } from '../data/templates/famousSystemTemplates';
+import { famousSystemTemplates, gameTemplates, nonGameFamousTemplates } from '../data/templates/famousSystemTemplates';
 import { starterTemplates } from '../data/templates/starterTemplates';
 import { useArchStore } from '../store/useArchStore';
 import { instantiateTemplate, loadTemplateWithAnimation } from '../utils/templateLoader';
@@ -23,8 +23,15 @@ import type { Template } from '../types';
 /* ── Brand icon mapping ── */
 const brandIcons: Record<string, React.ComponentType<{ size?: number; strokeWidth?: number }>> = {
   instagram: Camera, netflix: Tv, whatsapp: MessageCircle, uber: Car,
-  spotify: Music, 'google-search': Search, steam: Gamepad2, discord: Disc,
-  stripe: CreditCard, tiktok: Film, amazon: ShoppingCart, 'x-twitter': MessageSquare,
+  spotify: Music, 'google-search': Search, stripe: CreditCard, tiktok: Film,
+  amazon: ShoppingCart, 'x-twitter': MessageSquare, airbnb: MapPin, pinterest: Users,
+  youtube: Video, cloudflare: Globe,
+};
+
+/* ── Game brand icon mapping ── */
+const gameIcons: Record<string, React.ComponentType<{ size?: number; strokeWidth?: number }>> = {
+  steam: Gamepad2, discord: Disc, fortnite: Gamepad2, valorant: Gamepad2,
+  roblox: Gamepad2, 'world-of-warcraft': Gamepad2, minecraft: Gamepad2,
 };
 
 /* ── Starter icon mapping ── */
@@ -1103,7 +1110,7 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
           </AnimatedSection>
 
           <div className="lp-templates-grid">
-            {famousSystemTemplates.map((template, idx) => {
+            {nonGameFamousTemplates.map((template, idx) => {
               const Icon = brandIcons[template.id] || Box;
               return (
                 <AnimatedSection key={template.id} delay={0.05 * idx}>
@@ -1128,6 +1135,62 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
                     <p className="lp-template-desc">{template.description}</p>
                     <div className="lp-template-insight">
                       <Zap size={14} strokeWidth={2.5} />
+                      <span>{template.keyInsight}</span>
+                    </div>
+                  </button>
+                </AnimatedSection>
+              );
+            })}
+          </div>
+        </section>
+
+        <div className="lp-divider" />
+
+        {/* ═══════════════════════════════════════
+         *  GAME CLOUD INFRASTRUCTURE
+         * ═══════════════════════════════════════ */}
+        <section id="game-templates" className="lp-section">
+          <AnimatedSection>
+            <div className="lp-section-header">
+              <div className="lp-section-label lp-section-label-game">
+                <Gamepad2 size={13} />
+                Game Cloud Infrastructure
+              </div>
+              <h2 className="lp-section-title">How the world's biggest<br />games are built</h2>
+              <p className="lp-section-desc">
+                From 350M-player battle royales to planet-scale MMOs.
+                Explore the dedicated server farms, anti-cheat pipelines, and matchmaking systems
+                that power the games you play.
+              </p>
+            </div>
+          </AnimatedSection>
+
+          <div className="lp-templates-grid">
+            {gameTemplates.map((template, idx) => {
+              const Icon = gameIcons[template.id] || Gamepad2;
+              return (
+                <AnimatedSection key={template.id} delay={0.05 * idx}>
+                  <button
+                    className="lp-template-card lp-template-card-game"
+                    onClick={() => handleTemplateSelect(template)}
+                    disabled={!!loadingId}
+                    style={{ opacity: loadingId && loadingId !== template.id ? 0.35 : 1, width: '100%' }}
+                  >
+                    <div className="lp-template-top">
+                      <div className={`lp-template-icon lp-template-icon-game ${template.id}`}>
+                        <Icon size={22} strokeWidth={1.5} />
+                      </div>
+                      <div className="lp-template-info">
+                        <span className="lp-template-name">{template.name}</span>
+                        <span className="lp-template-meta">
+                          {template.nodeCount} components · ~${template.baselineCost}/mo
+                        </span>
+                      </div>
+                      <ArrowRight size={16} className="lp-template-arrow" />
+                    </div>
+                    <p className="lp-template-desc">{template.description}</p>
+                    <div className="lp-template-insight lp-template-insight-game">
+                      <Gamepad2 size={14} strokeWidth={2.5} />
                       <span>{template.keyInsight}</span>
                     </div>
                   </button>

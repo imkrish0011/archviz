@@ -1,9 +1,9 @@
 import { useState, useRef, useCallback } from 'react';
 import { useArchStore } from '../store/useArchStore';
-import { famousSystemTemplates } from '../data/templates/famousSystemTemplates';
+import { famousSystemTemplates, gameTemplates, nonGameFamousTemplates } from '../data/templates/famousSystemTemplates';
 import { starterTemplates } from '../data/templates/starterTemplates';
 import { instantiateTemplate, loadTemplateWithAnimation } from '../utils/templateLoader';
-import { X, Server, Rocket } from 'lucide-react';
+import { X, Server, Rocket, Gamepad2 } from 'lucide-react';
 import type { Template } from '../types';
 
 export default function TemplatePickerModal() {
@@ -15,7 +15,7 @@ export default function TemplatePickerModal() {
   const setNodes = useArchStore(s => s.setNodes);
   const setEdges = useArchStore(s => s.setEdges);
   
-  const [tab, setTab] = useState<'famous' | 'starter'>('famous');
+  const [tab, setTab] = useState<'famous' | 'game' | 'starter'>('famous');
   const [confirmTemplate, setConfirmTemplate] = useState<Template | null>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
   
@@ -56,7 +56,7 @@ export default function TemplatePickerModal() {
   
   if (!open) return null;
   
-  const templates = tab === 'famous' ? famousSystemTemplates : starterTemplates;
+  const templates = tab === 'famous' ? nonGameFamousTemplates : tab === 'game' ? gameTemplates : starterTemplates;
   
   return (
     <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) toggle(); }}>
@@ -94,6 +94,13 @@ export default function TemplatePickerModal() {
             >
               <Server size={14} style={{ marginRight: 6 }} />
               Famous Systems
+            </button>
+            <button 
+              className={`modal-tab modal-tab-game ${tab === 'game' ? 'active' : ''}`}
+              onClick={() => setTab('game')}
+            >
+              <Gamepad2 size={14} style={{ marginRight: 6 }} />
+              Games
             </button>
             <button 
               className={`modal-tab ${tab === 'starter' ? 'active' : ''}`}

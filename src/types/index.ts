@@ -209,7 +209,7 @@ export interface Snapshot {
 }
 
 // ─── Template Types ──────────────────────────────────────────
-export type TemplateCategory = 'famous' | 'starter' | 'snippet';
+export type TemplateCategory = 'famous' | 'game' | 'starter' | 'snippet';
 
 export interface TemplateNodeDef {
   id: string;
