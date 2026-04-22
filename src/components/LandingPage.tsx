@@ -281,7 +281,7 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
 
           <div className="lp-hero-trust">
             <div className="lp-trust-item">
-              <span className="lp-trust-value">140+</span>
+              <span className="lp-trust-value">150+</span>
               <span className="lp-trust-label">Components</span>
             </div>
             <div className="lp-trust-divider" />
@@ -339,7 +339,7 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
                 <Box size={13} />
                 Component Library
               </div>
-              <h2 className="lp-section-title" style={{ fontSize: '2.5rem' }}>140+ Cloud Modules</h2>
+              <h2 className="lp-section-title" style={{ fontSize: '2.5rem' }}>150+ Cloud Modules</h2>
             </div>
           </AnimatedSection>
 
@@ -1364,7 +1364,7 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
               </p>
               <div className="lp-free-features">
                 <div className="lp-free-feature"><Check size={14} /> Unlimited designs</div>
-                <div className="lp-free-feature"><Check size={14} /> All 154+ components</div>
+                <div className="lp-free-feature"><Check size={14} /> All 150+ components</div>
                 <div className="lp-free-feature"><Check size={14} /> Full simulation engine</div>
                 <div className="lp-free-feature"><Check size={14} /> All templates included</div>
                 <div className="lp-free-feature"><Check size={14} /> PNG 3× Retina export</div>
