@@ -169,6 +169,33 @@ function AnimatedSection({ children, className = '', delay = 0 }: {
   );
 }
 
+/* ── Animated Counter ── */
+function AnimatedCounter({ end, suffix = '', prefix = '', duration = 1800 }: {
+  end: number; suffix?: string; prefix?: string; duration?: number;
+}) {
+  const { ref, inView } = useInView(0.3);
+  const [count, setCount] = useState(0);
+  const hasAnimated = useRef(false);
+
+  useEffect(() => {
+    if (!inView || hasAnimated.current) return;
+    hasAnimated.current = true;
+
+    const startTime = performance.now();
+    const step = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // ease-out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setCount(Math.round(eased * end));
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }, [inView, end, duration]);
+
+  return <span ref={ref}>{prefix}{count.toLocaleString()}{suffix}</span>;
+}
+
 export default function LandingPage({ onLaunch }: LandingPageProps) {
   const loadTemplate = useArchStore(s => s.loadTemplate);
   const clearCanvas = useArchStore(s => s.clearCanvas);
@@ -311,22 +338,22 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
 
           <div className="lp-hero-trust">
             <div className="lp-trust-item">
-              <span className="lp-trust-value">150+</span>
+              <span className="lp-trust-value"><AnimatedCounter end={150} suffix="+" /></span>
               <span className="lp-trust-label">Components</span>
             </div>
             <div className="lp-trust-divider" />
             <div className="lp-trust-item">
-              <span className="lp-trust-value">40+</span>
+              <span className="lp-trust-value"><AnimatedCounter end={40} suffix="+" /></span>
               <span className="lp-trust-label">Templates</span>
             </div>
             <div className="lp-trust-divider" />
             <div className="lp-trust-item">
-              <span className="lp-trust-value">10M</span>
+              <span className="lp-trust-value"><AnimatedCounter end={10} suffix="M" /></span>
               <span className="lp-trust-label">Max Users Sim</span>
             </div>
             <div className="lp-trust-divider" />
             <div className="lp-trust-item">
-              <span className="lp-trust-value">$0</span>
+              <span className="lp-trust-value"><AnimatedCounter end={0} prefix="$" /></span>
               <span className="lp-trust-label">Forever Free</span>
             </div>
           </div>
@@ -861,19 +888,19 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
         <AnimatedSection>
           <div className="lp-stats-bar">
             <div className="lp-stat">
-              <div className="lp-stat-value">150+</div>
+              <div className="lp-stat-value"><AnimatedCounter end={150} suffix="+" duration={2000} /></div>
               <div className="lp-stat-label">Cloud Components</div>
             </div>
             <div className="lp-stat">
-              <div className="lp-stat-value">8</div>
+              <div className="lp-stat-value"><AnimatedCounter end={8} duration={1200} /></div>
               <div className="lp-stat-label">Simulation Engines</div>
             </div>
             <div className="lp-stat">
-              <div className="lp-stat-value">25+</div>
+              <div className="lp-stat-value"><AnimatedCounter end={25} suffix="+" duration={1500} /></div>
               <div className="lp-stat-label">Security Rules</div>
             </div>
             <div className="lp-stat">
-              <div className="lp-stat-value">3×</div>
+              <div className="lp-stat-value"><AnimatedCounter end={3} suffix="×" duration={800} /></div>
               <div className="lp-stat-label">Retina Export</div>
             </div>
           </div>
@@ -1440,6 +1467,11 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
          *  FOOTER
          * ═══════════════════════════════════════ */}
         <footer className="lp-footer-pro">
+          <div className="lp-footer-aurora">
+            <div className="lp-footer-aurora-blob lp-footer-aurora-1" />
+            <div className="lp-footer-aurora-blob lp-footer-aurora-2" />
+            <div className="lp-footer-aurora-blob lp-footer-aurora-3" />
+          </div>
           <div className="lp-footer-content">
             <div className="lp-footer-logo">
               <BrainCircuit size={24} />

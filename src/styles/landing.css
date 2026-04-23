@@ -2002,6 +2002,68 @@
   align-items: center;
   text-align: center;
   position: relative;
+  overflow: hidden;
+}
+
+/* Aurora effect — drifting gradient blobs */
+@keyframes lp-aurora-drift-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25%      { transform: translate(60px, -20px) scale(1.1); }
+  50%      { transform: translate(-30px, 15px) scale(0.95); }
+  75%      { transform: translate(40px, 10px) scale(1.05); }
+}
+
+@keyframes lp-aurora-drift-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%      { transform: translate(-50px, 20px) scale(1.15); }
+  66%      { transform: translate(30px, -15px) scale(0.9); }
+}
+
+@keyframes lp-aurora-drift-3 {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.3; }
+  50%      { transform: translate(40px, -25px) scale(1.2); opacity: 0.5; }
+}
+
+.lp-footer-aurora {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.lp-footer-aurora-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.35;
+}
+
+.lp-footer-aurora-1 {
+  width: 300px;
+  height: 200px;
+  background: linear-gradient(135deg, rgba(94, 234, 212, 0.3), rgba(94, 234, 212, 0.05));
+  bottom: -40px;
+  left: 15%;
+  animation: lp-aurora-drift-1 12s ease-in-out infinite;
+}
+
+.lp-footer-aurora-2 {
+  width: 250px;
+  height: 180px;
+  background: linear-gradient(135deg, rgba(167, 139, 250, 0.25), rgba(167, 139, 250, 0.05));
+  bottom: -20px;
+  right: 20%;
+  animation: lp-aurora-drift-2 15s ease-in-out infinite;
+}
+
+.lp-footer-aurora-3 {
+  width: 200px;
+  height: 150px;
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(94, 234, 212, 0.1));
+  top: -30px;
+  left: 45%;
+  animation: lp-aurora-drift-3 10s ease-in-out infinite;
 }
 
 /* Gradient top accent line */
@@ -2016,6 +2078,8 @@
 }
 
 .lp-footer-content {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
