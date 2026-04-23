@@ -3088,54 +3088,24 @@
  * ══════════════════════════════════════════ */
 
 @keyframes lp-arb-card-in {
-  from {
-    opacity: 0;
-    transform: translateY(12px) scale(0.97);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  from { opacity: 0; transform: translateY(12px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @keyframes lp-arb-name-morph {
-  0% {
-    opacity: 0;
-    transform: translateY(6px);
-    filter: blur(4px);
-  }
-
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-    filter: blur(0);
-  }
+  0% { opacity: 0; transform: translateY(6px); filter: blur(4px); }
+  100% { opacity: 1; transform: translateY(0); filter: blur(0); }
 }
 
 @keyframes lp-arb-savings-pop {
-  0% {
-    opacity: 0;
-    transform: scale(0.7);
-  }
-
-  60% {
-    transform: scale(1.12);
-  }
-
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
+  0% { opacity: 0; transform: scale(0.7); }
+  60% { transform: scale(1.12); }
+  100% { opacity: 1; transform: scale(1); }
 }
 
 @keyframes lp-arb-pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
 .lp-arbitrage-section {
@@ -3146,7 +3116,7 @@
 .lp-arb-toggle-wrap {
   display: flex;
   justify-content: center;
-  margin-bottom: 40px;
+  margin-bottom: 24px;
 }
 
 .lp-arb-toggle {
@@ -3158,7 +3128,7 @@
   border-radius: 14px;
   padding: 5px;
   gap: 4px;
-  min-width: 340px;
+  min-width: 400px;
 }
 
 .lp-arb-toggle-btn {
@@ -3167,14 +3137,14 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  padding: 10px 20px;
+  gap: 10px;
+  padding: 12px 20px;
   background: none;
   border: none;
   border-radius: 10px;
   color: var(--lp-text-muted);
   font-family: var(--lp-font);
-  font-size: 0.88rem;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
   transition: color 0.3s ease, transform 0.2s ease;
@@ -3193,6 +3163,22 @@
   transform: scale(0.96);
 }
 
+.lp-arb-toggle-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  opacity: 0.5;
+  filter: grayscale(100%);
+  transition: all 0.3s ease;
+}
+
+.lp-arb-toggle-btn.active .lp-arb-toggle-logo {
+  opacity: 1;
+  filter: grayscale(0%);
+}
+
 .lp-arb-toggle-pill {
   position: absolute;
   z-index: 1;
@@ -3209,6 +3195,31 @@
   pointer-events: none;
 }
 
+/* ── Scenario Label ── */
+.lp-arb-scenario {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 32px;
+  font-size: 0.85rem;
+  color: var(--lp-text-muted);
+  font-family: var(--lp-mono);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.lp-arb-scenario-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transition: background 0.3s ease;
+}
+
+.lp-arb-scenario-sep {
+  opacity: 0.4;
+}
+
 /* ── Service Cards Grid ── */
 .lp-arb-grid {
   display: grid;
@@ -3219,9 +3230,8 @@
 
 .lp-arb-card {
   display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 20px 18px;
+  flex-direction: column;
+  padding: 20px 22px;
   background: var(--lp-surface);
   border: 1px solid var(--lp-border);
   border-radius: var(--lp-radius);
@@ -3230,7 +3240,6 @@
   overflow: hidden;
 }
 
-/* Subtle top highlight */
 .lp-arb-card::before {
   content: '';
   position: absolute;
@@ -3255,6 +3264,13 @@
   opacity: 1;
 }
 
+.lp-arb-card-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
 .lp-arb-card-icon {
   width: 44px;
   height: 44px;
@@ -3267,54 +3283,171 @@
   transition: background 0.4s ease, border-color 0.4s ease;
 }
 
-.lp-arb-card-body {
+.lp-arb-card-meta {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
   flex: 1;
   min-width: 0;
 }
 
-.lp-arb-card-name {
-  font-size: 0.92rem;
+.lp-arb-card-label {
+  font-size: 0.82rem;
   font-weight: 600;
+  color: var(--lp-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.lp-arb-card-spec {
+  font-size: 0.9rem;
+  font-weight: 500;
   color: var(--lp-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  animation: lp-arb-name-morph 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
-  letter-spacing: -0.02em;
-}
-
-.lp-arb-card-provider {
-  font-size: 0.72rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  transition: color 0.3s ease;
+  letter-spacing: -0.01em;
 }
 
 .lp-arb-card-cost {
-  display: flex;
-  align-items: baseline;
-  gap: 2px;
-  margin-left: auto;
-  padding-left: 12px;
-  flex-shrink: 0;
+  text-align: right;
 }
 
 .lp-arb-card-price {
-  font-size: 1.05rem;
+  display: block;
+  font-size: 1.15rem;
   font-weight: 700;
   font-family: var(--lp-mono);
   color: var(--lp-text);
   letter-spacing: -0.03em;
+  line-height: 1.1;
 }
 
 .lp-arb-card-mo {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   color: var(--lp-text-dim);
   font-family: var(--lp-mono);
+}
+
+.lp-arb-card-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lp-arb-card-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--arb-accent);
+  transition: color 0.3s ease;
+  animation: lp-arb-name-morph 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.lp-arb-card-bar-track {
+  height: 4px;
+  background: var(--lp-border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.lp-arb-card-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1), background 0.3s ease;
+}
+
+/* ── Comparison Strip ── */
+.lp-arb-compare-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.lp-arb-compare-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: var(--lp-surface);
+  border: 1px solid var(--lp-border);
+  border-radius: var(--lp-radius);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  text-align: left;
+}
+
+.lp-arb-compare-row:hover {
+  border-color: var(--lp-border-hover);
+  background: var(--lp-surface-hover);
+}
+
+.lp-arb-compare-row.active {
+  border-color: var(--arb-c);
+  background: rgba(var(--arb-c-rgb), 0.05); /* Will require RGB vars if we want alpha, or just solid */
+}
+
+/* Fallback since we don't have RGB vars */
+.lp-arb-compare-row.active {
+  box-shadow: inset 0 0 0 1px var(--arb-c);
+}
+
+.lp-arb-compare-logo {
+  display: flex;
+  align-items: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.lp-arb-compare-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--lp-text);
+  width: 50px;
+}
+
+.lp-arb-compare-bar-track {
+  flex: 1;
+  height: 6px;
+  background: var(--lp-border);
+  border-radius: 3px;
+  overflow: hidden;
+  margin: 0 10px;
+}
+
+.lp-arb-compare-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lp-arb-compare-price {
+  font-size: 1.05rem;
+  font-weight: 700;
+  font-family: var(--lp-mono);
+  color: var(--lp-text);
+}
+
+.lp-arb-cheapest-tag {
+  position: absolute;
+  top: -1px;
+  right: 20px;
+  background: var(--lp-border-hover);
+  color: var(--lp-text);
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 0 0 4px 4px;
+  letter-spacing: 0.05em;
+}
+
+.lp-arb-compare-row.cheapest {
+  background: rgba(255, 255, 255, 0.02);
 }
 
 /* ── Total Cost Bar ── */
@@ -3322,16 +3455,16 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 28px;
+  padding: 24px 32px;
   background: var(--lp-surface);
   border: 1px solid var(--lp-border);
   border-radius: var(--lp-radius);
   transition: border-color 0.4s ease;
   position: relative;
   overflow: hidden;
+  margin-bottom: 16px;
 }
 
-/* Subtle gradient accent bar along the top */
 .lp-arb-cost-bar::after {
   content: '';
   position: absolute;
@@ -3339,30 +3472,26 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg,
-    transparent,
-    var(--lp-border-hover),
-    transparent
-  );
+  background: linear-gradient(90deg, transparent, var(--lp-border-hover), transparent);
   opacity: 0.5;
 }
 
 .lp-arb-cost-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
 .lp-arb-cost-dot {
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   transition: background 0.3s ease, box-shadow 0.3s ease;
   animation: lp-arb-pulse 2s ease-in-out infinite;
 }
 
 .lp-arb-cost-label {
-  font-size: 0.9rem;
+  font-size: 1.05rem;
   font-weight: 500;
   color: var(--lp-text-secondary);
 }
@@ -3375,15 +3504,15 @@
 .lp-arb-cost-right {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
 }
 
 .lp-arb-savings-badge {
   display: inline-flex;
   align-items: center;
-  padding: 5px 12px;
+  padding: 6px 14px;
   border-radius: 999px;
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   font-weight: 700;
   border: 1px solid transparent;
   transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
@@ -3393,7 +3522,7 @@
 }
 
 .lp-arb-cost-total {
-  font-size: 1.8rem;
+  font-size: 2.2rem;
   font-weight: 800;
   font-family: var(--lp-mono);
   letter-spacing: -0.04em;
@@ -3402,29 +3531,36 @@
 }
 
 .lp-arb-cost-suffix {
-  font-size: 0.85rem;
+  font-size: 1rem;
   color: var(--lp-text-dim);
   font-family: var(--lp-mono);
   font-weight: 500;
-  margin-left: -4px;
+  margin-left: -6px;
+}
+
+.lp-arb-disclaimer {
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--lp-text-muted);
+  margin-top: 16px;
 }
 
 /* ── Responsive ── */
+@media (max-width: 1024px) {
+  .lp-arb-compare-strip {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 900px) {
   .lp-arb-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-
-  .lp-arb-toggle {
-    min-width: 280px;
-  }
-
   .lp-arb-cost-bar {
     flex-direction: column;
-    gap: 16px;
+    gap: 20px;
     align-items: flex-start;
   }
-
   .lp-arb-cost-right {
     width: 100%;
     justify-content: space-between;
@@ -3435,17 +3571,28 @@
   .lp-arb-grid {
     grid-template-columns: 1fr;
   }
-
   .lp-arb-toggle {
     min-width: 100%;
   }
-
   .lp-arb-toggle-btn {
-    padding: 8px 12px;
-    font-size: 0.8rem;
+    padding: 10px 12px;
+    font-size: 0.85rem;
   }
-
+  .lp-arb-toggle-label {
+    display: none;
+  }
   .lp-arb-cost-total {
-    font-size: 1.4rem;
+    font-size: 1.8rem;
+  }
+  .lp-arb-compare-name {
+    display: none;
+  }
+  .lp-arb-scenario {
+    flex-direction: column;
+    gap: 4px;
+    text-align: center;
+  }
+  .lp-arb-scenario-sep {
+    display: none;
   }
 }

@@ -200,76 +200,122 @@ function AnimatedCounter({ end, suffix = '', prefix = '', duration = 1800 }: {
 type ArbitrageProvider = 'aws' | 'azure' | 'gcp';
 
 interface ArbitrageService {
+  label: string;
+  spec: string;
   aws: { name: string; cost: number };
   azure: { name: string; cost: number };
   gcp: { name: string; cost: number };
   icon: React.ComponentType<{ size?: number; strokeWidth?: number; style?: React.CSSProperties }>;
 }
 
+/* Pricing based on on-demand us-east / US rates as of April 2026.
+   Scenario: Production SaaS — 3× compute, 5 TB storage, managed DB, 
+   50M serverless invocations, 10 TB CDN egress, 13 GB Redis cache. */
 const arbitrageServices: ArbitrageService[] = [
   {
+    label: 'Compute',
+    spec: '3× 4 vCPU · 16 GB',
     icon: Server,
-    aws:   { name: 'EC2 Instances',     cost: 1240 },
-    azure: { name: 'Virtual Machines',  cost: 1380 },
-    gcp:   { name: 'Compute Engine',    cost: 1150 },
+    aws:   { name: 'EC2 m5.xlarge',        cost: 415 },
+    azure: { name: 'D4s v5',               cost: 420 },
+    gcp:   { name: 'n2-standard-4',        cost: 389 },
   },
   {
+    label: 'Object Storage',
+    spec: '5 TB Standard',
     icon: HardDrive,
-    aws:   { name: 'S3 Storage',        cost: 420 },
-    azure: { name: 'Blob Storage',      cost: 460 },
-    gcp:   { name: 'Cloud Storage',     cost: 390 },
+    aws:   { name: 'S3 Standard',          cost: 118 },
+    azure: { name: 'Blob Storage Hot',     cost: 92 },
+    gcp:   { name: 'Cloud Storage Std',    cost: 105 },
   },
   {
+    label: 'Managed Database',
+    spec: 'PostgreSQL · 4 vCPU · 500 GB',
     icon: Database,
-    aws:   { name: 'RDS PostgreSQL',    cost: 890 },
-    azure: { name: 'Azure SQL',         cost: 960 },
-    gcp:   { name: 'Cloud SQL',         cost: 820 },
+    aws:   { name: 'RDS db.r6g.xlarge',    cost: 380 },
+    azure: { name: 'Azure SQL 4 vCore',    cost: 445 },
+    gcp:   { name: 'Cloud SQL db-custom',  cost: 350 },
   },
   {
+    label: 'Serverless Functions',
+    spec: '50M invocations · 256 MB',
     icon: Zap,
-    aws:   { name: 'Lambda',            cost: 180 },
-    azure: { name: 'Azure Functions',   cost: 210 },
-    gcp:   { name: 'Cloud Functions',   cost: 165 },
+    aws:   { name: 'Lambda',               cost: 42 },
+    azure: { name: 'Azure Functions',      cost: 45 },
+    gcp:   { name: 'Cloud Run Functions',  cost: 38 },
   },
   {
+    label: 'CDN / Edge',
+    spec: '10 TB egress · Global',
     icon: Globe,
-    aws:   { name: 'CloudFront CDN',    cost: 340 },
-    azure: { name: 'Azure CDN',         cost: 370 },
-    gcp:   { name: 'Cloud CDN',         cost: 310 },
+    aws:   { name: 'CloudFront',           cost: 850 },
+    azure: { name: 'Front Door CDN',       cost: 810 },
+    gcp:   { name: 'Cloud CDN',            cost: 800 },
   },
   {
+    label: 'In-Memory Cache',
+    spec: 'Redis · 13 GB · HA',
     icon: Flame,
-    aws:   { name: 'ElastiCache Redis', cost: 520 },
-    azure: { name: 'Azure Cache',       cost: 580 },
-    gcp:   { name: 'Memorystore',       cost: 470 },
+    aws:   { name: 'ElastiCache r7g',      cost: 320 },
+    azure: { name: 'Azure Cache P2',       cost: 405 },
+    gcp:   { name: 'Memorystore',          cost: 290 },
   },
 ];
 
-const providerMeta: Record<ArbitrageProvider, { label: string; color: string }> = {
-  aws:   { label: 'AWS',   color: '#FF9900' },
-  azure: { label: 'Azure', color: '#0078D4' },
-  gcp:   { label: 'GCP',   color: '#4285F4' },
+/* Provider SVG logos (simplified official marks) */
+const AwsLogo = () => (
+  <svg width="20" height="12" viewBox="0 0 40 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M11.2 17.6c-3.8 2.8-9.4 4.3-14.1 4.3-.7 0-1.3-.1-2-.1.4.4 4.4-2.9 10-6.5 1.4-.8 2.9-1.2 4.2-1.2 2 0 3.5.8 3.5 2.3 0 .4-.2.8-.5 1.2" transform="translate(6 0)" fill="#FF9900"/>
+    <path d="M7 5.8l1.7 7.7h.1L11 5.8h2.3l2.2 7.7h.1l1.7-7.7h2.5L16.5 16h-2.4l-2.3-7.5h-.1L9.5 16H7L3.7 5.8H7z" fill="#fff"/>
+  </svg>
+);
+
+const AzureLogo = () => (
+  <svg width="18" height="16" viewBox="0 0 18 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M6.8 0L1 12.5h4.2L10.6 0H6.8zM7.2 9.3L3.4 16h12.1l-3-4.5L7.2 9.3z" fill="#0078D4"/>
+  </svg>
+);
+
+const GcpLogo = () => (
+  <svg width="18" height="16" viewBox="0 0 24 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M15.1 3.4l2.1-2.1.1-.9C15.5-.5 13 -.3 10.8.5 8.6 1.4 6.8 3.1 5.8 5.2l.1 0 3.5-.5.3-.3c1.2-1.3 3-2 4.8-1.7l.6.7z" fill="#EA4335"/>
+    <path d="M19.5 6.4c-.7-2-2-3.6-3.8-4.7l-3 3c1.4.7 2.5 2 2.8 3.5v.5c1.4 0 2.5 1.1 2.5 2.5s-1.1 2.5-2.5 2.5H12l-.5.5v3l.5.5h3.5c3.3 0 6-2.7 6-6 0-2.3-1.3-4.3-3.2-5.3" fill="#4285F4"/>
+    <path d="M8 17.7h3.5V14.2H8c-.4 0-.7-.1-1-.2l-.7.2-2 2-.2.7C5.3 17.4 6.6 17.7 8 17.7" fill="#34A853"/>
+    <path d="M8 5.7C4.7 5.7 2 8.4 2 11.7c0 2 1 3.8 2.5 4.9l2.9-2.9c-1-.5-1.7-1.6-1.7-2.8 0-1.7 1.3-3 3-3s3 1.3 3 3l2.9-2.9C13.2 7 10.8 5.7 8 5.7" fill="#FBBC05"/>
+  </svg>
+);
+
+const providerLogos: Record<ArbitrageProvider, () => JSX.Element> = {
+  aws: AwsLogo,
+  azure: AzureLogo,
+  gcp: GcpLogo,
+};
+
+const providerMeta: Record<ArbitrageProvider, { label: string; fullName: string; color: string }> = {
+  aws:   { label: 'AWS',   fullName: 'Amazon Web Services', color: '#FF9900' },
+  azure: { label: 'Azure', fullName: 'Microsoft Azure',     color: '#0078D4' },
+  gcp:   { label: 'GCP',   fullName: 'Google Cloud',        color: '#4285F4' },
 };
 
 function ArbitrageVisualizer() {
   const [provider, setProvider] = useState<ArbitrageProvider>('aws');
   const [displayCost, setDisplayCost] = useState(0);
-  const { ref, inView } = useInView(0.15);
+  const { ref } = useInView(0.15);
 
   const totalCost = arbitrageServices.reduce((sum, s) => sum + s[provider].cost, 0);
-  const allTotals = (['aws', 'azure', 'gcp'] as ArbitrageProvider[]).map(p =>
-    arbitrageServices.reduce((sum, s) => sum + s[p].cost, 0)
-  );
-  const maxCost = Math.max(...allTotals);
+  const allTotals: Record<ArbitrageProvider, number> = {
+    aws: arbitrageServices.reduce((s, v) => s + v.aws.cost, 0),
+    azure: arbitrageServices.reduce((s, v) => s + v.azure.cost, 0),
+    gcp: arbitrageServices.reduce((s, v) => s + v.gcp.cost, 0),
+  };
+  const maxCost = Math.max(allTotals.aws, allTotals.azure, allTotals.gcp);
   const savingsPercent = Math.round(((maxCost - totalCost) / maxCost) * 100);
 
-  // Animate the cost counter on provider change
   useEffect(() => {
     const start = displayCost;
     const end = totalCost;
     const duration = 600;
     const startTime = performance.now();
-
     const step = (now: number) => {
       const elapsed = now - startTime;
       const progress = Math.min(elapsed / duration, 1);
@@ -295,40 +341,49 @@ function ArbitrageVisualizer() {
             One architecture.<br />Three price tags.
           </h2>
           <p className="lp-section-desc">
-            Toggle between AWS, Azure, and GCP to see how the same architecture
-            costs differently across providers. Find the cheapest cloud — instantly.
+            Toggle between AWS, Azure, and GCP to see how the same production stack
+            costs differently. On-demand pricing, US regions, April 2026.
           </p>
         </div>
       </AnimatedSection>
 
       <AnimatedSection delay={0.1}>
-        {/* ── Provider Toggle ── */}
+        {/* ── Provider Toggle with Logos ── */}
         <div className="lp-arb-toggle-wrap">
           <div className="lp-arb-toggle" role="radiogroup" aria-label="Cloud provider selector">
-            {(['aws', 'azure', 'gcp'] as ArbitrageProvider[]).map(p => (
-              <button
-                key={p}
-                className={`lp-arb-toggle-btn${provider === p ? ' active' : ''}`}
-                onClick={() => setProvider(p)}
-                role="radio"
-                aria-checked={provider === p}
-                style={{ '--arb-accent': providerMeta[p].color } as React.CSSProperties}
-              >
-                <Cloud size={14} strokeWidth={2} />
-                {providerMeta[p].label}
-              </button>
-            ))}
-            {/* Sliding pill indicator */}
+            {(['aws', 'azure', 'gcp'] as ArbitrageProvider[]).map(p => {
+              const Logo = providerLogos[p];
+              return (
+                <button
+                  key={p}
+                  className={`lp-arb-toggle-btn${provider === p ? ' active' : ''}`}
+                  onClick={() => setProvider(p)}
+                  role="radio"
+                  aria-checked={provider === p}
+                >
+                  <span className="lp-arb-toggle-logo"><Logo /></span>
+                  <span className="lp-arb-toggle-label">{providerMeta[p].label}</span>
+                </button>
+              );
+            })}
             <div
               className="lp-arb-toggle-pill"
               style={{
                 transform: `translateX(${(['aws', 'azure', 'gcp'].indexOf(provider)) * 100}%)`,
                 background: `${meta.color}18`,
                 borderColor: `${meta.color}40`,
-                boxShadow: `0 0 20px ${meta.color}15`,
+                boxShadow: `0 0 24px ${meta.color}20`,
               }}
             />
           </div>
+        </div>
+
+        {/* ── Scenario Label ── */}
+        <div className="lp-arb-scenario">
+          <span className="lp-arb-scenario-dot" style={{ background: meta.color }} />
+          <span>Production SaaS Stack</span>
+          <span className="lp-arb-scenario-sep">·</span>
+          <span>3× Compute, Managed DB, 10 TB CDN, Redis HA, Serverless</span>
         </div>
 
         {/* ── Service Cards Grid ── */}
@@ -336,27 +391,65 @@ function ArbitrageVisualizer() {
           {arbitrageServices.map((service, idx) => {
             const Icon = service.icon;
             const current = service[provider];
+            const serviceMax = Math.max(service.aws.cost, service.azure.cost, service.gcp.cost);
+            const barPercent = Math.round((current.cost / serviceMax) * 100);
             return (
               <div
                 key={idx}
                 className="lp-arb-card"
-                style={{
-                  '--arb-accent': meta.color,
-                  animationDelay: `${idx * 0.06}s`,
-                } as React.CSSProperties}
+                style={{ '--arb-accent': meta.color } as React.CSSProperties}
               >
-                <div className="lp-arb-card-icon" style={{ background: `${meta.color}12`, borderColor: `${meta.color}25` }}>
-                  <Icon size={20} strokeWidth={1.5} style={{ color: meta.color }} />
+                <div className="lp-arb-card-header">
+                  <div className="lp-arb-card-icon" style={{ background: `${meta.color}12`, borderColor: `${meta.color}25` }}>
+                    <Icon size={18} strokeWidth={1.5} style={{ color: meta.color }} />
+                  </div>
+                  <div className="lp-arb-card-meta">
+                    <span className="lp-arb-card-label">{service.label}</span>
+                    <span className="lp-arb-card-spec">{service.spec}</span>
+                  </div>
+                  <div className="lp-arb-card-cost">
+                    <span className="lp-arb-card-price">${current.cost.toLocaleString()}</span>
+                    <span className="lp-arb-card-mo">/mo</span>
+                  </div>
                 </div>
-                <div className="lp-arb-card-body">
+                <div className="lp-arb-card-bottom">
                   <span className="lp-arb-card-name" key={`${provider}-${idx}`}>{current.name}</span>
-                  <span className="lp-arb-card-provider" style={{ color: meta.color }}>{meta.label}</span>
-                </div>
-                <div className="lp-arb-card-cost">
-                  <span className="lp-arb-card-price">${current.cost.toLocaleString()}</span>
-                  <span className="lp-arb-card-mo">/mo</span>
+                  <div className="lp-arb-card-bar-track">
+                    <div
+                      className="lp-arb-card-bar-fill"
+                      style={{ width: `${barPercent}%`, background: meta.color }}
+                    />
+                  </div>
                 </div>
               </div>
+            );
+          })}
+        </div>
+
+        {/* ── All-Provider Comparison Strip ── */}
+        <div className="lp-arb-compare-strip">
+          {(['aws', 'azure', 'gcp'] as ArbitrageProvider[]).map(p => {
+            const total = allTotals[p];
+            const pMeta = providerMeta[p];
+            const PLogo = providerLogos[p];
+            const isActive = provider === p;
+            const cheapest = Math.min(allTotals.aws, allTotals.azure, allTotals.gcp);
+            const barW = Math.round((total / maxCost) * 100);
+            return (
+              <button
+                key={p}
+                className={`lp-arb-compare-row${isActive ? ' active' : ''}${total === cheapest ? ' cheapest' : ''}`}
+                onClick={() => setProvider(p)}
+                style={{ '--arb-c': pMeta.color } as React.CSSProperties}
+              >
+                <span className="lp-arb-compare-logo"><PLogo /></span>
+                <span className="lp-arb-compare-name">{pMeta.label}</span>
+                <span className="lp-arb-compare-bar-track">
+                  <span className="lp-arb-compare-bar-fill" style={{ width: `${barW}%`, background: pMeta.color }} />
+                </span>
+                <span className="lp-arb-compare-price">${total.toLocaleString()}</span>
+                {total === cheapest && <span className="lp-arb-cheapest-tag">Cheapest</span>}
+              </button>
             );
           })}
         </div>
@@ -367,13 +460,13 @@ function ArbitrageVisualizer() {
             <div className="lp-arb-cost-dot" style={{ background: meta.color, boxShadow: `0 0 12px ${meta.color}60` }} />
             <span className="lp-arb-cost-label">
               Estimated Monthly Total
-              <span className="lp-arb-cost-provider" style={{ color: meta.color }}> — {meta.label}</span>
+              <span className="lp-arb-cost-provider" style={{ color: meta.color }}> — {meta.fullName}</span>
             </span>
           </div>
           <div className="lp-arb-cost-right">
             {savingsPercent > 0 && (
               <span className="lp-arb-savings-badge" key={provider} style={{ background: `${meta.color}15`, color: meta.color, borderColor: `${meta.color}30` }}>
-                Save {savingsPercent}%
+                ↓ {savingsPercent}% vs most expensive
               </span>
             )}
             <span className="lp-arb-cost-total" style={{ color: meta.color }}>
@@ -382,6 +475,10 @@ function ArbitrageVisualizer() {
             <span className="lp-arb-cost-suffix">/mo</span>
           </div>
         </div>
+
+        <p className="lp-arb-disclaimer">
+          Prices reflect on-demand, public list rates for US regions (April 2026). Actual costs vary by region, commitment, and usage.
+        </p>
       </AnimatedSection>
     </section>
   );
