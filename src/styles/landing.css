@@ -3433,16 +3433,22 @@
 
 .lp-arb-cheapest-tag {
   position: absolute;
-  top: -1px;
-  right: 20px;
-  background: var(--lp-border-hover);
-  color: var(--lp-text);
-  font-size: 0.65rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  padding: 2px 8px;
-  border-radius: 0 0 4px 4px;
-  letter-spacing: 0.05em;
+  top: -10px;
+  right: 14px;
+  background: var(--arb-c);
+  color: #fff;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  transition: transform 0.3s ease;
+}
+
+.lp-arb-compare-row:hover .lp-arb-cheapest-tag {
+  transform: scale(1.1);
 }
 
 .lp-arb-compare-row.cheapest {

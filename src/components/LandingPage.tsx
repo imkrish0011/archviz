@@ -11,7 +11,7 @@ import {
   Webhook, Container, HardDrive, Radio, CircuitBoard, Flame,
   FileCode, ShieldAlert, Target, Mail, Leaf,
   Warehouse, PackageOpen, LayoutDashboard, ArrowLeftRight, FileText, Cog, LayoutGrid,
-  FolderOpen, CloudUpload, LogIn
+  FolderOpen, CloudUpload, LogIn, Crown
 } from 'lucide-react';
 import '../styles/landing.css';
 import { famousSystemTemplates, gameTemplates, nonGameFamousTemplates } from '../data/templates/famousSystemTemplates';
@@ -450,7 +450,11 @@ function ArbitrageVisualizer() {
                   <span className="lp-arb-compare-bar-fill" style={{ width: `${barW}%`, background: pMeta.color }} />
                 </span>
                 <span className="lp-arb-compare-price">${total.toLocaleString()}</span>
-                {total === cheapest && <span className="lp-arb-cheapest-tag">Cheapest</span>}
+                {total === cheapest && (
+                  <span className="lp-arb-cheapest-tag" title="Cheapest Option">
+                    <Crown size={14} strokeWidth={2.5} />
+                  </span>
+                )}
               </button>
             );
           })}
