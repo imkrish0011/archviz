@@ -262,27 +262,29 @@ const arbitrageServices: ArbitrageService[] = [
   },
 ];
 
-/* Provider SVG logos (simplified official marks) */
+/* Provider Web Logos */
 const AwsLogo = () => (
-  <svg width="20" height="12" viewBox="0 0 40 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M11.2 17.6c-3.8 2.8-9.4 4.3-14.1 4.3-.7 0-1.3-.1-2-.1.4.4 4.4-2.9 10-6.5 1.4-.8 2.9-1.2 4.2-1.2 2 0 3.5.8 3.5 2.3 0 .4-.2.8-.5 1.2" transform="translate(6 0)" fill="#FF9900"/>
-    <path d="M7 5.8l1.7 7.7h.1L11 5.8h2.3l2.2 7.7h.1l1.7-7.7h2.5L16.5 16h-2.4l-2.3-7.5h-.1L9.5 16H7L3.7 5.8H7z" fill="#fff"/>
-  </svg>
+  <img 
+    src="https://upload.wikimedia.org/wikipedia/commons/9/93/Amazon_Web_Services_Logo.svg" 
+    alt="AWS Logo" 
+    style={{ width: '100%', height: '100%', objectFit: 'contain' }} 
+  />
 );
 
 const AzureLogo = () => (
-  <svg width="18" height="16" viewBox="0 0 18 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M6.8 0L1 12.5h4.2L10.6 0H6.8zM7.2 9.3L3.4 16h12.1l-3-4.5L7.2 9.3z" fill="#0078D4"/>
-  </svg>
+  <img 
+    src="https://upload.wikimedia.org/wikipedia/commons/a/a8/Microsoft_Azure_Logo.svg" 
+    alt="Azure Logo" 
+    style={{ width: '100%', height: '100%', objectFit: 'contain' }} 
+  />
 );
 
 const GcpLogo = () => (
-  <svg width="18" height="16" viewBox="0 0 24 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M15.1 3.4l2.1-2.1.1-.9C15.5-.5 13 -.3 10.8.5 8.6 1.4 6.8 3.1 5.8 5.2l.1 0 3.5-.5.3-.3c1.2-1.3 3-2 4.8-1.7l.6.7z" fill="#EA4335"/>
-    <path d="M19.5 6.4c-.7-2-2-3.6-3.8-4.7l-3 3c1.4.7 2.5 2 2.8 3.5v.5c1.4 0 2.5 1.1 2.5 2.5s-1.1 2.5-2.5 2.5H12l-.5.5v3l.5.5h3.5c3.3 0 6-2.7 6-6 0-2.3-1.3-4.3-3.2-5.3" fill="#4285F4"/>
-    <path d="M8 17.7h3.5V14.2H8c-.4 0-.7-.1-1-.2l-.7.2-2 2-.2.7C5.3 17.4 6.6 17.7 8 17.7" fill="#34A853"/>
-    <path d="M8 5.7C4.7 5.7 2 8.4 2 11.7c0 2 1 3.8 2.5 4.9l2.9-2.9c-1-.5-1.7-1.6-1.7-2.8 0-1.7 1.3-3 3-3s3 1.3 3 3l2.9-2.9C13.2 7 10.8 5.7 8 5.7" fill="#FBBC05"/>
-  </svg>
+  <img 
+    src="https://upload.wikimedia.org/wikipedia/commons/5/51/Google_Cloud_logo.svg" 
+    alt="GCP Logo" 
+    style={{ width: '100%', height: '100%', objectFit: 'contain' }} 
+  />
 );
 
 const providerLogos: Record<ArbitrageProvider, () => React.ReactNode> = {
