@@ -80,7 +80,45 @@ export interface ArchNodeData {
   scalingPolicy?: 'cpu-70' | 'mem-80' | 'custom';
   containerRuntime?: 'docker' | 'containerd' | 'firecracker';
   strictTls?: boolean;
-  
+
+  // Lambda / Serverless Specific
+  lambdaMemory?: number;        // MB (128–10240)
+  lambdaTimeout?: number;       // seconds (1–900)
+  lambdaConcurrency?: number;   // reserved concurrency
+  lambdaRuntime?: string;       // e.g. 'nodejs20.x', 'python3.12'
+  lambdaVpcAttached?: boolean;
+
+  // S3 / Object Storage Specific
+  s3Versioning?: boolean;
+  s3PublicAccessBlock?: boolean;
+  s3LifecycleGlacierDays?: number;  // transition to Glacier after N days, 0 = disabled
+  s3StorageClass?: 'STANDARD' | 'INTELLIGENT_TIERING' | 'STANDARD_IA' | 'GLACIER';
+
+  // Kafka / Streaming Specific
+  kafkaPartitions?: number;
+  kafkaRetentionDays?: number;
+  kafkaReplicationFactor?: number;
+  kafkaAutoCreateTopics?: boolean;
+
+  // API Gateway Specific
+  apigwRateLimit?: number;       // requests/sec
+  apigwThrottleBurst?: number;
+  apigwCorsEnabled?: boolean;
+  apigwAuthType?: 'none' | 'jwt' | 'iam' | 'api-key';
+
+  // Kubernetes Specific
+  k8sNodeInstanceType?: string;
+  k8sMinNodes?: number;
+  k8sMaxNodes?: number;
+  k8sFargateEnabled?: boolean;
+  k8sNamespace?: string;
+
+  // Auth Extended
+  authOAuthProviders?: string[];  // e.g. ['google', 'github', 'apple']
+  authPasswordMinLength?: number;
+  authTokenExpiryMinutes?: number;
+  authUserPoolMode?: 'user-pool' | 'identity-pool' | 'both';
+
   [key: string]: unknown;
 }
 

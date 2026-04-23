@@ -185,6 +185,74 @@ export function generateRecommendations(
     });
   }
   
+  // ── Rule 8: Bespoke — Lambda oversized memory ──
+  for (const node of activeNodes) {
+    if (node.data.componentType === 'lambda' && node.data.lambdaMemory) {
+      const load = nodeLoads.get(node.id) || 0;
+      const cap = node.data.tier.capacity * node.data.instances;
+      if (cap > 0 && node.data.lambdaMemory > 1024 && load / cap < 0.3) {
+        recommendations.push({
+          id: `lambda-oversized-${node.id}`,
+          reason: `${node.data.label} has ${node.data.lambdaMemory}MB allocated but uses only ${Math.round((load / cap) * 100)}% capacity. Lambda charges per GB-second — excess memory is wasted cost.`,
+          expectedImprovement: 'Up to 50% cost reduction for this function',
+          costImpact: `Save ~$${Math.round(node.data.lambdaMemory * 0.01)}/mo`,
+          severity: 'medium',
+          solution: `Reduce memory to 512MB or 256MB in the Lambda Configuration panel. CPU scales proportionally, so test performance first.`,
+          insight: `AWS Lambda charges $0.0000166667 per GB-second. At ${node.data.lambdaMemory}MB with low utilization, you're paying for idle compute.`,
+        });
+        break;
+      }
+    }
+  }
+
+  // ── Rule 9: Bespoke — Kafka under-replicated ──
+  for (const node of activeNodes) {
+    if ((node.data.componentType === 'kafka' || node.data.componentType === 'confluent-kafka') &&
+        (node.data.kafkaReplicationFactor || 3) < 3) {
+      recommendations.push({
+        id: `kafka-replication-${node.id}`,
+        reason: `${node.data.label} has replication factor ${node.data.kafkaReplicationFactor}. A single broker failure will cause data loss.`,
+        expectedImprovement: 'Zero data loss during broker failures',
+        costImpact: `+~$${Math.round((node.data.tier.monthlyCost || 453) * 0.5)}/mo for additional brokers`,
+        severity: 'high',
+        solution: 'Increase replication factor to 3 in the Kafka Configuration panel.',
+        insight: 'Industry standard is replication factor = 3 for production Kafka clusters. This ensures 2 broker failures can be tolerated.',
+      });
+      break;
+    }
+  }
+
+  // ── Rule 10: Bespoke — S3 without lifecycle for cost savings ──
+  for (const node of activeNodes) {
+    if (node.data.componentType === 's3' && !node.data.s3LifecycleGlacierDays && (Number(node.data.storageGB) || 100) > 500) {
+      recommendations.push({
+        id: `s3-lifecycle-${node.id}`,
+        reason: `${node.data.label} stores ${Number(node.data.storageGB) || 100}GB without lifecycle rules. Old data could be automatically archived to Glacier for 90% savings.`,
+        expectedImprovement: '60-90% storage cost reduction for aged data',
+        costImpact: `Save ~$${Math.round((Number(node.data.storageGB) || 100) * 0.02)}/mo`,
+        severity: 'low',
+        solution: 'Set "Lifecycle — Glacier Transition" to 90 days in the S3 Configuration panel.',
+      });
+      break;
+    }
+  }
+
+  // ── Rule 11: Bespoke — API Gateway without auth ──
+  for (const node of activeNodes) {
+    if (node.data.componentType === 'api-gateway' && (!node.data.apigwAuthType || node.data.apigwAuthType === 'none')) {
+      recommendations.push({
+        id: `apigw-auth-${node.id}`,
+        reason: `${node.data.label} has no authorization configured. All API endpoints are publicly callable.`,
+        expectedImprovement: 'Prevent unauthorized access and abuse',
+        costImpact: 'Free (JWT) or minimal ($3.50/mo for API keys)',
+        severity: 'high',
+        solution: 'Set "Authorization Type" to JWT or IAM in the API Gateway Configuration panel.',
+        insight: 'An unprotected API gateway is the #1 vector for abuse, cost attacks, and data breaches.',
+      });
+      break;
+    }
+  }
+  
   return recommendations;
 }
 

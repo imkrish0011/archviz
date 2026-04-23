@@ -13,14 +13,19 @@ import AuthConfigPanel from './panels/AuthConfigPanel';
 import DatabaseConfigPanel from './panels/DatabaseConfigPanel';
 import ScalingConfigPanel from './panels/ScalingConfigPanel';
 import { StorageConfigPanel, CacheConfigPanel, LBConfigPanel, NetworkConfigPanel, MessagingConfigPanel, ReliabilityConfigPanel } from './panels/MiscPanels';
+import LambdaConfigPanel from './panels/LambdaConfigPanel';
+import S3ConfigPanel from './panels/S3ConfigPanel';
+import KafkaConfigPanel from './panels/KafkaConfigPanel';
+import ApiGatewayConfigPanel from './panels/ApiGatewayConfigPanel';
+import KubernetesConfigPanel from './panels/KubernetesConfigPanel';
 import PanelSection from './panels/PanelSection';
 
 /* ── Helpers ── */
-const dbTypes = ['postgresql', 'mysql', 'mongodb', 'cassandra', 'dynamodb', 'aurora-serverless', 'bigtable'];
-const cacheTypes = ['redis', 'memcached'];
-const computeTypes = ['api-server', 'web-server', 'websocket-server', 'worker', 'graphql-server', 'game-server', 'lambda', 'ecs-fargate', 'app-runner', 'batch', 'ml-worker'];
-const networkTypes = ['load-balancer', 'cdn', 'api-gateway', 'dns', 'waf', 'nat-gateway'];
-const messagingTypes = ['sqs', 'sns', 'kafka', 'message-queue', 'eventbridge', 'kinesis', 'step-functions'];
+const dbTypes = ['postgresql', 'mysql', 'mongodb', 'cassandra', 'dynamodb', 'aurora-serverless', 'bigtable', 'pinecone', 'elasticsearch', 'snowflake', 'rds-proxy', 'rds-postgres', 'neo4j', 'influxdb', 'amazon-efs', 'amazon-glacier', 'qdrant', 'data-lake', 'block-storage', 'feature-store', 'clickhouse', 'supabase', 'cockroachdb', 'databricks-lakehouse', 'serverless-db', 'databricks', 'snowflake-dwh', 'planetscale'];
+const cacheTypes = ['redis', 'memcached', 'elasticache-redis'];
+const computeTypes = ['api-server', 'web-server', 'websocket-server', 'worker', 'graphql-server', 'game-server', 'lambda', 'ecs-fargate', 'app-runner', 'batch', 'ml-worker', 'kubernetes-cluster', 'cloudflare-workers', 'eks-cluster', 'ecs-container', 'aws-batch', 'apache-spark', 'gpu-instance', 'docker-container', 'aws-sagemaker', 'vertex-ai', 'huggingface', 'vllm-server', 'temporal-worker', 'vercel', 'netlify', 'cloudflare-pages', 'nextjs', 'react', 'vue'];
+const networkTypes = ['load-balancer', 'cdn', 'api-gateway', 'dns', 'waf', 'nat-gateway', 'aws-waf', 'transit-gateway', 'alb', 'vpc-endpoint', 'fastly-cdn', 'cloudflare-zero-trust', 'service-mesh', 'istio-mesh', 'reverse-proxy', 'vpn-gateway', 'aws-transit-gateway'];
+const messagingTypes = ['sqs', 'sns', 'kafka', 'message-queue', 'eventbridge', 'kinesis', 'step-functions', 'rabbitmq', 'amazon-sqs', 'apache-kafka', 'amazon-eventbridge', 'amazon-kinesis', 'webhook-handler', 'mqtt-broker', 'webrtc-sfu', 'confluent-kafka', 'temporal'];
 
 const regions = [
   'us-east-1 (N. Virginia)',
@@ -65,8 +70,8 @@ export default function RightPanel() {
   const isCompute = computeTypes.includes(node.data.componentType);
   const isNetwork = networkTypes.includes(node.data.componentType);
   const isMessaging = messagingTypes.includes(node.data.componentType);
-  const isLB = node.data.componentType === 'load-balancer';
-  const isAuth = ['auth0', 'aws-cognito'].includes(node.data.componentType);
+  const isLB = node.data.componentType === 'load-balancer' || node.data.componentType === 'alb';
+  const isAuth = ['auth0', 'aws-cognito', 'active-directory', 'hashicorp-vault', 'aws-iam', 'entra-id', 'okta'].includes(node.data.componentType);
 
   const handleTierChange = (tierIndex: number) => {
     const tier = def.tiers[tierIndex];
@@ -386,16 +391,23 @@ export default function RightPanel() {
         </div>
       </PanelSection>
 
-      {/* Modular Config Panels */}
-      {isCompute && <ComputeConfigPanel data={data} update={update} />}
+      {/* ── Bespoke Component-Specific Panels ── */}
+      {node.data.componentType === 'lambda' && <LambdaConfigPanel data={data} update={update} />}
+      {node.data.componentType === 's3' && <S3ConfigPanel data={data} update={update} />}
+      {(node.data.componentType === 'kafka' || node.data.componentType === 'confluent-kafka' || node.data.componentType === 'apache-kafka') && <KafkaConfigPanel data={data} update={update} />}
+      {node.data.componentType === 'api-gateway' && <ApiGatewayConfigPanel data={data} update={update} />}
+      {(node.data.componentType === 'kubernetes-cluster' || node.data.componentType === 'eks-cluster') && <KubernetesConfigPanel data={data} update={update} />}
+
+      {/* ── Category-Based Modular Panels ── */}
+      {isCompute && node.data.componentType !== 'lambda' && <ComputeConfigPanel data={data} update={update} />}
       {isAuth && <AuthConfigPanel data={data} update={update} />}
       {node.data.scalingType === 'horizontal' && <ScalingConfigPanel node={node} data={data} update={update} />}
       {isDB && <DatabaseConfigPanel data={data} update={update} />}
       {isDB && <StorageConfigPanel node={node} data={data} update={update} />}
       {isCache && <CacheConfigPanel node={node} data={data} update={update} handleCacheRateChange={handleCacheRateChange} />}
       {isLB && <LBConfigPanel node={node} data={data} update={update} />}
-      {isNetwork && !isLB && <NetworkConfigPanel node={node} data={data} update={update} />}
-      {isMessaging && <MessagingConfigPanel node={node} data={data} update={update} />}
+      {isNetwork && !isLB && node.data.componentType !== 'api-gateway' && <NetworkConfigPanel node={node} data={data} update={update} />}
+      {isMessaging && node.data.componentType !== 'kafka' && node.data.componentType !== 'confluent-kafka' && node.data.componentType !== 'apache-kafka' && <MessagingConfigPanel node={node} data={data} update={update} />}
       
       <ReliabilityConfigPanel node={node} data={data} update={update} />
 

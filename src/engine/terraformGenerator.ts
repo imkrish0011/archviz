@@ -271,6 +271,9 @@ function renderTerraformNode(
         ].join('\n'),
       };
     case 'lambda':
+      registerVariable(context, { name: `${name}_memory`, description: `${node.data.label} memory size in MB`, type: 'number', defaultValue: node.data.lambdaMemory || 512 });
+      registerVariable(context, { name: `${name}_timeout`, description: `${node.data.label} timeout in seconds`, type: 'number', defaultValue: node.data.lambdaTimeout || 15 });
+      registerVariable(context, { name: `${name}_concurrency`, description: `${node.data.label} reserved concurrency`, type: 'number', defaultValue: node.data.lambdaConcurrency || 100 });
       return {
         section: 'compute',
         content: [
@@ -287,12 +290,22 @@ function renderTerraformNode(
           '}',
           '',
           `resource "aws_lambda_function" "${name}" {`,
-          `  function_name = "${name}"`,
-          '  role          = aws_iam_role.' + `${name}_lambda_role.arn`,
-          '  runtime       = "nodejs20.x"',
-          '  handler       = "index.handler"',
-          '  filename      = "lambda_payload.zip"',
+          `  function_name    = "${name}"`,
+          '  role             = aws_iam_role.' + `${name}_lambda_role.arn`,
+          `  runtime          = "${node.data.lambdaRuntime || 'nodejs20.x'}"`,
+          '  handler          = "index.handler"',
+          '  filename         = "lambda_payload.zip"',
+          `  memory_size      = var.${name}_memory`,
+          `  timeout          = var.${name}_timeout`,
+          `  reserved_concurrent_executions = var.${name}_concurrency`,
           '',
+          ...(node.data.lambdaVpcAttached ? [
+            '  vpc_config {',
+            '    subnet_ids         = [aws_subnet.private.id]',
+            '    security_group_ids = []  # Add your security groups',
+            '  }',
+            '',
+          ] : []),
           renderTagsBlock(),
           '}',
         ].join('\n'),
@@ -318,6 +331,9 @@ function renderTerraformNode(
         ].join('\n'),
       };
     case 'kubernetes-cluster':
+      registerVariable(context, { name: `${name}_node_type`, description: `${node.data.label} worker node instance type`, type: 'string', defaultValue: node.data.k8sNodeInstanceType || 't3.large' });
+      registerVariable(context, { name: `${name}_min_nodes`, description: `${node.data.label} minimum node count`, type: 'number', defaultValue: node.data.k8sMinNodes || 2 });
+      registerVariable(context, { name: `${name}_max_nodes`, description: `${node.data.label} maximum node count`, type: 'number', defaultValue: node.data.k8sMaxNodes || 10 });
       return {
         section: 'compute',
         content: [
@@ -342,6 +358,33 @@ function renderTerraformNode(
           '',
           renderTagsBlock(),
           '}',
+          '',
+          `resource "aws_eks_node_group" "${name}_nodes" {`,
+          `  cluster_name    = aws_eks_cluster.${name}.name`,
+          `  node_group_name = "${name}-workers"`,
+          `  node_role_arn   = aws_iam_role.${name}_eks_role.arn`,
+          '  subnet_ids      = [aws_subnet.private.id]',
+          `  instance_types  = [var.${name}_node_type]`,
+          '',
+          '  scaling_config {',
+          `    desired_size = var.${name}_min_nodes`,
+          `    min_size     = var.${name}_min_nodes`,
+          `    max_size     = var.${name}_max_nodes`,
+          '  }',
+          '}',
+          ...(node.data.k8sFargateEnabled ? [
+            '',
+            `resource "aws_eks_fargate_profile" "${name}_fargate" {`,
+            `  cluster_name           = aws_eks_cluster.${name}.name`,
+            `  fargate_profile_name   = "${name}-fargate"`,
+            `  pod_execution_role_arn = aws_iam_role.${name}_eks_role.arn`,
+            '  subnet_ids             = [aws_subnet.private.id]',
+            '',
+            '  selector {',
+            `    namespace = "${node.data.k8sNamespace || 'default'}"`,
+            '  }',
+            '}',
+          ] : []),
         ].join('\n'),
       };
     case 'app-runner':
@@ -437,6 +480,50 @@ function renderTerraformNode(
           '',
           renderTagsBlock(),
           '}',
+          '',
+          ...(node.data.s3Versioning ? [
+            `resource "aws_s3_bucket_versioning" "${name}_versioning" {`,
+            `  bucket = aws_s3_bucket.${name}.id`,
+            '  versioning_configuration {',
+            '    status = "Enabled"',
+            '  }',
+            '}',
+            '',
+          ] : []),
+          ...(node.data.s3PublicAccessBlock !== false ? [
+            `resource "aws_s3_bucket_public_access_block" "${name}_public_access" {`,
+            `  bucket = aws_s3_bucket.${name}.id`,
+            '  block_public_acls       = true',
+            '  block_public_policy     = true',
+            '  ignore_public_acls      = true',
+            '  restrict_public_buckets = true',
+            '}',
+            '',
+          ] : []),
+          ...(node.data.encryption !== false ? [
+            `resource "aws_s3_bucket_server_side_encryption_configuration" "${name}_sse" {`,
+            `  bucket = aws_s3_bucket.${name}.id`,
+            '  rule {',
+            '    apply_server_side_encryption_by_default {',
+            '      sse_algorithm = "AES256"',
+            '    }',
+            '  }',
+            '}',
+            '',
+          ] : []),
+          ...((node.data.s3LifecycleGlacierDays && node.data.s3LifecycleGlacierDays > 0) ? [
+            `resource "aws_s3_bucket_lifecycle_configuration" "${name}_lifecycle" {`,
+            `  bucket = aws_s3_bucket.${name}.id`,
+            '  rule {',
+            '    id     = "glacier-transition"',
+            '    status = "Enabled"',
+            '    transition {',
+            `      days          = ${node.data.s3LifecycleGlacierDays}`,
+            '      storage_class = "GLACIER"',
+            '    }',
+            '  }',
+            '}',
+          ] : []),
         ].join('\n'),
       };
     case 'elasticsearch':
@@ -518,6 +605,8 @@ function renderTerraformNode(
         ].join('\n'),
       };
     case 'api-gateway':
+      registerVariable(context, { name: `${name}_rate_limit`, description: `${node.data.label} rate limit (req/s)`, type: 'number', defaultValue: node.data.apigwRateLimit || 10000 });
+      registerVariable(context, { name: `${name}_burst`, description: `${node.data.label} throttle burst`, type: 'number', defaultValue: node.data.apigwThrottleBurst || 5000 });
       return {
         section: 'network',
         content: [
@@ -526,6 +615,28 @@ function renderTerraformNode(
           '',
           renderTagsBlock(),
           '}',
+          '',
+          `resource "aws_api_gateway_method_settings" "${name}_settings" {`,
+          `  rest_api_id = aws_api_gateway_rest_api.${name}.id`,
+          '  stage_name  = "prod"',
+          '  method_path = "*/*"',
+          '  settings {',
+          `    throttling_rate_limit  = var.${name}_rate_limit`,
+          `    throttling_burst_limit = var.${name}_burst`,
+          '  }',
+          '}',
+          ...(node.data.apigwAuthType === 'jwt' ? [
+            '',
+            `resource "aws_api_gateway_authorizer" "${name}_jwt" {`,
+            `  rest_api_id = aws_api_gateway_rest_api.${name}.id`,
+            `  name        = "${name}-jwt-authorizer"`,
+            '  type        = "TOKEN"',
+            '}',
+          ] : []),
+          ...(node.data.apigwCorsEnabled ? [
+            '',
+            `# CORS enabled for ${name} — configure Access-Control-Allow-Origin headers`,
+          ] : []),
         ].join('\n'),
       };
     case 'nat-gateway':
@@ -628,11 +739,17 @@ function renderTerraformNode(
           `resource "aws_msk_cluster" "${name}" {`,
           `  cluster_name           = "${name}"`,
           '  kafka_version          = "3.5.1"',
-          '  number_of_broker_nodes = 2',
+          `  number_of_broker_nodes = ${Math.max(2, node.data.kafkaReplicationFactor || 3)}`,
           '  broker_node_group_info {',
           '    instance_type  = "kafka.t3.small"',
           '    client_subnets = [aws_subnet.public.id, aws_subnet.private.id]',
           '  }',
+          '',
+          '  # Bespoke Kafka Configuration',
+          `  # Partitions per topic:     ${node.data.kafkaPartitions || 6}`,
+          `  # Retention period:          ${node.data.kafkaRetentionDays || 7} days`,
+          `  # Replication factor:        ${node.data.kafkaReplicationFactor || 3}`,
+          `  # Auto-create topics:        ${node.data.kafkaAutoCreateTopics ? 'enabled' : 'disabled'}`,
           '',
           renderTagsBlock(),
           '}',

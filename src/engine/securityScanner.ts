@@ -546,6 +546,134 @@ const rules: { id: string; fn: RuleFn }[] = [
       };
     },
   },
+
+  // ═══════════════════════════════════════════════════════════════
+  // BESPOKE COMPONENT-SPECIFIC RULES
+  // ═══════════════════════════════════════════════════════════════
+
+  // ── R26: S3 Bucket with Public Access Allowed ──
+  {
+    id: 's3-public-access',
+    fn: (_nodes, _edges, active) => {
+      const publicS3 = active.filter(n =>
+        n.data.componentType === 's3' && n.data.s3PublicAccessBlock === false
+      );
+      if (publicS3.length === 0) return null;
+      return {
+        id: 's3-public-access', severity: 'critical',
+        title: 'S3 bucket allows public access',
+        description: `${publicS3.length} S3 bucket(s) have "Block Public Access" disabled. Objects could be exposed to the internet.`,
+        remediation: 'Enable "Block Public Access" in the S3 Configuration panel. If public hosting is needed, use CloudFront with an Origin Access Identity.',
+        compliance: ['SOC2', 'HIPAA', 'PCI-DSS', 'GDPR'],
+        affectedNodeIds: publicS3.map(n => n.id),
+      };
+    },
+  },
+
+  // ── R27: Lambda without VPC accessing databases ──
+  {
+    id: 'lambda-bespoke-no-vpc',
+    fn: (_nodes, edges, active) => {
+      const lambdas = active.filter(n =>
+        n.data.componentType === 'lambda' && !n.data.lambdaVpcAttached
+      );
+      const dbs = nodesOfType(active, DB_TYPES);
+      if (lambdas.length === 0 || dbs.length === 0) return null;
+
+      const lambdasTouchingDB = lambdas.filter(l =>
+        dbs.some(db => edges.some(e =>
+          (e.source === l.id && e.target === db.id) || (e.source === db.id && e.target === l.id)
+        ))
+      );
+      if (lambdasTouchingDB.length === 0) return null;
+      return {
+        id: 'lambda-bespoke-no-vpc', severity: 'high',
+        title: 'Lambda accesses database without VPC attachment',
+        description: 'Lambda functions connect to databases but are not attached to a VPC. Database connections traverse the public internet.',
+        remediation: 'Enable "VPC Attachment" in the Lambda Configuration panel to route traffic through private subnets.',
+        compliance: ['SOC2', 'PCI-DSS', 'HIPAA'],
+        affectedNodeIds: lambdasTouchingDB.map(n => n.id),
+      };
+    },
+  },
+
+  // ── R28: API Gateway with no authorization ──
+  {
+    id: 'apigw-no-auth',
+    fn: (_nodes, _edges, active) => {
+      const openGateways = active.filter(n =>
+        n.data.componentType === 'api-gateway' && (!n.data.apigwAuthType || n.data.apigwAuthType === 'none')
+      );
+      if (openGateways.length === 0) return null;
+      return {
+        id: 'apigw-no-auth', severity: 'high',
+        title: 'API Gateway has no authorization configured',
+        description: 'API endpoints are publicly accessible without authentication. Any client can invoke your APIs.',
+        remediation: 'Set "Authorization Type" to JWT, IAM, or API Key in the API Gateway Configuration panel.',
+        compliance: ['SOC2', 'OWASP', 'PCI-DSS'],
+        affectedNodeIds: openGateways.map(n => n.id),
+      };
+    },
+  },
+
+  // ── R29: Kafka under-replicated ──
+  {
+    id: 'kafka-under-replicated',
+    fn: (_nodes, _edges, active) => {
+      const underReplicated = active.filter(n =>
+        (n.data.componentType === 'kafka' || n.data.componentType === 'confluent-kafka') &&
+        (n.data.kafkaReplicationFactor || 3) < 3
+      );
+      if (underReplicated.length === 0) return null;
+      return {
+        id: 'kafka-under-replicated', severity: 'high',
+        title: 'Kafka cluster has replication factor < 3',
+        description: 'Event streams have insufficient replication. A single broker failure could cause permanent data loss.',
+        remediation: 'Set "Replication Factor" to 3 in the Kafka Configuration panel for production workloads.',
+        compliance: ['SOC2', 'NIST'],
+        affectedNodeIds: underReplicated.map(n => n.id),
+      };
+    },
+  },
+
+  // ── R30: S3 without versioning ──
+  {
+    id: 's3-no-versioning',
+    fn: (_nodes, _edges, active) => {
+      const noVersioning = active.filter(n =>
+        n.data.componentType === 's3' && !n.data.s3Versioning
+      );
+      if (noVersioning.length === 0) return null;
+      return {
+        id: 's3-no-versioning', severity: 'medium',
+        title: 'S3 bucket without object versioning',
+        description: 'Objects can be permanently deleted or overwritten without recovery. Versioning is required for compliance.',
+        remediation: 'Enable "Object Versioning" in the S3 Configuration panel.',
+        compliance: ['SOC2', 'HIPAA'],
+        affectedNodeIds: noVersioning.map(n => n.id),
+      };
+    },
+  },
+
+  // ── R31: Auth with weak password policy ──
+  {
+    id: 'auth-weak-password',
+    fn: (_nodes, _edges, active) => {
+      const weakAuth = active.filter(n =>
+        AUTH_TYPES.includes(n.data.componentType) &&
+        (n.data.authPasswordMinLength || 8) < 12
+      );
+      if (weakAuth.length === 0) return null;
+      return {
+        id: 'auth-weak-password', severity: 'medium',
+        title: 'Authentication has weak password policy',
+        description: `Password minimum length is below NIST recommended 12 characters. Short passwords are vulnerable to brute-force attacks.`,
+        remediation: 'Set "Password Min Length" to 12 or more in the Authentication Settings panel.',
+        compliance: ['NIST', 'SOC2', 'PCI-DSS'],
+        affectedNodeIds: weakAuth.map(n => n.id),
+      };
+    },
+  },
 ];
 
 // ═══════════════════════════════════════════════════════════════

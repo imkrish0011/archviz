@@ -33,6 +33,39 @@ export function getComponentCost(node: ArchNode, load: number = 0, provider: Clo
     }
   }
   
+  // ── Bespoke: Lambda memory-based pricing ──
+  if (node.data.componentType === 'lambda' && node.data.lambdaMemory) {
+    // AWS Lambda pricing: $0.0000166667 per GB-second
+    // Monthly cost = (memoryGB * avgDurationSec * invocations) * pricePerGBsec
+    const memoryGB = (node.data.lambdaMemory || 512) / 1024;
+    const avgDuration = Math.min((node.data.lambdaTimeout || 15) * 0.3, 10); // assume 30% of timeout as avg
+    const monthlyInvocations = load > 0 ? load * 2.628e6 : 1000000;
+    const computeGBseconds = memoryGB * avgDuration * monthlyInvocations;
+    baseCost = (computeGBseconds * 0.0000166667) + (monthlyInvocations * 0.0000002); // + $0.20 per million requests
+  }
+
+  // ── Bespoke: S3 storage class pricing ──
+  if (node.data.componentType === 's3' && node.data.s3StorageClass) {
+    const storageMultipliers: Record<string, number> = {
+      'STANDARD': 1.0,
+      'INTELLIGENT_TIERING': 0.95,
+      'STANDARD_IA': 0.6,
+      'GLACIER': 0.1,
+    };
+    baseCost *= storageMultipliers[node.data.s3StorageClass] || 1.0;
+    if (node.data.s3Versioning) baseCost *= 1.3; // versioning adds ~30% storage overhead
+  }
+
+  // ── Bespoke: Kafka per-partition pricing ──
+  if ((node.data.componentType === 'kafka' || node.data.componentType === 'confluent-kafka') && node.data.kafkaPartitions) {
+    const partitions = node.data.kafkaPartitions || 6;
+    const retentionDays = node.data.kafkaRetentionDays || 7;
+    const replicationFactor = node.data.kafkaReplicationFactor || 3;
+    // More partitions/replicas = more storage & broker overhead
+    baseCost *= (partitions / 6) * (replicationFactor / 3);
+    baseCost += retentionDays * 0.5; // ~$0.50/day for storage retention
+  }
+  
   // Storage Types
   if (node.data.volumeType === 'io1') baseCost *= 2.5; // High performance IOPS charge
   if (node.data.volumeType === 'magnetic') baseCost *= 0.6; // Low cost
