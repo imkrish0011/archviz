@@ -285,7 +285,7 @@ const GcpLogo = () => (
   </svg>
 );
 
-const providerLogos: Record<ArbitrageProvider, () => JSX.Element> = {
+const providerLogos: Record<ArbitrageProvider, () => React.ReactNode> = {
   aws: AwsLogo,
   azure: AzureLogo,
   gcp: GcpLogo,
