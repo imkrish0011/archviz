@@ -77,6 +77,7 @@ export default function TopBar() {
   const moreRef = useRef<HTMLDivElement>(null);
 
   const cloudProvider = useArchStore(s => s.cloudProvider);
+  const setCloudProvider = useArchStore(s => s.setCloudProvider);
   const isWhiteLabelReport = useArchStore(s => s.isWhiteLabelReport);
   const toggleWhiteLabelReport = useArchStore(s => s.toggleWhiteLabelReport);
 
@@ -253,6 +254,18 @@ export default function TopBar() {
           onChange={e => setProjectName(e.target.value)}
           spellCheck={false}
         />
+        <div className="topbar-divider" />
+        <select
+          className="form-select"
+          style={{ width: 85, padding: '2px 24px 2px 8px', fontSize: '11px', height: 24, background: 'rgba(255,255,255,0.05)', border: 'none' }}
+          value={cloudProvider}
+          onChange={(e) => setCloudProvider(e.target.value as any)}
+          title="Cloud Provider"
+        >
+          <option value="aws">AWS</option>
+          <option value="gcp">GCP</option>
+          <option value="azure">Azure</option>
+        </select>
       </div>
 
       <div className="topbar-center">
@@ -290,6 +303,23 @@ export default function TopBar() {
           {formatCost(currentCost)}/mo
           <TrendingUp size={11} />
         </button>
+        <div className="topbar-divider" />
+        <select
+          className="form-select"
+          style={{ width: 110, padding: '2px 24px 2px 8px', fontSize: '11px', height: 24, background: 'rgba(255,255,255,0.05)', border: 'none' }}
+          value={simulationConfig.rpsMultiplier >= 1 ? 'prod' : simulationConfig.rpsMultiplier >= 0.5 ? 'staging' : 'dev'}
+          onChange={(e) => {
+            const val = e.target.value;
+            setSimulationConfig({ 
+              rpsMultiplier: val === 'prod' ? 1 : val === 'staging' ? 0.5 : 0.1 
+            });
+          }}
+          title="Environment"
+        >
+          <option value="dev">Development</option>
+          <option value="staging">Staging</option>
+          <option value="prod">Production</option>
+        </select>
       </div>
 
       <div className="topbar-right">
