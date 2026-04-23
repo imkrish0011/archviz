@@ -99,6 +99,16 @@
   to   { transform: translateX(-50%); }
 }
 
+@keyframes lp-glow-border {
+  0%, 100% { box-shadow: 0 0 12px rgba(94, 234, 212, 0.15), 0 0 30px rgba(94, 234, 212, 0.06); }
+  50%      { box-shadow: 0 0 20px rgba(94, 234, 212, 0.35), 0 0 50px rgba(94, 234, 212, 0.12); }
+}
+
+@keyframes lp-border-sweep {
+  0%   { background-position: 0% 0%; }
+  100% { background-position: 200% 200%; }
+}
+
 /* ──────── Reset ──────── */
 .landing-container * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -211,6 +221,15 @@
   -webkit-backdrop-filter: blur(24px) saturate(1.4);
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   animation: lp-nav-slideDown 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transition: height 0.35s ease, background 0.35s ease, padding 0.35s ease, box-shadow 0.35s ease;
+}
+
+/* ── Scrolled navbar state ── */
+.lp-nav.lp-nav-scrolled {
+  height: 48px;
+  background: rgba(6, 6, 8, 0.88);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
 }
 
 /* Subtle glow line at bottom on scroll */
@@ -307,7 +326,15 @@
 
 .lp-nav-link:hover {
   color: #fafafa;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+/* Active pill highlight for nav links */
+.lp-nav-link.lp-nav-link-active {
+  color: #fafafa;
+  background: rgba(94, 234, 212, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(94, 234, 212, 0.15);
 }
 
 .lp-nav-link:active {
@@ -338,6 +365,7 @@
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
   letter-spacing: -0.01em;
+  animation: lp-glow-border 3s ease-in-out infinite;
 }
 
 /* Shimmer overlay */
@@ -359,11 +387,13 @@
 
 .lp-nav-cta:hover {
   transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 8px 30px rgba(255, 255, 255, 0.15), 0 0 20px rgba(94, 234, 212, 0.1);
+  box-shadow: 0 8px 30px rgba(255, 255, 255, 0.2), 0 0 30px rgba(94, 234, 212, 0.2);
+  animation: none;
 }
 
 .lp-nav-cta:active {
   transform: translateY(0) scale(0.98);
+  animation: none;
 }
 
 .lp-nav-cta-ghost {
@@ -486,12 +516,12 @@
   font-family: inherit;
   font-size: 1.05rem;
   font-weight: 700;
-  border: none;
+  border: 2px solid transparent;
   cursor: pointer;
   transition: all 0.3s var(--lp-transition);
-  box-shadow: 0 4px 20px rgba(255,255,255,0.12);
   position: relative;
   overflow: hidden;
+  animation: lp-glow-border 3s ease-in-out infinite;
 }
 
 .lp-btn-primary::after {
@@ -507,7 +537,8 @@
 
 .lp-btn-primary:hover {
   transform: translateY(-3px);
-  box-shadow: 0 8px 30px rgba(255,255,255,0.25);
+  box-shadow: 0 8px 40px rgba(94, 234, 212, 0.25), 0 0 60px rgba(94, 234, 212, 0.1);
+  animation: none;
 }
 
 .lp-btn-secondary {
@@ -1064,13 +1095,16 @@
 }
 
 .lp-feature-card {
-  background: var(--lp-surface);
+  background: rgba(14, 14, 14, 0.6);
+  backdrop-filter: blur(16px) saturate(1.3);
+  -webkit-backdrop-filter: blur(16px) saturate(1.3);
   border: 1px solid var(--lp-border);
   border-radius: var(--lp-radius);
   padding: 36px 28px;
   position: relative;
   overflow: hidden;
   transition: all 0.4s var(--lp-transition);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
 }
 
 .lp-feature-card::before {
@@ -1083,14 +1117,44 @@
   transition: opacity 0.4s ease;
 }
 
+/* Glowing border sweep on hover */
+.lp-feature-card::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: var(--lp-radius);
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    transparent 20%,
+    rgba(94, 234, 212, 0.25) 40%,
+    rgba(167, 139, 250, 0.2) 60%,
+    transparent 80%
+  );
+  background-size: 200% 200%;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  animation: lp-border-sweep 4s linear infinite;
+  pointer-events: none;
+}
+
 .lp-feature-card:hover {
   transform: translateY(-6px);
-  border-color: rgba(255,255,255,0.3);
-  box-shadow: 0 24px 48px rgba(0,0,0,0.5), 0 0 60px rgba(255,255,255,0.05);
-  background: var(--lp-surface-2);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow:
+    0 24px 48px rgba(0, 0, 0, 0.5),
+    0 0 60px rgba(255, 255, 255, 0.05),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+  background: rgba(21, 21, 21, 0.75);
 }
 
 .lp-feature-card:hover::before { opacity: 1; }
+.lp-feature-card:hover::after  { opacity: 1; }
 
 .lp-feature-icon {
   width: 52px; height: 52px;

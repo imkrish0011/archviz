@@ -202,6 +202,36 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
     onLaunch(false);
   }, [clearCanvas, onLaunch]);
 
+  /* ── Scroll-reactive navbar ── */
+  const [navScrolled, setNavScrolled] = useState(false);
+  const [activeSection, setActiveSection] = useState<string>('');
+
+  useEffect(() => {
+    const container = document.querySelector('.landing-container');
+    if (!container) return;
+
+    const handleScroll = () => {
+      setNavScrolled(container.scrollTop > 60);
+
+      // Determine which section is in view
+      const sections = ['features', 'preview', 'templates', 'comparison'];
+      let current = '';
+      for (const id of sections) {
+        const el = document.getElementById(id);
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          if (rect.top <= 200 && rect.bottom > 100) {
+            current = id;
+          }
+        }
+      }
+      setActiveSection(current);
+    };
+
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -219,17 +249,17 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
       {/* ═══════════════════════════════════════
        *  NAVBAR
        * ═══════════════════════════════════════ */}
-      <nav className="lp-nav">
+      <nav className={`lp-nav${navScrolled ? ' lp-nav-scrolled' : ''}`}>
         <div className="lp-nav-logo">
           <BrainCircuit size={22} />
           <span>ArchViz  β</span>
         </div>
         <div className="lp-nav-center">
           <div className="lp-nav-links">
-            <button className="lp-nav-link" onClick={() => scrollTo('features')}>Features</button>
-            <button className="lp-nav-link" onClick={() => scrollTo('preview')}>Preview</button>
-            <button className="lp-nav-link" onClick={() => scrollTo('templates')}>Templates</button>
-            <button className="lp-nav-link" onClick={() => scrollTo('comparison')}>Compare</button>
+            <button className={`lp-nav-link${activeSection === 'features' ? ' lp-nav-link-active' : ''}`} onClick={() => scrollTo('features')}>Features</button>
+            <button className={`lp-nav-link${activeSection === 'preview' ? ' lp-nav-link-active' : ''}`} onClick={() => scrollTo('preview')}>Preview</button>
+            <button className={`lp-nav-link${activeSection === 'templates' ? ' lp-nav-link-active' : ''}`} onClick={() => scrollTo('templates')}>Templates</button>
+            <button className={`lp-nav-link${activeSection === 'comparison' ? ' lp-nav-link-active' : ''}`} onClick={() => scrollTo('comparison')}>Compare</button>
           </div>
         </div>
         <div className="lp-nav-actions">
