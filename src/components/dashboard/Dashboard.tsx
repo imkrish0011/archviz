@@ -6,7 +6,7 @@ import {
   Zap, Layout, Activity, TrendingUp,
   Camera, Tv, MessageCircle, Car, Music, Gamepad2, Disc,
   CreditCard, Film, ShoppingCart, MessageSquare, Globe, Users,
-  Blocks, Cloud, LayoutTemplate
+  Blocks, Cloud, LayoutTemplate, ShieldCheck, Key, CheckCircle2
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { listProjects, deleteProject, renameProject } from '../../services/projectService';
@@ -512,21 +512,24 @@ export default function Dashboard() {
                 }
               </div>
               <div className="db-acc-title-area">
-                <h2 className="db-acc-name">{user?.displayName ?? 'Architect'}</h2>
+                <h2 className="db-acc-name">
+                  {user?.displayName ?? 'Architect'}
+                  <span className="db-acc-tier-badge">Enterprise</span>
+                </h2>
                 <span className="db-acc-email">{user?.email ?? 'user@archviz.com'}</span>
               </div>
             </div>
 
             <div className="db-acc-grid">
               
-              <div className="db-acc-card">
-                <h3 className="db-acc-card-title"><Activity size={16} /> Usage Metrics</h3>
+              <div className="db-acc-card db-acc-card--main">
+                <h3 className="db-acc-card-title"><Activity size={16} /> Platform Usage</h3>
                 
                 <div className="db-acc-stats-split">
                   <div className="db-acc-stats-main">
                     <div className="db-acc-stats">
                       <div className="db-acc-stat">
-                        <span className="db-acc-val">{projects.length} <span style={{ opacity: 0.3, fontSize: 18 }}>/ {MAX_PROJECTS}</span></span>
+                        <span className="db-acc-val">{projects.length} <span className="db-acc-val-max">/ ∞</span></span>
                         <span className="db-acc-lbl">Projects Active</span>
                       </div>
                       <div className="db-acc-stat">
@@ -542,17 +545,55 @@ export default function Dashboard() {
                   
                   <div className="db-acc-progress-wrap">
                     <div className="db-acc-progress-label">
-                      <span>Cloud Limit</span>
-                      <span>{Math.round((projects.length / MAX_PROJECTS) * 100)}%</span>
+                      <span>Compute Limit</span>
+                      <span>Healthy</span>
                     </div>
                     <div className="db-acc-progress-bar">
-                      <div className="db-acc-progress-fill" style={{ width: `${(projects.length / MAX_PROJECTS) * 100}%` }} />
+                      <div className="db-acc-progress-fill" style={{ width: '15%' }} />
                     </div>
                   </div>
                 </div>
               </div>
 
+              <div className="db-acc-bento-row">
+                <div className="db-acc-card">
+                  <h3 className="db-acc-card-title"><ShieldCheck size={16} /> Security & Compliance</h3>
+                  <div className="db-acc-compliance-list">
+                    <div className="db-acc-compliance-item">
+                      <CheckCircle2 size={16} className="text-emerald" />
+                      <span>SOC2 Type II</span>
+                      <span className="db-acc-compliance-status">Verified</span>
+                    </div>
+                    <div className="db-acc-compliance-item">
+                      <CheckCircle2 size={16} className="text-emerald" />
+                      <span>HIPAA BAA</span>
+                      <span className="db-acc-compliance-status">Signed</span>
+                    </div>
+                    <div className="db-acc-compliance-item">
+                      <CheckCircle2 size={16} className="text-emerald" />
+                      <span>GDPR</span>
+                      <span className="db-acc-compliance-status">Compliant</span>
+                    </div>
+                  </div>
+                </div>
 
+                <div className="db-acc-card">
+                  <h3 className="db-acc-card-title"><Key size={16} /> Access & Integrations</h3>
+                  <div className="db-acc-api-section">
+                    <div className="db-acc-api-row">
+                      <span className="db-acc-api-label">SAML SSO</span>
+                      <span className="db-acc-api-badge">Enforced</span>
+                    </div>
+                    <div className="db-acc-api-row">
+                      <span className="db-acc-api-label">Production API Key</span>
+                      <div className="db-acc-api-key-box">
+                        ••••••••••••••••••••••••
+                        <button className="db-acc-api-copy">Copy</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
             </div>
           </section>
