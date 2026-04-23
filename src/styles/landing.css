@@ -3082,3 +3082,370 @@
   line-height: 1.65;
   margin: 0;
 }
+
+/* ══════════════════════════════════════════
+ *  MULTI-CLOUD ARBITRAGE VISUALIZER
+ * ══════════════════════════════════════════ */
+
+@keyframes lp-arb-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes lp-arb-name-morph {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+    filter: blur(4px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes lp-arb-savings-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+
+  60% {
+    transform: scale(1.12);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes lp-arb-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.lp-arbitrage-section {
+  position: relative;
+}
+
+/* ── Provider Toggle ── */
+.lp-arb-toggle-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 40px;
+}
+
+.lp-arb-toggle {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  position: relative;
+  background: var(--lp-surface);
+  border: 1px solid var(--lp-border);
+  border-radius: 14px;
+  padding: 5px;
+  gap: 4px;
+  min-width: 340px;
+}
+
+.lp-arb-toggle-btn {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 10px 20px;
+  background: none;
+  border: none;
+  border-radius: 10px;
+  color: var(--lp-text-muted);
+  font-family: var(--lp-font);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.3s ease, transform 0.2s ease;
+  letter-spacing: -0.01em;
+}
+
+.lp-arb-toggle-btn:hover {
+  color: var(--lp-text-secondary);
+}
+
+.lp-arb-toggle-btn.active {
+  color: #fff;
+}
+
+.lp-arb-toggle-btn:active {
+  transform: scale(0.96);
+}
+
+.lp-arb-toggle-pill {
+  position: absolute;
+  z-index: 1;
+  top: 5px;
+  left: 5px;
+  width: calc(33.333% - 3px);
+  height: calc(100% - 10px);
+  border-radius: 10px;
+  border: 1px solid transparent;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              background 0.4s ease,
+              border-color 0.4s ease,
+              box-shadow 0.4s ease;
+  pointer-events: none;
+}
+
+/* ── Service Cards Grid ── */
+.lp-arb-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.lp-arb-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 18px;
+  background: var(--lp-surface);
+  border: 1px solid var(--lp-border);
+  border-radius: var(--lp-radius);
+  transition: all 0.35s var(--lp-transition);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle top highlight */
+.lp-arb-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 20%;
+  right: 20%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.lp-arb-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--lp-border-hover);
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.45),
+    0 0 30px rgba(255, 255, 255, 0.03);
+}
+
+.lp-arb-card:hover::before {
+  opacity: 1;
+}
+
+.lp-arb-card-icon {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  transition: background 0.4s ease, border-color 0.4s ease;
+}
+
+.lp-arb-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.lp-arb-card-name {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--lp-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  animation: lp-arb-name-morph 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  letter-spacing: -0.02em;
+}
+
+.lp-arb-card-provider {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  transition: color 0.3s ease;
+}
+
+.lp-arb-card-cost {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  margin-left: auto;
+  padding-left: 12px;
+  flex-shrink: 0;
+}
+
+.lp-arb-card-price {
+  font-size: 1.05rem;
+  font-weight: 700;
+  font-family: var(--lp-mono);
+  color: var(--lp-text);
+  letter-spacing: -0.03em;
+}
+
+.lp-arb-card-mo {
+  font-size: 0.7rem;
+  color: var(--lp-text-dim);
+  font-family: var(--lp-mono);
+}
+
+/* ── Total Cost Bar ── */
+.lp-arb-cost-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 28px;
+  background: var(--lp-surface);
+  border: 1px solid var(--lp-border);
+  border-radius: var(--lp-radius);
+  transition: border-color 0.4s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle gradient accent bar along the top */
+.lp-arb-cost-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg,
+    transparent,
+    var(--lp-border-hover),
+    transparent
+  );
+  opacity: 0.5;
+}
+
+.lp-arb-cost-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.lp-arb-cost-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+  animation: lp-arb-pulse 2s ease-in-out infinite;
+}
+
+.lp-arb-cost-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--lp-text-secondary);
+}
+
+.lp-arb-cost-provider {
+  font-weight: 700;
+  transition: color 0.3s ease;
+}
+
+.lp-arb-cost-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.lp-arb-savings-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+  transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  animation: lp-arb-savings-pop 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  letter-spacing: 0.01em;
+  font-family: var(--lp-mono);
+}
+
+.lp-arb-cost-total {
+  font-size: 1.8rem;
+  font-weight: 800;
+  font-family: var(--lp-mono);
+  letter-spacing: -0.04em;
+  transition: color 0.3s ease;
+  line-height: 1;
+}
+
+.lp-arb-cost-suffix {
+  font-size: 0.85rem;
+  color: var(--lp-text-dim);
+  font-family: var(--lp-mono);
+  font-weight: 500;
+  margin-left: -4px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .lp-arb-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .lp-arb-toggle {
+    min-width: 280px;
+  }
+
+  .lp-arb-cost-bar {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .lp-arb-cost-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 600px) {
+  .lp-arb-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .lp-arb-toggle {
+    min-width: 100%;
+  }
+
+  .lp-arb-toggle-btn {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+  }
+
+  .lp-arb-cost-total {
+    font-size: 1.4rem;
+  }
+}

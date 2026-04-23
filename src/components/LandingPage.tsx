@@ -196,6 +196,197 @@ function AnimatedCounter({ end, suffix = '', prefix = '', duration = 1800 }: {
   return <span ref={ref}>{prefix}{count.toLocaleString()}{suffix}</span>;
 }
 
+/* ── Multi-Cloud Arbitrage Visualizer ── */
+type ArbitrageProvider = 'aws' | 'azure' | 'gcp';
+
+interface ArbitrageService {
+  aws: { name: string; cost: number };
+  azure: { name: string; cost: number };
+  gcp: { name: string; cost: number };
+  icon: React.ComponentType<{ size?: number; strokeWidth?: number; style?: React.CSSProperties }>;
+}
+
+const arbitrageServices: ArbitrageService[] = [
+  {
+    icon: Server,
+    aws:   { name: 'EC2 Instances',     cost: 1240 },
+    azure: { name: 'Virtual Machines',  cost: 1380 },
+    gcp:   { name: 'Compute Engine',    cost: 1150 },
+  },
+  {
+    icon: HardDrive,
+    aws:   { name: 'S3 Storage',        cost: 420 },
+    azure: { name: 'Blob Storage',      cost: 460 },
+    gcp:   { name: 'Cloud Storage',     cost: 390 },
+  },
+  {
+    icon: Database,
+    aws:   { name: 'RDS PostgreSQL',    cost: 890 },
+    azure: { name: 'Azure SQL',         cost: 960 },
+    gcp:   { name: 'Cloud SQL',         cost: 820 },
+  },
+  {
+    icon: Zap,
+    aws:   { name: 'Lambda',            cost: 180 },
+    azure: { name: 'Azure Functions',   cost: 210 },
+    gcp:   { name: 'Cloud Functions',   cost: 165 },
+  },
+  {
+    icon: Globe,
+    aws:   { name: 'CloudFront CDN',    cost: 340 },
+    azure: { name: 'Azure CDN',         cost: 370 },
+    gcp:   { name: 'Cloud CDN',         cost: 310 },
+  },
+  {
+    icon: Flame,
+    aws:   { name: 'ElastiCache Redis', cost: 520 },
+    azure: { name: 'Azure Cache',       cost: 580 },
+    gcp:   { name: 'Memorystore',       cost: 470 },
+  },
+];
+
+const providerMeta: Record<ArbitrageProvider, { label: string; color: string }> = {
+  aws:   { label: 'AWS',   color: '#FF9900' },
+  azure: { label: 'Azure', color: '#0078D4' },
+  gcp:   { label: 'GCP',   color: '#4285F4' },
+};
+
+function ArbitrageVisualizer() {
+  const [provider, setProvider] = useState<ArbitrageProvider>('aws');
+  const [displayCost, setDisplayCost] = useState(0);
+  const { ref, inView } = useInView(0.15);
+
+  const totalCost = arbitrageServices.reduce((sum, s) => sum + s[provider].cost, 0);
+  const allTotals = (['aws', 'azure', 'gcp'] as ArbitrageProvider[]).map(p =>
+    arbitrageServices.reduce((sum, s) => sum + s[p].cost, 0)
+  );
+  const maxCost = Math.max(...allTotals);
+  const savingsPercent = Math.round(((maxCost - totalCost) / maxCost) * 100);
+
+  // Animate the cost counter on provider change
+  useEffect(() => {
+    const start = displayCost;
+    const end = totalCost;
+    const duration = 600;
+    const startTime = performance.now();
+
+    const step = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplayCost(Math.round(start + (end - start) * eased));
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [totalCost]);
+
+  const meta = providerMeta[provider];
+
+  return (
+    <section className="lp-section lp-arbitrage-section" ref={ref}>
+      <AnimatedSection>
+        <div className="lp-section-header">
+          <div className="lp-section-label" style={{ borderColor: `${meta.color}33` }}>
+            <ArrowLeftRight size={13} />
+            Multi-Cloud Arbitrage
+          </div>
+          <h2 className="lp-section-title">
+            One architecture.<br />Three price tags.
+          </h2>
+          <p className="lp-section-desc">
+            Toggle between AWS, Azure, and GCP to see how the same architecture
+            costs differently across providers. Find the cheapest cloud — instantly.
+          </p>
+        </div>
+      </AnimatedSection>
+
+      <AnimatedSection delay={0.1}>
+        {/* ── Provider Toggle ── */}
+        <div className="lp-arb-toggle-wrap">
+          <div className="lp-arb-toggle" role="radiogroup" aria-label="Cloud provider selector">
+            {(['aws', 'azure', 'gcp'] as ArbitrageProvider[]).map(p => (
+              <button
+                key={p}
+                className={`lp-arb-toggle-btn${provider === p ? ' active' : ''}`}
+                onClick={() => setProvider(p)}
+                role="radio"
+                aria-checked={provider === p}
+                style={{ '--arb-accent': providerMeta[p].color } as React.CSSProperties}
+              >
+                <Cloud size={14} strokeWidth={2} />
+                {providerMeta[p].label}
+              </button>
+            ))}
+            {/* Sliding pill indicator */}
+            <div
+              className="lp-arb-toggle-pill"
+              style={{
+                transform: `translateX(${(['aws', 'azure', 'gcp'].indexOf(provider)) * 100}%)`,
+                background: `${meta.color}18`,
+                borderColor: `${meta.color}40`,
+                boxShadow: `0 0 20px ${meta.color}15`,
+              }}
+            />
+          </div>
+        </div>
+
+        {/* ── Service Cards Grid ── */}
+        <div className="lp-arb-grid">
+          {arbitrageServices.map((service, idx) => {
+            const Icon = service.icon;
+            const current = service[provider];
+            return (
+              <div
+                key={idx}
+                className="lp-arb-card"
+                style={{
+                  '--arb-accent': meta.color,
+                  animationDelay: `${idx * 0.06}s`,
+                } as React.CSSProperties}
+              >
+                <div className="lp-arb-card-icon" style={{ background: `${meta.color}12`, borderColor: `${meta.color}25` }}>
+                  <Icon size={20} strokeWidth={1.5} style={{ color: meta.color }} />
+                </div>
+                <div className="lp-arb-card-body">
+                  <span className="lp-arb-card-name" key={`${provider}-${idx}`}>{current.name}</span>
+                  <span className="lp-arb-card-provider" style={{ color: meta.color }}>{meta.label}</span>
+                </div>
+                <div className="lp-arb-card-cost">
+                  <span className="lp-arb-card-price">${current.cost.toLocaleString()}</span>
+                  <span className="lp-arb-card-mo">/mo</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* ── Total Cost Bar ── */}
+        <div className="lp-arb-cost-bar" style={{ borderColor: `${meta.color}30` }}>
+          <div className="lp-arb-cost-left">
+            <div className="lp-arb-cost-dot" style={{ background: meta.color, boxShadow: `0 0 12px ${meta.color}60` }} />
+            <span className="lp-arb-cost-label">
+              Estimated Monthly Total
+              <span className="lp-arb-cost-provider" style={{ color: meta.color }}> — {meta.label}</span>
+            </span>
+          </div>
+          <div className="lp-arb-cost-right">
+            {savingsPercent > 0 && (
+              <span className="lp-arb-savings-badge" key={provider} style={{ background: `${meta.color}15`, color: meta.color, borderColor: `${meta.color}30` }}>
+                Save {savingsPercent}%
+              </span>
+            )}
+            <span className="lp-arb-cost-total" style={{ color: meta.color }}>
+              ${displayCost.toLocaleString()}
+            </span>
+            <span className="lp-arb-cost-suffix">/mo</span>
+          </div>
+        </div>
+      </AnimatedSection>
+    </section>
+  );
+}
+
 export default function LandingPage({ onLaunch }: LandingPageProps) {
   const loadTemplate = useArchStore(s => s.loadTemplate);
   const clearCanvas = useArchStore(s => s.clearCanvas);
@@ -831,6 +1022,13 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
             </AnimatedSection>
           </div>
         </section>
+
+        <div className="lp-divider" />
+
+        {/* ═══════════════════════════════════════
+         *  MULTI-CLOUD ARBITRAGE VISUALIZER
+         * ═══════════════════════════════════════ */}
+        <ArbitrageVisualizer />
 
         <div className="lp-divider" />
 
