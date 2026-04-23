@@ -1755,6 +1755,42 @@
    TEMPLATE CARDS
 ════════════════════════════════════════════════════════ */
 
+/* Template Tabs */
+.db-tpl-tabs {
+  display: flex;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 6px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  width: max-content;
+  border: 1px solid var(--db-border);
+}
+
+.db-tpl-tab {
+  background: transparent;
+  border: none;
+  color: var(--db-text-4);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-family: var(--db-font);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.db-tpl-tab:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.db-tpl-tab.active {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
 /* Famous architectures — 2-col responsive grid */
 .db-tpl-grid {
   display: grid;
@@ -1779,26 +1815,11 @@
   transition: transform 0.28s var(--db-ease), border-color 0.28s, box-shadow 0.28s;
 }
 
-.db-tpl-card::after {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, rgba(56,189,248,0.25), rgba(139,92,246,0.25), rgba(236,72,153,0.15));
-  opacity: 0;
-  z-index: -1;
-  transition: opacity 0.35s ease;
-  filter: blur(1px);
-}
-
 .db-tpl-card:hover {
-  transform: translateY(-3px) scale(1.005);
-  border-color: rgba(255,255,255,0.14);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5), 0 0 24px rgba(56,189,248,0.06);
-}
-
-.db-tpl-card:hover::after {
-  opacity: 1;
+  transform: translate(-3px, -3px);
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 4px 4px 0px rgba(255, 255, 255, 0.15);
+  background: var(--db-surface-2);
 }
 
 .db-tpl-card:disabled {
@@ -1914,9 +1935,9 @@
 
 .db-starter-card:hover {
   background: var(--db-surface-2);
-  border-color: rgba(255,255,255,0.14);
-  transform: translateX(4px);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translate(-3px, -3px);
+  box-shadow: 4px 4px 0px rgba(255, 255, 255, 0.15);
 }
 
 .db-starter-card:disabled {

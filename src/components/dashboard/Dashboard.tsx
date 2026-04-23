@@ -47,6 +47,7 @@ export default function Dashboard() {
   const [sort, setSort]             = useState<SortMode>('updated');
   const [view, setView]             = useState<ViewMode>('grid');
   const [tab, setTab]               = useState<Tab>('projects');
+  const [tplTab, setTplTab]         = useState<'famous' | 'starter'>('famous');
   const [deleting, setDeleting]     = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null); // id pending confirm
   const [userMenu, setUserMenu]     = useState(false);
@@ -396,88 +397,107 @@ export default function Dashboard() {
         {/* ══ TEMPLATES TAB ══ */}
         {tab === 'templates' && (
           <section className="db-projects-section">
-            {/* Famous architectures */}
-            <div className="db-section-header">
-              <div className="db-section-title-wrap">
-                <h2 className="db-section-title">Famous Architectures</h2>
-                <span className="db-section-count">{famousSystemTemplates.length}</span>
-              </div>
-              <p className="db-section-sub">Reverse-engineered real-world systems — click any to load into canvas instantly</p>
+            <div className="db-tpl-tabs">
+              <button
+                className={`db-tpl-tab ${tplTab === 'famous' ? 'active' : ''}`}
+                onClick={() => setTplTab('famous')}
+              >
+                Famous Architectures
+              </button>
+              <button
+                className={`db-tpl-tab ${tplTab === 'starter' ? 'active' : ''}`}
+                onClick={() => setTplTab('starter')}
+              >
+                Starter Patterns
+              </button>
             </div>
 
-            <div className="db-tpl-grid">
-              {famousSystemTemplates
-                .filter(t => !search || t.name.toLowerCase().includes(search.toLowerCase()))
-                .map(tpl => {
-                  const Icon = brandIcons[tpl.id] || BrainCircuit;
-                  return (
-                    <button
-                      key={tpl.id}
-                      className="db-tpl-card"
-                      onClick={() => handleLoadTemplate(tpl)}
-                      disabled={!!loadingTpl}
-                      style={{ opacity: loadingTpl && loadingTpl !== tpl.id ? 0.4 : 1 }}
-                    >
-                      <div className="db-tpl-card-top">
-                        <div className="db-tpl-icon">
-                          {loadingTpl === tpl.id
-                            ? <Loader2 size={18} className="db-spin" />
-                            : <Icon size={18} strokeWidth={1.5} />
+            {tplTab === 'famous' && (
+              <>
+                <div className="db-section-header">
+                  <div className="db-section-title-wrap">
+                    <h2 className="db-section-title">Famous Architectures</h2>
+                    <span className="db-section-count">{famousSystemTemplates.length}</span>
+                  </div>
+                  <p className="db-section-sub">Reverse-engineered real-world systems — click any to load into canvas instantly</p>
+                </div>
+                <div className="db-tpl-grid">
+                  {famousSystemTemplates
+                    .filter(t => !search || t.name.toLowerCase().includes(search.toLowerCase()))
+                    .map(tpl => {
+                      const Icon = brandIcons[tpl.id] || BrainCircuit;
+                      return (
+                        <button
+                          key={tpl.id}
+                          className="db-tpl-card"
+                          onClick={() => handleLoadTemplate(tpl)}
+                          disabled={!!loadingTpl}
+                          style={{ opacity: loadingTpl && loadingTpl !== tpl.id ? 0.4 : 1 }}
+                        >
+                          <div className="db-tpl-card-top">
+                            <div className="db-tpl-icon">
+                              {loadingTpl === tpl.id
+                                ? <Loader2 size={18} className="db-spin" />
+                                : <Icon size={18} strokeWidth={1.5} />
+                              }
+                            </div>
+                            <div className="db-tpl-info">
+                              <span className="db-tpl-name">{tpl.name}</span>
+                              <span className="db-tpl-meta">{tpl.nodeCount} nodes · ~${tpl.baselineCost}/mo</span>
+                            </div>
+                            <ArrowRight size={14} className="db-tpl-arrow" />
+                          </div>
+                          <p className="db-tpl-desc">{tpl.description}</p>
+                          <div className="db-tpl-insight">
+                            <Zap size={11} />
+                            <span>{tpl.keyInsight}</span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                </div>
+              </>
+            )}
+
+            {tplTab === 'starter' && (
+              <>
+                <div className="db-section-header">
+                  <div className="db-section-title-wrap">
+                    <h2 className="db-section-title">Starter Patterns</h2>
+                    <span className="db-section-count">{starterTemplates.length}</span>
+                  </div>
+                  <p className="db-section-sub">Proven architectural patterns ready to customize</p>
+                </div>
+                <div className="db-starter-grid">
+                  {starterTemplates
+                    .filter(t => !search || t.name.toLowerCase().includes(search.toLowerCase()))
+                    .map(tpl => {
+                      const Icon = starterIcons[tpl.id] || BrainCircuit;
+                      return (
+                        <button
+                          key={tpl.id}
+                          className="db-starter-card"
+                          onClick={() => handleLoadTemplate(tpl)}
+                          disabled={!!loadingTpl}
+                          style={{ opacity: loadingTpl && loadingTpl !== tpl.id ? 0.4 : 1 }}
+                        >
+                          <div className="db-starter-icon">
+                            {loadingTpl === tpl.id
+                              ? <Loader2 size={16} className="db-spin" />
+                              : <Icon size={16} strokeWidth={1.5} />
                           }
-                        </div>
-                        <div className="db-tpl-info">
-                          <span className="db-tpl-name">{tpl.name}</span>
-                          <span className="db-tpl-meta">{tpl.nodeCount} nodes · ~${tpl.baselineCost}/mo</span>
-                        </div>
-                        <ArrowRight size={14} className="db-tpl-arrow" />
-                      </div>
-                      <p className="db-tpl-desc">{tpl.description}</p>
-                      <div className="db-tpl-insight">
-                        <Zap size={11} />
-                        <span>{tpl.keyInsight}</span>
-                      </div>
-                    </button>
-                  );
-                })}
-            </div>
-
-            {/* Starter patterns */}
-            <div className="db-section-header" style={{ marginTop: 40 }}>
-              <div className="db-section-title-wrap">
-                <h2 className="db-section-title">Starter Patterns</h2>
-                <span className="db-section-count">{starterTemplates.length}</span>
-              </div>
-              <p className="db-section-sub">Proven architectural patterns ready to customize</p>
-            </div>
-
-            <div className="db-starter-grid">
-              {starterTemplates
-                .filter(t => !search || t.name.toLowerCase().includes(search.toLowerCase()))
-                .map(tpl => {
-                  const Icon = starterIcons[tpl.id] || BrainCircuit;
-                  return (
-                    <button
-                      key={tpl.id}
-                      className="db-starter-card"
-                      onClick={() => handleLoadTemplate(tpl)}
-                      disabled={!!loadingTpl}
-                      style={{ opacity: loadingTpl && loadingTpl !== tpl.id ? 0.4 : 1 }}
-                    >
-                      <div className="db-starter-icon">
-                        {loadingTpl === tpl.id
-                          ? <Loader2 size={16} className="db-spin" />
-                          : <Icon size={16} strokeWidth={1.5} />
-                        }
-                      </div>
-                      <div className="db-starter-text">
-                        <span className="db-starter-name">{tpl.name}</span>
-                        <span className="db-starter-meta">{tpl.nodeCount} nodes · ~${tpl.baselineCost}/mo</span>
-                      </div>
-                      <ArrowRight size={13} className="db-tpl-arrow" />
-                    </button>
-                  );
-                })}
-            </div>
+                          </div>
+                          <div className="db-starter-text">
+                            <span className="db-starter-name">{tpl.name}</span>
+                            <span className="db-starter-meta">{tpl.nodeCount} nodes · ~${tpl.baselineCost}/mo</span>
+                          </div>
+                          <ArrowRight size={13} className="db-tpl-arrow" />
+                        </button>
+                      );
+                    })}
+                </div>
+              </>
+            )}
           </section>
         )}
 
