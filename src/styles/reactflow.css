@@ -157,6 +157,12 @@
 .arch-node[data-category="network"] { border-left-color: var(--cat-network); }
 .arch-node[data-category="messaging"] { border-left-color: var(--cat-messaging); }
 .arch-node[data-category="observability"] { border-left-color: var(--cat-observability); }
+.arch-node[data-category="security"] { border-left-color: var(--cat-security); }
+.arch-node[data-category="pipeline"] { border-left-color: var(--cat-pipeline); }
+.arch-node[data-category="alt-cloud"] { border-left-color: var(--cat-alt-cloud); }
+.arch-node[data-category="frontend-paas"] { border-left-color: var(--cat-frontend-paas); }
+.arch-node[data-category="frontend-framework"] { border-left-color: var(--cat-frontend-framework); }
+.arch-node[data-category="deployment"] { border-left-color: var(--cat-deployment); }
 
 .arch-node[data-category="client"] .arch-node-icon { color: var(--cat-client); }
 .arch-node[data-category="compute"] .arch-node-icon { color: var(--cat-compute); }
@@ -164,6 +170,12 @@
 .arch-node[data-category="network"] .arch-node-icon { color: var(--cat-network); }
 .arch-node[data-category="messaging"] .arch-node-icon { color: var(--cat-messaging); }
 .arch-node[data-category="observability"] .arch-node-icon { color: var(--cat-observability); }
+.arch-node[data-category="security"] .arch-node-icon { color: var(--cat-security); }
+.arch-node[data-category="pipeline"] .arch-node-icon { color: var(--cat-pipeline); }
+.arch-node[data-category="alt-cloud"] .arch-node-icon { color: var(--cat-alt-cloud); }
+.arch-node[data-category="frontend-paas"] .arch-node-icon { color: var(--cat-frontend-paas); }
+.arch-node[data-category="frontend-framework"] .arch-node-icon { color: var(--cat-frontend-framework); }
+.arch-node[data-category="deployment"] .arch-node-icon { color: var(--cat-deployment); }
 
 .arch-node[data-category="client"] .arch-node-cost { color: var(--cat-client); opacity: 0.5; }
 .arch-node[data-category="compute"] .arch-node-cost { color: var(--cat-compute); }
@@ -171,6 +183,12 @@
 .arch-node[data-category="network"] .arch-node-cost { color: var(--cat-network); }
 .arch-node[data-category="messaging"] .arch-node-cost { color: var(--cat-messaging); }
 .arch-node[data-category="observability"] .arch-node-cost { color: var(--cat-observability); }
+.arch-node[data-category="security"] .arch-node-cost { color: var(--cat-security); }
+.arch-node[data-category="pipeline"] .arch-node-cost { color: var(--cat-pipeline); }
+.arch-node[data-category="alt-cloud"] .arch-node-cost { color: var(--cat-alt-cloud); }
+.arch-node[data-category="frontend-paas"] .arch-node-cost { color: var(--cat-frontend-paas); }
+.arch-node[data-category="frontend-framework"] .arch-node-cost { color: var(--cat-frontend-framework); }
+.arch-node[data-category="deployment"] .arch-node-cost { color: var(--cat-deployment); }
 
 .arch-node.healthy {
   box-shadow: 0 0 0 1px rgba(74, 222, 128, 0.15);
@@ -421,3 +439,96 @@
   left: 0;
   right: 0;
 }
+
+/* ─── Node Entry Animation (replaces framer-motion layout) ── */
+@keyframes archNodeEnter {
+  0% {
+    opacity: 0;
+    transform: scale(0.85) translateY(8px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.02) translateY(-1px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.arch-node-enter {
+  animation: archNodeEnter 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ─── Node Overloaded Glow ── */
+.arch-node.node-overloaded {
+  box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.3),
+              0 0 16px rgba(251, 191, 36, 0.08);
+}
+
+.arch-node.node-bottlenecked {
+  animation: bottleneckPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes bottleneckPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.3),
+                0 0 12px rgba(248, 113, 113, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 0 2px rgba(248, 113, 113, 0.5),
+                0 0 24px rgba(248, 113, 113, 0.2);
+  }
+}
+
+/* ─── Premium Edge Interactions ── */
+.react-flow__edge-path {
+  transition: stroke 0.2s ease, stroke-width 0.15s ease, filter 0.2s ease !important;
+}
+
+.react-flow__edge:hover .react-flow__edge-path {
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.15)) !important;
+}
+
+.react-flow__edge.selected .react-flow__edge-path {
+  filter: drop-shadow(0 0 6px rgba(94, 234, 212, 0.25)) !important;
+}
+
+/* Bottleneck edge glow */
+.bottleneck-glow {
+  animation: bottleneckEdgeGlow 1.5s ease-in-out infinite !important;
+}
+
+@keyframes bottleneckEdgeGlow {
+  0%, 100% { filter: drop-shadow(0 0 5px rgba(255, 69, 0, 0.4)); }
+  50% { filter: drop-shadow(0 0 12px rgba(255, 69, 0, 0.7)); }
+}
+
+/* ─── Connection Line Animation ── */
+@keyframes connectionDash {
+  from { stroke-dashoffset: 18; }
+  to { stroke-dashoffset: 0; }
+}
+
+.react-flow__connection-path {
+  animation: connectionDash 0.6s linear infinite !important;
+}
+
+/* ─── Node Load Bar Gradient ── */
+.arch-node-load-fill {
+  background: linear-gradient(90deg, var(--success), var(--success)) !important;
+  transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+              background 0.3s ease !important;
+}
+
+.arch-node-load-fill.warning {
+  background: linear-gradient(90deg, var(--success), var(--warning)) !important;
+}
+
+.arch-node-load-fill.critical {
+  background: linear-gradient(90deg, var(--warning), var(--danger)) !important;
+}
+
+/* ─── SVG Filter for Tracer Glow ── */
+/* Applied via CSS, actual filter defined inline in ArchEdge */
+

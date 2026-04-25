@@ -37,17 +37,22 @@ import VersionHistoryDrawer from './components/VersionHistoryDrawer';
 import SimulationOverlay from './components/SimulationOverlay';
 import OnboardingOverlay from './components/OnboardingOverlay';
 import SecurityPanel from './components/SecurityPanel';
+import FinOpsPanel from './components/FinOpsPanel';
 import LandingPage from './components/LandingPage';
-import { ToastProvider, useToastBus, toastBus } from './components/ToastSystem';
+import { ToastProvider, useToastBus } from './components/ToastSystem';
+import { toastBus } from './lib/toastBus';
 import { ContextMenu, SearchOverlay, ShortcutsOverlay } from './components/InteractiveOverlays';
 import { ErrorBoundary, CanvasErrorBoundary } from './components/ErrorBoundary';
 import { runSecurityScan } from './engine/securityScanner';
 import { captureArchitectureAsImage } from './engine/exportRenderer';
 import { getTemplateById, instantiateTemplate } from './utils/templateLoader';
+import { generateBatchPrefix } from './utils/idGenerator';
+import { useHealthSync } from './hooks/useHealthSync';
 import LoginModal from './components/auth/LoginModal';
 import Dashboard from './components/dashboard/Dashboard';
 import { loadProject } from './services/projectService';
 import { Loader2 } from 'lucide-react';
+import CommandPalette from './components/CommandPalette';
 
 const nodeTypes = { archNode: ArchNodeComponent, groupNode: GroupNode, zoneNode: ZoneNode, stickyNote: StickyNoteNode };
 const edgeTypes = { default: ArchEdge, custom: ArchEdge };
@@ -104,7 +109,6 @@ function FlowCanvas() {
   const handleNodeDrag = useArchStore(s => s.handleNodeDrag);
   const handleNodeDragStop = useArchStore(s => s.handleNodeDragStop);
   const alignmentLines = useArchStore(s => s.alignmentLines);
-  const { nodeHealth } = useSimulation();
   const reactFlowInstance = useReactFlow();
   
   // Expose instance for export utilities
@@ -112,46 +116,8 @@ function FlowCanvas() {
     (window as unknown as Record<string, unknown>).__archviz_rfInstance = reactFlowInstance;
   }, [reactFlowInstance]);
   
-  // Update node health status on every simulation tick
-  useEffect(() => {
-    const updateNodeData = useArchStore.getState().updateNodeData;
-    const updateEdges = useArchStore.getState().setEdges;
-    
-    for (const node of nodes) {
-      const health = nodeHealth.get(node.id);
-      if (health && (node.data.loadPercent !== health.loadPercent || node.data.healthStatus !== health.status)) {
-        updateNodeData(node.id, {
-          loadPercent: health.loadPercent,
-          healthStatus: health.status as 'healthy' | 'warning' | 'critical',
-        });
-      }
-    }
-    
-    // Process edges to display traffic health
-    let edgesChanged = false;
-    const newEdges = edges.map(edge => {
-      const sourceHealth = nodeHealth.get(edge.source)?.status || 'healthy';
-      const targetHealth = nodeHealth.get(edge.target)?.status || 'healthy';
-      
-      let edgeClass = 'edge-healthy';
-      if (sourceHealth === 'critical' || targetHealth === 'critical') {
-        edgeClass = 'edge-critical';
-      } else if (sourceHealth === 'warning' || targetHealth === 'warning') {
-        edgeClass = 'edge-warning';
-      }
-      
-      if (edge.className !== edgeClass) {
-        edgesChanged = true;
-        return { ...edge, className: edgeClass };
-      }
-      return edge;
-    });
-    
-    if (edgesChanged) {
-      // Small timeout to avoid immediate state updates during render phase
-      setTimeout(() => updateEdges(newEdges), 0);
-    }
-  }, [nodeHealth]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Health synchronization — extracted to dedicated hook with RAF batching
+  useHealthSync();
   
   // Handle drag & drop from sidebar
   const onDragOver = useCallback((event: React.DragEvent) => {
@@ -186,10 +152,10 @@ function FlowCanvas() {
       const offsetY = position.y - firstNode.position.y;
       
       const idMap = new Map<string, string>();
-      const timePrefix = Date.now().toString(36) + Math.random().toString(36).substr(2, 4);
+      const batchPrefix = generateBatchPrefix();
       
       const processedNodes = newNodes.map((n, i) => {
-        const newId = `node-${timePrefix}-${i}`;
+        const newId = `node-${batchPrefix}-${i}`;
         idMap.set(n.id, newId);
         return {
           ...n,
@@ -204,7 +170,7 @@ function FlowCanvas() {
       const processedEdges = newEdges.map((e, i) => {
         return {
           ...e,
-          id: `edge-${timePrefix}-${i}`,
+          id: `edge-${batchPrefix}-${i}`,
           source: idMap.get(e.source) || e.source,
           target: idMap.get(e.target) || e.target,
         };
@@ -443,8 +409,12 @@ function WorkspaceView() {
   const edges             = useArchStore(s => s.edges);
   const setSecurityReport = useArchStore(s => s.setSecurityReport);
 
+  // Debounced security scan — prevents expensive re-computation on every node/edge change
   useEffect(() => {
-    setSecurityReport(runSecurityScan(nodes, edges));
+    const timer = setTimeout(() => {
+      setSecurityReport(runSecurityScan(nodes, edges));
+    }, 300);
+    return () => clearTimeout(timer);
   }, [nodes, edges, setSecurityReport]);
 
   // Initialize simulation events
@@ -501,9 +471,11 @@ function WorkspaceView() {
       <SimulationOverlay />
       <OnboardingOverlay />
       <SecurityPanel />
+      <FinOpsPanel />
       <ContextMenu />
       <SearchOverlay />
       <ShortcutsOverlay />
+      <CommandPalette />
 
       {/* A11y */}
       <div aria-live="polite" className="sr-only"

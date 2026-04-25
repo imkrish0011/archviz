@@ -45,13 +45,17 @@ export default function LeftSidebar() {
     event.dataTransfer.effectAllowed = 'move';
   }, []);
 
+  // Counter-based offset to spread double-click node placements — replaces Math.random()
+  const offsetCounterRef = useRef(0);
+  
   const getCanvasCenter = useCallback(() => {
     const { x, y, zoom } = reactFlowInstance.getViewport();
     const canvasEl = document.querySelector('.react-flow') as HTMLElement;
     if (!canvasEl) return { x: 400, y: 300 };
     const rect = canvasEl.getBoundingClientRect();
-    const offsetX = (Math.random() - 0.5) * 120;
-    const offsetY = (Math.random() - 0.5) * 80;
+    const counter = ++offsetCounterRef.current;
+    const offsetX = ((counter * 37) % 120) - 60; // deterministic spread pattern
+    const offsetY = ((counter * 23) % 80) - 40;
     return {
       x: (rect.width / 2 - x) / zoom + offsetX,
       y: (rect.height / 2 - y) / zoom + offsetY,

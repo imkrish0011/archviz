@@ -91,7 +91,8 @@ export default function RightPanel() {
   };
 
   const handleDuplicate = () => {
-    const newNodeId = `node_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+    const { generateNodeId } = require('../utils/idGenerator');
+    const newNodeId = generateNodeId();
     const newNode = {
       ...node,
       id: newNodeId,

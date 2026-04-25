@@ -15,7 +15,7 @@ export function getComponentCost(node: ArchNode, load: number = 0, provider: Clo
   }
   
   // Calculate dynamic serverless execution costs
-  const serverlessTypes = ['lambda', 'api-gateway', 'cloudflare-workers', 'step-functions', 'vercel', 'netlify', 'cloudflare-pages', 'supabase', 'planetscale', 'firebase'];
+  const serverlessTypes = ['lambda', 'api-gateway', 'cloudflare-workers', 'step-functions', 'vercel', 'netlify', 'cloudflare-pages', 'supabase', 'planetscale', 'firebase', 'digitalocean-app'];
   if (serverlessTypes.includes(node.data.componentType)) {
     const monthlyRequests = load * 2.628e6;
     if (node.data.tier.costPerMillionRequests) {
@@ -188,4 +188,87 @@ export function formatCost(cost: number): string {
 
 export function formatCostFull(cost: number): string {
   return `$${cost.toFixed(2)}/mo`;
+}
+
+export interface CostBreakdown {
+  compute: number;
+  storage: number;
+  network: number;
+  messaging: number;
+  serverless: number;
+  observability: number;
+  other: number;
+  total: number;
+  topComponents: { label: string; cost: number; category: string }[];
+}
+
+export function calculateCostBreakdown(
+  nodes: ArchNode[],
+  edges: ArchEdge[] = [],
+  nodeLoads?: Map<string, number>,
+  provider: CloudProvider = 'aws'
+): CostBreakdown {
+  const breakdown: CostBreakdown = {
+    compute: 0, storage: 0, network: 0, messaging: 0,
+    serverless: 0, observability: 0, other: 0, total: 0,
+    topComponents: [],
+  };
+
+  const componentCosts: { label: string; cost: number; category: string }[] = [];
+
+  for (const node of nodes) {
+    if (node.data.isDisabled) continue;
+    const load = nodeLoads?.get(node.id) || 0;
+    const cost = getComponentCost(node, load, provider);
+    if (cost <= 0) continue;
+
+    const cat = node.data.category;
+    componentCosts.push({ label: node.data.label, cost, category: cat });
+
+    const serverlessTypes = ['lambda', 'cloudflare-workers', 'step-functions', 'vercel', 'netlify', 'cloudflare-pages', 'firebase', 'digitalocean-app'];
+    if (serverlessTypes.includes(node.data.componentType)) {
+      breakdown.serverless += cost;
+    } else if (['compute', 'alt-cloud'].includes(cat)) {
+      breakdown.compute += cost;
+    } else if (cat === 'storage') {
+      breakdown.storage += cost;
+    } else if (cat === 'network') {
+      breakdown.network += cost;
+    } else if (cat === 'messaging') {
+      breakdown.messaging += cost;
+    } else if (cat === 'observability') {
+      breakdown.observability += cost;
+    } else {
+      breakdown.other += cost;
+    }
+  }
+
+  // Data transfer costs → network bucket
+  let EGRESS_RATE_PER_GB = 0.09;
+  if (provider === 'gcp') EGRESS_RATE_PER_GB = 0.085;
+  if (provider === 'azure') EGRESS_RATE_PER_GB = 0.087;
+
+  for (const edge of edges) {
+    const config = edge.config || {};
+    const sourceNode = nodes.find(n => n.id === edge.source);
+    const targetNode = nodes.find(n => n.id === edge.target);
+    const crossesBoundary = config.isCrossAZ || targetNode?.data.category === 'client';
+    if (crossesBoundary && sourceNode && !sourceNode.data.isDisabled) {
+      const sourceLoad = nodeLoads?.get(sourceNode.id) || 0;
+      const payloadSizeBytes = config.payloadSizeBytes || 1024;
+      const bytesPerMonth = sourceLoad * payloadSizeBytes * 2.628e6;
+      const gbPerMonth = bytesPerMonth / 1e9;
+      breakdown.network += gbPerMonth * EGRESS_RATE_PER_GB;
+    }
+  }
+
+  breakdown.total = breakdown.compute + breakdown.storage + breakdown.network +
+    breakdown.messaging + breakdown.serverless + breakdown.observability + breakdown.other;
+
+  // Top 5 most expensive
+  breakdown.topComponents = componentCosts
+    .sort((a, b) => b.cost - a.cost)
+    .slice(0, 5);
+
+  return breakdown;
 }

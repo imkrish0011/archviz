@@ -6,11 +6,11 @@ import {
   Zap, Layout, Activity, TrendingUp,
   Camera, Tv, MessageCircle, Car, Music, Gamepad2, Disc,
   CreditCard, Film, ShoppingCart, MessageSquare, Globe, Users,
-  Blocks, Cloud, LayoutTemplate, ShieldCheck, Key, CheckCircle2
+  Blocks, Cloud, LayoutTemplate
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { listProjects, deleteProject, renameProject } from '../../services/projectService';
-import { toastBus } from '../ToastSystem';
+import { toastBus } from '../../lib/toastBus';
 import type { CloudProject } from '../../types';
 import ProjectCard from './ProjectCard';
 import { famousSystemTemplates } from '../../data/templates/famousSystemTemplates';

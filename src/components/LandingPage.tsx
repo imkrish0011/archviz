@@ -14,7 +14,7 @@ import {
   FolderOpen, CloudUpload, LogIn, Crown
 } from 'lucide-react';
 import '../styles/landing.css';
-import { famousSystemTemplates, gameTemplates, nonGameFamousTemplates } from '../data/templates/famousSystemTemplates';
+import { gameTemplates, nonGameFamousTemplates } from '../data/templates/famousSystemTemplates';
 import { starterTemplates } from '../data/templates/starterTemplates';
 import { useArchStore } from '../store/useArchStore';
 import { instantiateTemplate, loadTemplateWithAnimation } from '../utils/templateLoader';
@@ -67,6 +67,10 @@ const computeItems = [
   { label: 'Terraform Cloud', icon: Layers },
   { label: 'vLLM Engine', icon: BrainCircuit },
   { label: 'Temporal Worker', icon: Clock },
+  { label: 'DigitalOcean', icon: Cloud },
+  { label: 'Hetzner Cloud', icon: Server },
+  { label: 'Linode', icon: Cloud },
+  { label: 'CircleCI', icon: RefreshCcw },
 ];
 
 const dataItems = [
@@ -125,6 +129,8 @@ const networkItems = [
   { label: 'Firebase FCM', icon: Zap },
   { label: 'Slack API', icon: MessageSquare },
   { label: 'Istio Mesh', icon: Network },
+  { label: 'New Relic', icon: Activity },
+  { label: 'Splunk', icon: Search },
 ];
 
 interface LandingPageProps {

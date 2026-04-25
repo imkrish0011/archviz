@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { useArchStore } from '../store/useArchStore';
-import { famousSystemTemplates, gameTemplates, nonGameFamousTemplates } from '../data/templates/famousSystemTemplates';
+import { gameTemplates, nonGameFamousTemplates } from '../data/templates/famousSystemTemplates';
 import { starterTemplates } from '../data/templates/starterTemplates';
 import { instantiateTemplate, loadTemplateWithAnimation } from '../utils/templateLoader';
 import { X, Server, Rocket, Gamepad2 } from 'lucide-react';
@@ -19,14 +19,7 @@ export default function TemplatePickerModal() {
   const [confirmTemplate, setConfirmTemplate] = useState<Template | null>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
   
-  const handleSelect = useCallback((template: Template) => {
-    if (nodes.length > 0) {
-      setConfirmTemplate(template);
-    } else {
-      applyTemplate(template);
-    }
-  }, [nodes.length]);
-  
+  // Declared BEFORE handleSelect to avoid 'accessed before declaration' error
   const applyTemplate = useCallback((template: Template) => {
     // Clean up any previous animation
     cleanupRef.current?.();
@@ -46,6 +39,14 @@ export default function TemplatePickerModal() {
     toggle();
     setConfirmTemplate(null);
   }, [setNodes, setEdges, loadTemplate, toggle]);
+  
+  const handleSelect = useCallback((template: Template) => {
+    if (nodes.length > 0) {
+      setConfirmTemplate(template);
+    } else {
+      applyTemplate(template);
+    }
+  }, [nodes.length, applyTemplate]);
   
   const handleConfirmReplace = useCallback(() => {
     if (confirmTemplate) {

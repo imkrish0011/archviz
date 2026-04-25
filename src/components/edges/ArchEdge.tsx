@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import type { EdgeProps } from '@xyflow/react';
 import { getSmoothStepPath, EdgeLabelRenderer, BaseEdge } from '@xyflow/react';
 import type { EdgeConfig } from '../../types';
@@ -10,7 +10,19 @@ interface ArchEdgeData {
   [key: string]: unknown;
 }
 
-export default function ArchEdge({
+/**
+ * Deterministic animation duration from edge ID — replaces Math.random() in render.
+ * Uses a simple hash of the ID string to produce a value between 1.2 and 2.8.
+ */
+function stableAnimDuration(id: string): number {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = ((hash << 5) - hash + id.charCodeAt(i)) | 0;
+  }
+  return 1.2 + (Math.abs(hash) % 160) / 100;
+}
+
+function ArchEdgeComponent({
   id,
   source,
   target,
@@ -45,42 +57,49 @@ export default function ArchEdge({
   const connectionType = config.connectionType || 'default';
   const trafficWeight = config.trafficWeight;
   
-  // Base styling
-  const edgeStyle = { ...style };
-  let className = 'react-flow__edge-path';
-  
-  if (isBottleneck) {
-    edgeStyle.stroke = '#ff4500';
-    edgeStyle.filter = 'drop-shadow(0 0 5px rgba(255, 69, 0, 0.8))';
-    className += ' bottleneck-glow';
-  }
+  // Stable animation duration derived from edge ID (no Math.random)
+  const animDuration = useMemo(() => stableAnimDuration(id), [id]);
 
-  switch(connectionType) {
-    case 'sync-http':
-      edgeStyle.strokeWidth = 3;
-      edgeStyle.strokeDasharray = 'none';
-      break;
-    case 'async-event':
-      edgeStyle.strokeDasharray = '5 5';
-      className += ' async-event-edge';
-      break;
-    case 'firewall-boundary':
-      edgeStyle.stroke = '#ef4444'; // Red
-      edgeStyle.strokeWidth = 2;
-      edgeStyle.strokeDasharray = '2 4';
-      edgeStyle.strokeLinecap = 'round';
-      break;
-    default:
-      break;
-  }
-  
-  // Dim the edge based on traffic weight during deployments
-  if (trafficWeight !== undefined && trafficWeight !== null) {
-    edgeStyle.opacity = Math.max(0.15, trafficWeight / 100);
-    if (trafficWeight === 0) {
-      edgeStyle.strokeDasharray = '3 6';
+  // Memoize style computation
+  const { edgeStyle, className } = useMemo(() => {
+    const computedStyle = { ...style };
+    let cls = 'react-flow__edge-path';
+    
+    if (isBottleneck) {
+      computedStyle.stroke = '#ff4500';
+      computedStyle.filter = 'drop-shadow(0 0 5px rgba(255, 69, 0, 0.8))';
+      cls += ' bottleneck-glow';
     }
-  }
+
+    switch(connectionType) {
+      case 'sync-http':
+        computedStyle.strokeWidth = 3;
+        computedStyle.strokeDasharray = 'none';
+        break;
+      case 'async-event':
+        computedStyle.strokeDasharray = '5 5';
+        cls += ' async-event-edge';
+        break;
+      case 'firewall-boundary':
+        computedStyle.stroke = '#ef4444';
+        computedStyle.strokeWidth = 2;
+        computedStyle.strokeDasharray = '2 4';
+        computedStyle.strokeLinecap = 'round';
+        break;
+      default:
+        break;
+    }
+    
+    // Dim the edge based on traffic weight during deployments
+    if (trafficWeight !== undefined && trafficWeight !== null) {
+      computedStyle.opacity = Math.max(0.15, trafficWeight / 100);
+      if (trafficWeight === 0) {
+        computedStyle.strokeDasharray = '3 6';
+      }
+    }
+
+    return { edgeStyle: computedStyle, className: cls };
+  }, [style, isBottleneck, connectionType, trafficWeight]);
 
   const label = config.edgeLabel;
   
@@ -88,9 +107,6 @@ export default function ArchEdge({
   const weightColor = trafficWeight !== undefined && trafficWeight !== null
     ? (trafficWeight >= 50 ? '#10b981' : trafficWeight > 0 ? '#3b82f6' : '#666')
     : null;
-
-  // Randomized animation duration per edge for organic feel
-  const animDuration = useMemo(() => 1.2 + Math.random() * 1.6, []);
 
   return (
     <>
@@ -145,3 +161,5 @@ export default function ArchEdge({
     </>
   );
 }
+
+export default memo(ArchEdgeComponent);

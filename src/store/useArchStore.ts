@@ -4,13 +4,14 @@ import { getComponentDefinition } from '../data/componentLibrary';
 import type { Connection } from '@xyflow/react';
 import { applyNodeChanges, applyEdgeChanges } from '@xyflow/react';
 import type { NodeChange, EdgeChange } from '@xyflow/react';
-import { toastBus } from '../components/ToastSystem';
+import { toastBus } from '../lib/toastBus';
 import { validateConnection } from '../engine/connectionValidator';
 import { applyAutoLayout } from '../engine/autoLayout';
 import type { LayoutDirection } from '../engine/autoLayout';
 import { INITIAL_DEPLOYMENT_STATE, createDeploymentClones } from '../engine/deploymentSimulator';
 import type { DeploymentState } from '../engine/deploymentSimulator';
 import type { CloudProvider } from '../types';
+import { generateNodeId, generateEdgeId, generateSnapshotId } from '../utils/idGenerator';
 
 interface HistoryEntry {
   nodes: ArchNode[];
@@ -37,6 +38,7 @@ interface ArchStore {
   showOnboarding: boolean;
   leftSidebarOpen: boolean;
   securityPanelOpen: boolean;
+  finopsPanelOpen: boolean;
   projectName: string;
   greenOpsHeatmap: boolean;
   outageRegionId: string | null;
@@ -82,6 +84,7 @@ interface ArchStore {
   toggleTemplatePicker: () => void;
   toggleLeftSidebar: () => void;
   toggleSecurityPanel: () => void;
+  toggleFinopsPanel: () => void;
   toggleGreenOpsHeatmap: () => void;
   setOutageRegionId: (id: string | null) => void;
   dismissOnboarding: () => void;
@@ -126,14 +129,9 @@ interface ArchStore {
   loadFromLocalStorage: () => boolean;
 }
 
-let nodeIdCounter = 0;
-function genNodeId() {
-  return `node_${++nodeIdCounter}_${Date.now()}`;
-}
-
-function genEdgeId() {
-  return `edge_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
-}
+// ID generation now handled by ../utils/idGenerator.ts
+const genNodeId = generateNodeId;
+const genEdgeId = generateEdgeId;
 
 export const useArchStore = create<ArchStore>((set, get) => ({
   // ── Initial State ──
@@ -155,6 +153,7 @@ export const useArchStore = create<ArchStore>((set, get) => ({
   showOnboarding: !localStorage.getItem('archviz-onboarded'),
   leftSidebarOpen: true,
   securityPanelOpen: false,
+  finopsPanelOpen: false,
   projectName: 'Untitled Architecture',
   snapshots: [],
   compareSnapshots: null,
@@ -291,13 +290,19 @@ export const useArchStore = create<ArchStore>((set, get) => ({
       
       // Category-level validation
       const allowedTargets: Record<string, string[]> = {
-        client: ['network', 'compute', 'storage'],
-        network: ['compute', 'storage', 'network', 'observability'],
-        compute: ['compute', 'storage', 'messaging', 'network', 'observability'],
-        storage: ['compute', 'messaging', 'observability'],
-        messaging: ['compute', 'storage', 'observability', 'network'],
-        observability: ['observability'],
-        boundary: ['boundary', 'compute', 'storage', 'network', 'messaging', 'observability', 'client'],
+        client: ['network', 'compute', 'storage', 'alt-cloud', 'frontend-paas'],
+        'frontend-framework': ['network', 'compute', 'frontend-paas', 'alt-cloud'],
+        'frontend-paas': ['network', 'compute', 'storage', 'frontend-paas', 'alt-cloud', 'messaging'],
+        'alt-cloud': ['compute', 'storage', 'network', 'messaging', 'observability', 'alt-cloud', 'pipeline'],
+        network: ['compute', 'storage', 'network', 'observability', 'alt-cloud'],
+        compute: ['compute', 'storage', 'messaging', 'network', 'observability', 'alt-cloud', 'pipeline'],
+        storage: ['compute', 'messaging', 'observability', 'alt-cloud'],
+        messaging: ['compute', 'storage', 'observability', 'network', 'alt-cloud'],
+        observability: ['observability', 'compute', 'storage'],
+        pipeline: ['compute', 'deployment', 'storage', 'observability', 'pipeline', 'alt-cloud', 'network'],
+        security: ['compute', 'network', 'storage', 'security'],
+        deployment: ['compute', 'storage', 'pipeline', 'deployment'],
+        boundary: ['boundary', 'compute', 'storage', 'network', 'messaging', 'observability', 'client', 'alt-cloud', 'pipeline'],
       };
 
       if (!allowedTargets[srcCat]?.includes(tgtCat)) {
@@ -483,6 +488,7 @@ export const useArchStore = create<ArchStore>((set, get) => ({
   toggleTemplatePicker: () => set({ templatePickerOpen: !get().templatePickerOpen }),
   toggleLeftSidebar: () => set({ leftSidebarOpen: !get().leftSidebarOpen }),
   toggleSecurityPanel: () => set({ securityPanelOpen: !get().securityPanelOpen }),
+  toggleFinopsPanel: () => set({ finopsPanelOpen: !get().finopsPanelOpen }),
   toggleGreenOpsHeatmap: () => set({ greenOpsHeatmap: !get().greenOpsHeatmap }),
   setOutageRegionId: (id) => set({ outageRegionId: id }),
   dismissOnboarding: () => {
@@ -504,9 +510,9 @@ export const useArchStore = create<ArchStore>((set, get) => ({
     const autoLabel = label || generateSnapshotLabel(nodes, edges, snapshots);
     
     const snapshot: Snapshot = {
-      id: `snap_${Date.now()}`,
-      nodes: JSON.parse(JSON.stringify(nodes)),
-      edges: JSON.parse(JSON.stringify(edges)),
+      id: generateSnapshotId(),
+      nodes: structuredClone(nodes),
+      edges: structuredClone(edges),
       timestamp: Date.now(),
       label: autoLabel,
       healthScore: 0,  // Will be recalculated
@@ -523,8 +529,8 @@ export const useArchStore = create<ArchStore>((set, get) => ({
     if (!snapshot) return;
     
     set({
-      nodes: JSON.parse(JSON.stringify(snapshot.nodes)),
-      edges: JSON.parse(JSON.stringify(snapshot.edges)),
+      nodes: structuredClone(snapshot.nodes),
+      edges: structuredClone(snapshot.edges),
       simulationConfig: { ...snapshot.simulationConfig },
         selectedNodeId: null,
       rightPanelOpen: false,
@@ -727,8 +733,8 @@ export const useArchStore = create<ArchStore>((set, get) => ({
   pushHistory: () => {
     const { nodes, edges, undoStack } = get();
     const entry: HistoryEntry = {
-      nodes: JSON.parse(JSON.stringify(nodes)),
-      edges: JSON.parse(JSON.stringify(edges)),
+      nodes: structuredClone(nodes),
+      edges: structuredClone(edges),
     };
     set({ undoStack: [...undoStack.slice(-30), entry] });
   },
@@ -749,8 +755,8 @@ export const useArchStore = create<ArchStore>((set, get) => ({
     if (undoStack.length === 0) return;
     const prev = undoStack[undoStack.length - 1];
     const current: HistoryEntry = {
-      nodes: JSON.parse(JSON.stringify(nodes)),
-      edges: JSON.parse(JSON.stringify(edges)),
+      nodes: structuredClone(nodes),
+      edges: structuredClone(edges),
     };
     set({
       nodes: prev.nodes,
@@ -768,8 +774,8 @@ export const useArchStore = create<ArchStore>((set, get) => ({
     if (redoStack.length === 0) return;
     const next = redoStack[redoStack.length - 1];
     const current: HistoryEntry = {
-      nodes: JSON.parse(JSON.stringify(nodes)),
-      edges: JSON.parse(JSON.stringify(edges)),
+      nodes: structuredClone(nodes),
+      edges: structuredClone(edges),
     };
     set({
       nodes: next.nodes,

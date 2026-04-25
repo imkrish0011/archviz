@@ -10,6 +10,7 @@ export default function BottomInsightBar() {
   const nodes = useArchStore(s => s.nodes);
   const cloudProvider = useArchStore(s => s.cloudProvider);
   const setCloudProvider = useArchStore(s => s.setCloudProvider);
+  const toggleFinopsPanel = useArchStore(s => s.toggleFinopsPanel);
   
   if (nodes.length === 0) {
     return (
@@ -40,7 +41,7 @@ export default function BottomInsightBar() {
   return (
     <div className={`bottom-bar ${healthBarClass}`}>
       <div className="bottom-bar-metrics">
-        <div className="bottom-metric">
+        <div className="bottom-metric" onClick={toggleFinopsPanel} style={{ cursor: 'pointer' }} title="Click for FinOps cost breakdown">
           <DollarSign size={13} style={{ color: 'var(--text-tertiary)' }} />
           <span className="bottom-metric-label">Cost</span>
           <span className="bottom-metric-value" style={{ color: 'var(--accent)', transition: 'color 0.3s' }}>

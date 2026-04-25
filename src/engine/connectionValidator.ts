@@ -35,6 +35,7 @@ export function validateConnection(
   }
 
   const isFrontend = ['frontend', 'client', 'frontend-framework', 'frontend-paas'].includes(srcCat as string) || srcType.includes('client');
+  const isAltCloud = srcCat === 'alt-cloud' || tgtCat === 'alt-cloud';
   const isStorage = ['storage', 'database'].includes(tgtCat as string);
   const isMessaging = ['messaging', 'queue'].includes(tgtCat as string);
 
@@ -104,6 +105,16 @@ export function validateConnection(
       message: 'Glacier retrieval can take hours. Not suitable for real-time access.',
       suggestion: 'Use S3 Standard or S3-IA for frequently accessed data.',
     };
+  }
+
+  // Alt-cloud nodes (DigitalOcean, Hetzner, Linode) behave like compute — allow broad connectivity
+  if (isAltCloud) {
+    return { allowed: true, level: 'info', message: '' };
+  }
+
+  // Pipeline / CI/CD nodes are meta — always allow connections
+  if (srcCat === 'pipeline' || tgtCat === 'pipeline') {
+    return { allowed: true, level: 'info', message: '' };
   }
 
   // No anti-pattern triggered — connection is clean

@@ -2385,6 +2385,139 @@ const componentLibrary: ComponentDefinition[] = [
     tiers: [{ id: 'argo-cluster', label: 'In-Cluster', monthlyCost: 0.00, capacity: 0, latency: 0 }],
     defaultTierIndex: 0,
   },
+  // ═══════════════════════════════════════════════════
+  // ALTERNATIVE / VALUE CLOUDS
+  // ═══════════════════════════════════════════════════
+  {
+    type: 'digitalocean-droplet',
+    label: 'DigitalOcean Droplet',
+    category: 'alt-cloud',
+    icon: 'Cloud',
+    description: 'Simple, affordable cloud VMs from DigitalOcean — popular for startups and side-projects',
+    scalingType: 'horizontal',
+    reliability: 0.999,
+    scalingFactor: 1.0,
+    baseLatency: 10,
+    tiers: [
+      { id: 'do-s-1vcpu', label: 'Basic 1 vCPU / 1 GB', monthlyCost: 6.00, capacity: 300, latency: 15, cpu: '1 vCPU', ram: '1 GB' },
+      { id: 'do-s-2vcpu', label: 'Basic 2 vCPU / 4 GB', monthlyCost: 24.00, capacity: 1200, latency: 10, cpu: '2 vCPU', ram: '4 GB' },
+      { id: 'do-s-4vcpu', label: 'Basic 4 vCPU / 8 GB', monthlyCost: 48.00, capacity: 3000, latency: 8, cpu: '4 vCPU', ram: '8 GB' },
+      { id: 'do-g-8vcpu', label: 'General 8 vCPU / 32 GB', monthlyCost: 96.00, capacity: 8000, latency: 5, cpu: '8 vCPU', ram: '32 GB' },
+    ],
+    defaultTierIndex: 1,
+  },
+  {
+    type: 'digitalocean-app',
+    label: 'DO App Platform',
+    category: 'alt-cloud',
+    icon: 'Rocket',
+    description: 'Managed PaaS by DigitalOcean — deploy code or containers with zero infrastructure management',
+    scalingType: 'horizontal',
+    reliability: 0.999,
+    scalingFactor: 1.0,
+    baseLatency: 15,
+    tiers: [
+      { id: 'do-app-starter', label: 'Starter (512 MB)', monthlyCost: 5.00, capacity: 200, latency: 25, cpu: 'Shared', ram: '512 MB' },
+      { id: 'do-app-basic', label: 'Basic (1 GB)', monthlyCost: 12.00, capacity: 600, latency: 15, cpu: '1 vCPU', ram: '1 GB' },
+      { id: 'do-app-pro', label: 'Professional (2 GB)', monthlyCost: 25.00, capacity: 1500, latency: 10, cpu: '1 vCPU', ram: '2 GB' },
+    ],
+    defaultTierIndex: 1,
+  },
+  {
+    type: 'hetzner-cloud',
+    label: 'Hetzner Cloud',
+    category: 'alt-cloud',
+    icon: 'Server',
+    description: 'European value cloud with extreme price-to-performance — up to 60% cheaper than AWS',
+    scalingType: 'horizontal',
+    reliability: 0.999,
+    scalingFactor: 1.0,
+    baseLatency: 12,
+    tiers: [
+      { id: 'htz-cx22', label: 'CX22 (2 vCPU / 4 GB)', monthlyCost: 4.50, capacity: 1000, latency: 12, cpu: '2 vCPU', ram: '4 GB' },
+      { id: 'htz-cx32', label: 'CX32 (4 vCPU / 8 GB)', monthlyCost: 16.00, capacity: 3000, latency: 8, cpu: '4 vCPU', ram: '8 GB' },
+      { id: 'htz-cx42', label: 'CX42 (8 vCPU / 16 GB)', monthlyCost: 44.00, capacity: 8000, latency: 5, cpu: '8 vCPU', ram: '16 GB' },
+      { id: 'htz-cx52', label: 'CX52 (16 vCPU / 32 GB)', monthlyCost: 88.00, capacity: 15000, latency: 3, cpu: '16 vCPU', ram: '32 GB' },
+    ],
+    defaultTierIndex: 1,
+  },
+  {
+    type: 'linode-compute',
+    label: 'Linode (Akamai)',
+    category: 'alt-cloud',
+    icon: 'Cloud',
+    description: 'Developer-friendly cloud by Akamai with predictable pricing and free egress allowances',
+    scalingType: 'horizontal',
+    reliability: 0.999,
+    scalingFactor: 1.0,
+    baseLatency: 10,
+    tiers: [
+      { id: 'linode-1gb', label: 'Nanode 1 GB', monthlyCost: 5.00, capacity: 200, latency: 15, cpu: '1 vCPU', ram: '1 GB' },
+      { id: 'linode-4gb', label: 'Linode 4 GB', monthlyCost: 24.00, capacity: 1200, latency: 10, cpu: '2 vCPU', ram: '4 GB' },
+      { id: 'linode-8gb', label: 'Linode 8 GB', monthlyCost: 48.00, capacity: 3000, latency: 8, cpu: '4 vCPU', ram: '8 GB' },
+      { id: 'linode-32gb', label: 'Dedicated 32 GB', monthlyCost: 96.00, capacity: 10000, latency: 5, cpu: '8 vCPU', ram: '32 GB' },
+    ],
+    defaultTierIndex: 1,
+  },
+
+  // ═══════════════════════════════════════════════════
+  // ADDITIONAL CI/CD PIPELINE
+  // ═══════════════════════════════════════════════════
+  {
+    type: 'circleci',
+    label: 'CircleCI',
+    category: 'pipeline',
+    icon: 'RefreshCcw',
+    description: 'Cloud-native CI/CD platform with Docker-first pipelines and advanced caching',
+    scalingType: 'horizontal',
+    reliability: 0.999,
+    scalingFactor: 1.0,
+    baseLatency: 0,
+    tiers: [
+      { id: 'cci-free', label: 'Free (6k credits/mo)', monthlyCost: 0, capacity: 0, latency: 0 },
+      { id: 'cci-performance', label: 'Performance', monthlyCost: 15.00, capacity: 0, latency: 0 },
+      { id: 'cci-scale', label: 'Scale (Self-hosted)', monthlyCost: 2000.00, capacity: 0, latency: 0 },
+    ],
+    defaultTierIndex: 1,
+  },
+
+  // ═══════════════════════════════════════════════════
+  // ADDITIONAL OBSERVABILITY
+  // ═══════════════════════════════════════════════════
+  {
+    type: 'newrelic',
+    label: 'New Relic',
+    category: 'observability',
+    icon: 'BarChart3',
+    description: 'Full-stack observability platform with APM, infrastructure, logs, and browser monitoring',
+    scalingType: 'horizontal',
+    reliability: 0.999,
+    scalingFactor: 1.0,
+    baseLatency: 0,
+    tiers: [
+      { id: 'nr-free', label: 'Free (100 GB/mo)', monthlyCost: 0, capacity: 1000000, latency: 0 },
+      { id: 'nr-pro', label: 'Pro (per user)', monthlyCost: 49.00, capacity: 5000000, latency: 0 },
+      { id: 'nr-enterprise', label: 'Enterprise', monthlyCost: 549.00, capacity: 50000000, latency: 0 },
+    ],
+    defaultTierIndex: 1,
+  },
+  {
+    type: 'splunk-observability',
+    label: 'Splunk Observability',
+    category: 'observability',
+    icon: 'ScanSearch',
+    description: 'Enterprise observability suite with real-time streaming analytics, AI-driven alerting',
+    scalingType: 'horizontal',
+    reliability: 0.9999,
+    scalingFactor: 1.0,
+    baseLatency: 0,
+    tiers: [
+      { id: 'splunk-infra', label: 'Infrastructure (per host)', monthlyCost: 15.00, capacity: 1000000, latency: 0 },
+      { id: 'splunk-apm', label: 'APM + Infrastructure', monthlyCost: 60.00, capacity: 5000000, latency: 0 },
+    ],
+    defaultTierIndex: 0,
+  },
+
   {
     type: 'sticky-note',
     label: 'Sticky Note',
@@ -2553,7 +2686,7 @@ export function getComponentsByCategory(category: ComponentCategory): ComponentD
 
 export function getAllCategories(): ComponentCategory[] {
   return [
-    'client', 'frontend-framework', 'frontend-paas', 'compute', 'storage', 
+    'client', 'frontend-framework', 'frontend-paas', 'alt-cloud', 'compute', 'storage', 
     'network', 'messaging', 'observability', 'security', 'pipeline', 
     'boundary', 'deployment', 'meta'
   ];
@@ -2564,6 +2697,7 @@ export function getCategoryLabel(category: ComponentCategory): string {
     client: 'Client/User',
     'frontend-framework': 'Frontend Frameworks',
     'frontend-paas': 'Serverless & PaaS',
+    'alt-cloud': 'Alt Clouds (Value)',
     compute: 'Compute',
     storage: 'Storage',
     network: 'Network',

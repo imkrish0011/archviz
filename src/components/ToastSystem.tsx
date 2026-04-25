@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState, useCallback, createContext, useContext } from 'react';
+import { toastBus } from '../lib/toastBus';
+import type { ToastVariant } from '../lib/toastBus';
 
 /* ─────────────────────────────────────────────────────────
  *  Toast Notification System
  *  Usage: const toast = useToast(); toast.success('Saved!')
  * ───────────────────────────────────────────────────────── */
-
-type ToastVariant = 'success' | 'error' | 'info' | 'warning';
 
 interface Toast {
   id: string;
@@ -23,6 +23,8 @@ interface ToastContextValue {
 }
 
 const ToastContext = createContext<ToastContextValue | null>(null);
+
+let toastCounter = 0;
 
 export function useToast(): ToastContextValue {
   const ctx = useContext(ToastContext);
@@ -42,7 +44,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const addToast = useCallback((message: string, variant: ToastVariant) => {
-    const id = `toast_${Date.now()}_${Math.random().toString(36).slice(2, 5)}`;
+    const id = `toast_${++toastCounter}`;
     setToasts(prev => [...prev.slice(-4), { id, message, variant }]);
     const timer = setTimeout(() => dismiss(id), 3000);
     timersRef.current.set(id, timer);
@@ -88,25 +90,6 @@ function ToastContainer({ toasts, onDismiss }: { toasts: Toast[]; onDismiss: (id
     </div>
   );
 }
-
-/* ─────────────────────────────────────────────────────────
- *  Global Event Bus (toast from anywhere)
- * ───────────────────────────────────────────────────────── */
-type ToastListener = (msg: string, variant: ToastVariant) => void;
-const listeners: ToastListener[] = [];
-
-export const toastBus = {
-  emit(msg: string, variant: ToastVariant = 'info') {
-    listeners.forEach(fn => fn(msg, variant));
-  },
-  subscribe(fn: ToastListener) {
-    listeners.push(fn);
-    return () => {
-      const idx = listeners.indexOf(fn);
-      if (idx >= 0) listeners.splice(idx, 1);
-    };
-  },
-};
 
 /** Hook that bridges bus → ToastContext */
 export function useToastBus() {

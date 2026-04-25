@@ -1,7 +1,7 @@
 import { jsPDF } from 'jspdf';
 import type { SystemMetrics, ArchNode, ArchEdge, CloudProvider } from '../types';
 import { getArbitrageCosts } from './costEngine';
-import { toastBus } from '../components/ToastSystem';
+import { toastBus } from '../lib/toastBus';
 import { captureArchitectureAsImage } from './exportRenderer';
 
 export interface ReportConfig {

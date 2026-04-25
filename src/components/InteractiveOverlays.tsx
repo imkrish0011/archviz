@@ -85,7 +85,8 @@ export function ContextMenu() {
   if (!node) return null;
 
   const handleDuplicate = () => {
-    const newNodeId = `node_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+    const { generateNodeId } = require('../utils/idGenerator');
+    const newNodeId = generateNodeId();
     const newNode = { ...node, id: newNodeId, position: { x: node.position.x + 60, y: node.position.y + 60 } };
     useArchStore.getState().setNodes([...nodes, newNode]);
     useArchStore.getState().takeSnapshot('Duplicated component');

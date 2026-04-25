@@ -14,7 +14,7 @@ import { downloadTerraform, validateArchitecture } from '../engine/hclGenerator'
 import { downloadCloudFormation, downloadDockerCompose, downloadKubernetesManifests, downloadHelmChart } from '../engine/terraformGenerator';
 import { generateArchitectureReport } from '../engine/reportGenerator';
 import { runSimulation } from '../engine/simulator';
-import { toastBus } from './ToastSystem';
+import { toastBus } from '../lib/toastBus';
 import { useAuth } from '../hooks/useAuth';
 import { saveProject, updateProject } from '../services/projectService';
 import { calculateTotalCost, formatCost } from '../engine/costEngine';
@@ -77,7 +77,6 @@ export default function TopBar() {
   const moreRef = useRef<HTMLDivElement>(null);
 
   const cloudProvider = useArchStore(s => s.cloudProvider);
-  const setCloudProvider = useArchStore(s => s.setCloudProvider);
   const isWhiteLabelReport = useArchStore(s => s.isWhiteLabelReport);
   const toggleWhiteLabelReport = useArchStore(s => s.toggleWhiteLabelReport);
 
