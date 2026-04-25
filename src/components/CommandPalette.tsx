@@ -29,10 +29,10 @@ export default function CommandPalette() {
   const undo = useArchStore(s => s.undo);
   const redo = useArchStore(s => s.redo);
   const clearCanvas = useArchStore(s => s.clearCanvas);
-  const autoLayout = useArchStore(s => s.autoLayout);
+  const autoLayout = useArchStore(s => s.runAutoLayout);
   const toggleTemplatePicker = useArchStore(s => s.toggleTemplatePicker);
   const addNode = useArchStore(s => s.addNode);
-  const toggleTracing = useArchStore(s => s.toggleTracing);
+  const toggleTracing = useArchStore(s => s.toggleTrace);
   const toggleRecommendationPanel = useArchStore(s => s.toggleRecommendationPanel);
 
   // Open / close

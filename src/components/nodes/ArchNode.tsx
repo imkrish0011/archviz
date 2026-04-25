@@ -4,6 +4,7 @@ import type { NodeProps } from '@xyflow/react';
 import * as Icons from 'lucide-react';
 import { X } from 'lucide-react';
 import { getComponentCost, formatCost } from '../../engine/costEngine';
+import { getCarbonHeatmapColor, getCarbonBorderColor } from '../../engine/carbonEngine';
 import { useArchStore } from '../../store/useArchStore';
 import type { ArchNodeData } from '../../types';
 
@@ -36,6 +37,7 @@ function ArchNodeComponent({ id, data, selected }: NodeProps) {
   // Carbon data is passed via node data from parent instead of subscribing to all nodes
   // This eliminates the N² re-render problem where each node subscribes to the full nodes array
   const carbonData = d.carbonFootprint as { monthlyCO2kg: number; rating: string } | undefined;
+  const carbonRating = carbonData?.rating as 'low' | 'medium' | 'high' | undefined;
   
   const healthClass = d.isFailed ? 'failed' : d.isDisabled ? 'disabled' : d.healthStatus;
   const selectedClass = selected ? 'selected' : '';
@@ -51,25 +53,22 @@ function ArchNodeComponent({ id, data, selected }: NodeProps) {
   
   // GreenOps heatmap coloring (computed from passed-in carbon data, not full nodes array)
   const heatmapStyle = useMemo<React.CSSProperties>(() => {
-    if (!greenOpsHeatmap || d.isFailed || d.isDisabled || !carbonData) return {};
+    if (!greenOpsHeatmap || d.isFailed || d.isDisabled || !carbonRating) return {};
     
-    // Import these lazily from carbonEngine only when needed
-    const { getCarbonHeatmapColor, getCarbonBorderColor } = require('../../engine/carbonEngine');
     return {
-      background: getCarbonHeatmapColor(carbonData.rating),
-      boxShadow: `0 0 12px ${getCarbonBorderColor(carbonData.rating)}20, inset 0 0 0 1px ${getCarbonBorderColor(carbonData.rating)}30`,
+      background: getCarbonHeatmapColor(carbonRating),
+      boxShadow: `0 0 12px ${getCarbonBorderColor(carbonRating)}20, inset 0 0 0 1px ${getCarbonBorderColor(carbonRating)}30`,
     };
-  }, [greenOpsHeatmap, d.isFailed, d.isDisabled, carbonData]);
+  }, [greenOpsHeatmap, d.isFailed, d.isDisabled, carbonRating]);
 
   // Carbon badge
   const carbonBadge = useMemo(() => {
-    if (!greenOpsHeatmap || d.isFailed || d.isDisabled || !carbonData) return null;
-    const { getCarbonHeatmapColor, getCarbonBorderColor } = require('../../engine/carbonEngine');
+    if (!greenOpsHeatmap || d.isFailed || d.isDisabled || !carbonData || !carbonRating) return null;
     return (
       <div className="arch-node-carbon-badge" style={{ 
-        color: getCarbonBorderColor(carbonData.rating),
-        background: getCarbonHeatmapColor(carbonData.rating),
-        border: `1px solid ${getCarbonBorderColor(carbonData.rating)}40`,
+        color: getCarbonBorderColor(carbonRating),
+        background: getCarbonHeatmapColor(carbonRating),
+        border: `1px solid ${getCarbonBorderColor(carbonRating)}40`,
       }}>
         {carbonData.monthlyCO2kg < 1 ? `${Math.round(carbonData.monthlyCO2kg * 1000)}g` : `${carbonData.monthlyCO2kg.toFixed(1)}kg`} CO₂
       </div>

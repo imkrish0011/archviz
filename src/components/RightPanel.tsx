@@ -6,6 +6,7 @@ import { useSimulation } from '../hooks/useSimulation';
 import { X, Trash2, Info, Copy, RefreshCw, Power, PowerOff, GitBranch } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import type { ArchNode } from '../types';
+import { generateNodeId } from '../utils/idGenerator';
 
 import EdgeConfigPanel from './panels/EdgeConfigPanel';
 import ComputeConfigPanel from './panels/ComputeConfigPanel';
@@ -91,7 +92,6 @@ export default function RightPanel() {
   };
 
   const handleDuplicate = () => {
-    const { generateNodeId } = require('../utils/idGenerator');
     const newNodeId = generateNodeId();
     const newNode = {
       ...node,
