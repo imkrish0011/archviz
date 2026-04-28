@@ -578,7 +578,7 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
        * ═══════════════════════════════════════ */}
       <nav className={`lp-nav${navScrolled ? ' lp-nav-scrolled' : ''}`}>
         <div className="lp-nav-logo">
-          <BrainCircuit size={22} />
+          <img src="/logo.png" alt="Logo" style={{ width: 24, height: 24, objectFit: 'contain', marginRight: 4 }} />
           <span>ArchViz  β</span>
         </div>
         <div className="lp-nav-center">
@@ -1781,7 +1781,7 @@ export default function LandingPage({ onLaunch }: LandingPageProps) {
           </div>
           <div className="lp-footer-content">
             <div className="lp-footer-logo">
-              <BrainCircuit size={24} />
+              <img src="/logo.png" alt="Logo" style={{ width: 28, height: 28, objectFit: 'contain', marginRight: 8 }} />
               <span>ArchViz</span>
             </div>
 

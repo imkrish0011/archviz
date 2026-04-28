@@ -118,7 +118,7 @@ export default function ProjectCard({
           <div className="pc-list-icon">
             {project.thumbnail
               ? <img src={project.thumbnail} alt="" className="pc-list-thumb" />
-              : <BrainCircuit size={15} />
+              : <img src="/logo.png" alt="" style={{ width: 14, height: 14, objectFit: 'contain', opacity: 0.5 }} />
             }
           </div>
           <div className="pc-list-name-col">
@@ -159,7 +159,7 @@ export default function ProjectCard({
             ? <img src={project.thumbnail} alt={project.name} className="pc-thumb-img"/>
             : (
               <div className="pc-thumb-placeholder">
-                <BrainCircuit size={24} className="pc-thumb-icon"/>
+                <img src="/logo.png" alt="Logo" style={{ width: 20, height: 20, objectFit: 'contain', opacity: 0.3, marginBottom: 4 }} />
                 <div className="pc-thumb-nodes">{project.nodeCount} nodes</div>
               </div>
             )

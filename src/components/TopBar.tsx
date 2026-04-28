@@ -237,7 +237,7 @@ export default function TopBar() {
           style={{ background: 'transparent', border: 'none', cursor: 'pointer', outline: 'none', padding: 0 }}
           title="Return to Landing Page"
         >
-          <BrainCircuit size={20} className="logo-icon" />
+          <img src="/logo.png" alt="Logo" className="logo-icon" style={{ width: 22, height: 22, objectFit: 'contain' }} />
           <span>ArchViz β</span>
         </button>
         <div className="topbar-divider" />

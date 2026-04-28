@@ -164,7 +164,7 @@ export default function Dashboard() {
       {/* ══ SIDEBAR ══ */}
       <aside className="db-sidebar">
         <div className="db-sidebar-logo">
-          <div className="db-sidebar-logo-icon"><BrainCircuit size={17} /></div>
+          <div className="db-sidebar-logo-icon"><img src="/logo.png" alt="Logo" style={{ width: 18, height: 18, objectFit: 'contain' }} /></div>
           <span className="db-sidebar-logo-text">ArchViz</span>
           <div className="db-sidebar-logo-dot" />
         </div>

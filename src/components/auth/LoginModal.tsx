@@ -56,7 +56,7 @@ export default function LoginModal() {
         <div className="lm-header">
           <div className="lm-logo-ring">
             <div className="lm-logo-icon">
-              <BrainCircuit size={22} />
+                              <img src="/logo.png" alt="Logo" style={{ width: 24, height: 24, objectFit: 'contain' }} />
             </div>
           </div>
           <div className="lm-header-text">
