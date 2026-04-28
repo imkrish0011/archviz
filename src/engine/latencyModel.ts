@@ -1,4 +1,5 @@
 import type { ArchNode, ArchEdge } from '../types';
+import { getGeoZone, getCrossRegionLatency } from './regionUtils';
 
 /**
  * Latency Model
@@ -94,7 +95,7 @@ export function calculateTotalLatency(
   // DFS to find longest path (critical path)
   let maxLatency = 0;
   
-  function dfs(nodeId: string, currentLatency: number, visited: Set<string>) {
+  function dfs(nodeId: string, currentLatency: number, visited: Set<string>, sourceNodeId?: string) {
     if (visited.has(nodeId)) return;
     visited.add(nodeId);
     
@@ -103,14 +104,25 @@ export function calculateTotalLatency(
     
     const load = nodeLoads.get(nodeId) || 0;
     const nodeLatency = calculateNodeLatency(node, load, activeEvent);
-    const totalSoFar = currentLatency + nodeLatency;
+    
+    let crossRegionPenalty = 0;
+    if (sourceNodeId) {
+      const sourceNode = nodes.find(n => n.id === sourceNodeId);
+      if (sourceNode) {
+        const zoneA = getGeoZone(sourceNode.data.region as string | undefined);
+        const zoneB = getGeoZone(node.data.region as string | undefined);
+        crossRegionPenalty = getCrossRegionLatency(zoneA, zoneB);
+      }
+    }
+    
+    const totalSoFar = currentLatency + nodeLatency + crossRegionPenalty;
     
     const neighbors = adjacency.get(nodeId) || [];
     if (neighbors.length === 0) {
       maxLatency = Math.max(maxLatency, totalSoFar);
     } else {
       for (const neighbor of neighbors) {
-        dfs(neighbor, totalSoFar, new Set(visited));
+        dfs(neighbor, totalSoFar, new Set(visited), nodeId);
       }
     }
   }

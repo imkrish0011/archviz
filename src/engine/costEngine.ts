@@ -1,4 +1,5 @@
 import type { ArchNode, ArchEdge, CloudProvider } from '../types';
+import { getGeoZone, getRegionalPricingMultiplier } from './regionUtils';
 
 /**
  * Cost Engine
@@ -13,6 +14,10 @@ export function getComponentCost(node: ArchNode, load: number = 0, provider: Clo
   } else if (provider === 'azure') {
     baseCost *= node.data.tier.pricingOffsets?.azure || 1.05; // Azure is often slightly more expensive
   }
+
+  // Apply Regional Pricing Multiplier
+  const zone = getGeoZone(node.data.region as string | undefined);
+  baseCost *= getRegionalPricingMultiplier(zone);
   
   // Calculate dynamic serverless execution costs
   const serverlessTypes = ['lambda', 'api-gateway', 'cloudflare-workers', 'step-functions', 'vercel', 'netlify', 'cloudflare-pages', 'supabase', 'planetscale', 'firebase', 'digitalocean-app'];
@@ -137,7 +142,8 @@ export function calculateTotalCost(
     // Check if the edge crosses an AZ or goes to internet (client)
     const sourceNode = nodes.find(n => n.id === edge.source);
     const targetNode = nodes.find(n => n.id === edge.target);
-    const crossesBoundary = config.isCrossAZ || targetNode?.data.category === 'client';
+    const isCrossRegion = sourceNode && targetNode && getGeoZone(sourceNode.data.region as string | undefined) !== getGeoZone(targetNode.data.region as string | undefined);
+    const crossesBoundary = config.isCrossAZ || targetNode?.data.category === 'client' || isCrossRegion;
     
     if (crossesBoundary && sourceNode && !sourceNode.data.isDisabled) {
       const sourceLoad = nodeLoads?.get(sourceNode.id) || 0;
@@ -252,7 +258,8 @@ export function calculateCostBreakdown(
     const config = edge.config || {};
     const sourceNode = nodes.find(n => n.id === edge.source);
     const targetNode = nodes.find(n => n.id === edge.target);
-    const crossesBoundary = config.isCrossAZ || targetNode?.data.category === 'client';
+    const isCrossRegion = sourceNode && targetNode && getGeoZone(sourceNode.data.region as string | undefined) !== getGeoZone(targetNode.data.region as string | undefined);
+    const crossesBoundary = config.isCrossAZ || targetNode?.data.category === 'client' || isCrossRegion;
     if (crossesBoundary && sourceNode && !sourceNode.data.isDisabled) {
       const sourceLoad = nodeLoads?.get(sourceNode.id) || 0;
       const payloadSizeBytes = config.payloadSizeBytes || 1024;

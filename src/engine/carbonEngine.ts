@@ -83,6 +83,7 @@ function getNodeRegion(node: ArchNode, allNodes: ArchNode[]): string {
       if (label.includes(regionKey)) return regionKey;
     }
     // Also check common region labels
+    if (label.includes('london')) return 'eu-west-2';
     if (label.includes('virginia') || label.includes('us-east')) return 'us-east-1';
     if (label.includes('oregon') || label.includes('us-west')) return 'us-west-2';
     if (label.includes('ireland') || label.includes('eu-west')) return 'eu-west-1';

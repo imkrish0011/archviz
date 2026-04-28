@@ -30,6 +30,7 @@ const messagingTypes = ['sqs', 'sns', 'kafka', 'message-queue', 'eventbridge', '
 
 const regions = [
   'us-east-1 (N. Virginia)',
+  'us-east-1(London)',
   'us-west-2 (Oregon)',
   'eu-west-1 (Ireland)',
   'eu-central-1 (Frankfurt)',
