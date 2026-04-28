@@ -6,7 +6,8 @@ import {
   MiniMap,
   BackgroundVariant,
   useReactFlow,
-  ConnectionLineType
+  ConnectionLineType,
+  SelectionMode
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { Routes, Route, Navigate, useNavigate, useParams, useLocation } from 'react-router-dom';
@@ -192,11 +193,7 @@ function FlowCanvas() {
       
       if (e.key === 'Delete' || e.key === 'Backspace') {
         if (!isInput) {
-          if (selectedNodeId) {
-            removeNode(selectedNodeId);
-          } else if (selectedEdgeId) {
-            removeEdge(selectedEdgeId);
-          }
+          useArchStore.getState().deleteSelected();
         }
       }
       if (e.key === 'Escape') {
@@ -318,6 +315,7 @@ function FlowCanvas() {
           snapGrid={[20, 20]}
           panOnDrag={!selectionMode}
           selectionOnDrag={selectionMode}
+          selectionMode={SelectionMode.Partial}
         >
           <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="#1a1a1a" />
           <Controls showInteractive={false} />

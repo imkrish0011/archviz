@@ -70,6 +70,7 @@ interface ArchStore {
   onConnect: (connection: Connection) => void;
   addNode: (componentType: string, position: { x: number; y: number }) => void;
   removeNode: (nodeId: string) => void;
+  deleteSelected: () => void;
   removeEdge: (edgeId: string) => void;
   updateNodeData: (nodeId: string, data: Partial<ArchNode['data']>) => void;
   changeNodeType: (nodeId: string, newComponentType: string) => void;
@@ -406,6 +407,31 @@ export const useArchStore = create<ArchStore>((set, get) => ({
       rightPanelOpen: get().selectedNodeId === nodeId ? false : get().rightPanelOpen,
       redoStack: [],
     });
+    setTimeout(() => get().takeSnapshot(), 100);
+  },
+  
+  deleteSelected: () => {
+    const { nodes, edges } = get();
+    const selectedNodes = nodes.filter(n => n.selected);
+    const selectedEdges = edges.filter(e => e.selected);
+    
+    if (selectedNodes.length === 0 && selectedEdges.length === 0) return;
+    
+    get().pushHistory();
+    
+    const selectedNodeIds = new Set(selectedNodes.map(n => n.id));
+    const selectedEdgeIds = new Set(selectedEdges.map(e => e.id));
+    
+    set({
+      nodes: nodes.filter(n => !selectedNodeIds.has(n.id)),
+      edges: edges.filter(e => !selectedEdgeIds.has(e.id) && !selectedNodeIds.has(e.source) && !selectedNodeIds.has(e.target)),
+      selectedNodeId: selectedNodeIds.has(get().selectedNodeId as string) ? null : get().selectedNodeId,
+      selectedEdgeId: selectedEdgeIds.has(get().selectedEdgeId as string) ? null : get().selectedEdgeId,
+      rightPanelOpen: false,
+      redoStack: [],
+    });
+    
+    toastBus.emit(`Deleted selected items`, 'info');
     setTimeout(() => get().takeSnapshot(), 100);
   },
   

@@ -85,16 +85,32 @@ export function ContextMenu() {
   const node = nodes.find(n => n.id === menu.targetId);
   if (!node) return null;
 
+  const selectedNodes = nodes.filter(n => n.selected);
+  const isBulkMenu = selectedNodes.length > 1 && selectedNodes.some(n => n.id === menu.targetId);
+
   const handleDuplicate = () => {
-    const newNodeId = generateNodeId();
-    const newNode = { ...node, id: newNodeId, position: { x: node.position.x + 60, y: node.position.y + 60 } };
-    useArchStore.getState().setNodes([...nodes, newNode]);
-    useArchStore.getState().takeSnapshot('Duplicated component');
-    selectNode(newNodeId);
+    if (isBulkMenu) {
+      useArchStore.getState().duplicateSelected();
+    } else {
+      // Just duplicate this single node
+      const newNodeId = generateNodeId();
+      const newNode = { ...node, id: newNodeId, position: { x: node.position.x + 60, y: node.position.y + 60 } };
+      useArchStore.getState().setNodes([...nodes, newNode]);
+      useArchStore.getState().takeSnapshot('Duplicated component');
+      selectNode(newNodeId);
+    }
     close();
   };
 
-  const handleDelete = () => { removeNode(menu.targetId); close(); };
+  const handleDelete = () => { 
+    if (isBulkMenu) {
+      useArchStore.getState().deleteSelected();
+    } else {
+      removeNode(menu.targetId); 
+    }
+    close(); 
+  };
+  
   const handleInspect = () => { selectNode(menu.targetId); close(); };
   const handleToggle = () => {
     updateNodeData(menu.targetId, { isDisabled: !node.data.isDisabled });
@@ -107,19 +123,23 @@ export function ContextMenu() {
       className="ctx-menu"
       style={{ left: menu.x, top: menu.y }}
     >
-      <button className="ctx-item" onClick={handleInspect}>
-        <Eye size={14} /> Inspect
-      </button>
+      {!isBulkMenu && (
+        <>
+          <button className="ctx-item" onClick={handleInspect}>
+            <Eye size={14} /> Inspect
+          </button>
+          <button className="ctx-item" onClick={handleToggle}>
+            {node.data.isDisabled ? <Power size={14} /> : <PowerOff size={14} />}
+            {node.data.isDisabled ? 'Enable' : 'Disable'}
+          </button>
+        </>
+      )}
       <button className="ctx-item" onClick={handleDuplicate}>
-        <Copy size={14} /> Duplicate
-      </button>
-      <button className="ctx-item" onClick={handleToggle}>
-        {node.data.isDisabled ? <Power size={14} /> : <PowerOff size={14} />}
-        {node.data.isDisabled ? 'Enable' : 'Disable'}
+        <Copy size={14} /> {isBulkMenu ? `Duplicate (${selectedNodes.length})` : 'Duplicate'}
       </button>
       <div className="ctx-divider" />
       <button className="ctx-item ctx-danger" onClick={handleDelete}>
-        <Trash2 size={14} /> Delete
+        <Trash2 size={14} /> {isBulkMenu ? `Delete (${selectedNodes.length})` : 'Delete'}
       </button>
     </div>
   );
