@@ -11,7 +11,7 @@ import type { LayoutDirection } from '../engine/autoLayout';
 import { INITIAL_DEPLOYMENT_STATE, createDeploymentClones } from '../engine/deploymentSimulator';
 import type { DeploymentState } from '../engine/deploymentSimulator';
 import type { CloudProvider } from '../types';
-import { generateNodeId, generateEdgeId, generateSnapshotId } from '../utils/idGenerator';
+import { generateNodeId, generateEdgeId, generateSnapshotId, generateBatchPrefix } from '../utils/idGenerator';
 
 interface HistoryEntry {
   nodes: ArchNode[];
@@ -60,6 +60,7 @@ interface ArchStore {
   
   // ── Smart Guides ──
   alignmentLines: { x?: number; y?: number } | null;
+  selectionMode: boolean;
   
   // ── Actions ──
   onNodesChange: (changes: NodeChange<ArchNode>[]) => void;
@@ -94,6 +95,7 @@ interface ArchStore {
   toggleWhiteLabelReport: () => void;
   toggleTrace: () => void;
   setSecurityReport: (report: SecurityReport | null) => void;
+  toggleSelectionMode: () => void;
   
   // Deployment actions
   startDeployment: (sourceNodeId: string) => void;
@@ -112,6 +114,7 @@ interface ArchStore {
   // Bulk updates
   setNodes: (nodes: ArchNode[]) => void;
   setEdges: (edges: ArchEdge[]) => void;
+  duplicateSelected: () => void;
   
   // Undo/Redo
   undo: () => void;
@@ -167,6 +170,7 @@ export const useArchStore = create<ArchStore>((set, get) => ({
   isWhiteLabelReport: false,
   isTracing: false,
   computedSecurityReport: null,
+  selectionMode: false,
   
   // ── React Flow handlers ──
   onNodesChange: (changes) => {
@@ -501,6 +505,7 @@ export const useArchStore = create<ArchStore>((set, get) => ({
   toggleWhiteLabelReport: () => set({ isWhiteLabelReport: !get().isWhiteLabelReport }),
   toggleTrace: () => set({ isTracing: !get().isTracing }),
   setSecurityReport: (report) => set({ computedSecurityReport: report }),
+  toggleSelectionMode: () => set({ selectionMode: !get().selectionMode }),
   
   // ── Snapshots ──
   takeSnapshot: (label) => {
@@ -728,6 +733,50 @@ export const useArchStore = create<ArchStore>((set, get) => ({
   
   setNodes: (nodes) => set({ nodes }),
   setEdges: (edges) => set({ edges }),
+  
+  duplicateSelected: () => {
+    const { nodes, edges } = get();
+    const selectedNodes = nodes.filter(n => n.selected);
+    if (selectedNodes.length === 0) return;
+
+    const idMap = new Map<string, string>();
+    const batchPrefix = generateBatchPrefix();
+    
+    // Duplicate nodes
+    const newNodes = selectedNodes.map((n, i) => {
+      const newId = `node-${batchPrefix}-${i}`;
+      idMap.set(n.id, newId);
+      return {
+        ...n,
+        id: newId,
+        selected: true, // Select the new clones
+        position: { x: n.position.x + 50, y: n.position.y + 50 }
+      };
+    });
+
+    // Deselect original nodes
+    const unselectedOldNodes = nodes.map(n => n.selected ? { ...n, selected: false } : n);
+
+    // Duplicate edges where both source and target are in the selected group
+    const selectedIds = new Set(selectedNodes.map(n => n.id));
+    const edgesToDuplicate = edges.filter(e => selectedIds.has(e.source) && selectedIds.has(e.target));
+    
+    const newEdges = edgesToDuplicate.map((e, i) => ({
+      ...e,
+      id: `edge-${batchPrefix}-${i}`,
+      source: idMap.get(e.source)!,
+      target: idMap.get(e.target)!
+    }));
+
+    get().pushHistory();
+    set({
+      nodes: [...unselectedOldNodes, ...newNodes],
+      edges: [...edges, ...newEdges],
+      redoStack: []
+    });
+    
+    toastBus.emit(`Duplicated ${selectedNodes.length} component(s)`, 'success');
+  },
   
   // ── Undo / Redo ──
   pushHistory: () => {

@@ -61,6 +61,8 @@ export default function TopBar() {
   const runAutoLayout = useArchStore(s => s.runAutoLayout);
   const isTracing = useArchStore(s => s.isTracing);
   const toggleTrace = useArchStore(s => s.toggleTrace);
+  const selectionMode = useArchStore(s => s.selectionMode);
+  const toggleSelectionMode = useArchStore(s => s.toggleSelectionMode);
   const setSecurityReport = useArchStore(s => s.setSecurityReport);
   const computedSecurityReport = useArchStore(s => s.computedSecurityReport);
   const navigate = useNavigate();
@@ -295,6 +297,16 @@ export default function TopBar() {
       </div>
 
       <div className="topbar-right">
+        {/* Selection Toggle */}
+        <button
+          className={`btn-icon ${selectionMode ? 'active' : ''}`}
+          onClick={toggleSelectionMode}
+          title={selectionMode ? "Disable Selection Mode (Enable Panning)" : "Enable Box Selection"}
+        >
+          {selectionMode ? <CheckSquare size={16} /> : <Square size={16} />}
+        </button>
+        <div className="topbar-divider" />
+        
         {/* Auto-Layout */}
         <button
           className="btn-icon"

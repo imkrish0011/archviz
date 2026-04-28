@@ -109,6 +109,7 @@ function FlowCanvas() {
   const handleNodeDrag = useArchStore(s => s.handleNodeDrag);
   const handleNodeDragStop = useArchStore(s => s.handleNodeDragStop);
   const alignmentLines = useArchStore(s => s.alignmentLines);
+  const selectionMode = useArchStore(s => s.selectionMode);
   const reactFlowInstance = useReactFlow();
   
   // Expose instance for export utilities
@@ -230,6 +231,14 @@ function FlowCanvas() {
         exportCanvasAsPNG();
       }
       
+      // Ctrl+D or Ctrl+V — Duplicate / Paste
+      if ((e.key === 'd' || e.key === 'v') && (e.ctrlKey || e.metaKey)) {
+        if (!isInput) {
+          e.preventDefault();
+          useArchStore.getState().duplicateSelected();
+        }
+      }
+      
       // F11 — Fullscreen
       if (e.key === 'F11') {
         e.preventDefault();
@@ -307,6 +316,8 @@ function FlowCanvas() {
           deleteKeyCode={null}
           snapToGrid={true}
           snapGrid={[20, 20]}
+          panOnDrag={!selectionMode}
+          selectionOnDrag={selectionMode}
         >
           <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="#1a1a1a" />
           <Controls showInteractive={false} />
