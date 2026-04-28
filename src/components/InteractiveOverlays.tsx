@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { Copy, Trash2, Power, PowerOff, Eye, Search as SearchIcon, X, Scissors } from 'lucide-react';
+import { Copy, Trash2, Power, PowerOff, Eye, Search as SearchIcon, X, Scissors, Rocket } from 'lucide-react';
 import { useArchStore } from '../store/useArchStore';
 import { generateNodeId } from '../utils/idGenerator';
+import { getTrafficShiftSchedule, updateEdgeTrafficWeights } from '../engine/deploymentSimulator';
 
 /* ─────────────────────────────────────────────────────────
  *  Right-Click Context Menu for Canvas Nodes & Edges
@@ -128,6 +129,65 @@ export function ContextMenu() {
     close();
   };
 
+  // Compute types that support Blue/Green deployment
+  const COMPUTE_TYPES = ['api-server', 'web-server', 'worker', 'lambda', 'websocket-server', 'ecs-fargate', 'app-runner', 'kubernetes-cluster', 'graphql-server', 'game-server', 'ml-worker'];
+  const isCompute = COMPUTE_TYPES.includes(node.data.componentType);
+  const deploymentActive = useArchStore.getState().deploymentState.isActive;
+
+  const handleDeployRollout = () => {
+    const store = useArchStore.getState();
+    store.startDeployment(menu.targetId);
+    close();
+    
+    // Animate the traffic shift over 10 seconds
+    const schedule = getTrafficShiftSchedule();
+    schedule.forEach(({ delayMs, weightV2 }) => {
+      setTimeout(() => {
+        const s = useArchStore.getState();
+        if (!s.deploymentState.isActive) return;
+        
+        // Update edge traffic labels
+        const updatedEdges = updateEdgeTrafficWeights(
+          s.edges,
+          s.deploymentState.sourceNodeIds,
+          s.deploymentState.cloneNodeIds,
+          weightV2
+        );
+        
+        // Update Green node load to match traffic weight
+        const updatedNodes = s.nodes.map(n => {
+          if (s.deploymentState.cloneNodeIds.includes(n.id)) {
+            return { ...n, data: { ...n.data, loadPercent: weightV2 * 0.6 } };
+          }
+          if (s.deploymentState.sourceNodeIds.includes(n.id)) {
+            return { ...n, data: { ...n.data, loadPercent: (100 - weightV2) * 0.6 } };
+          }
+          return n;
+        });
+        
+        const phase = weightV2 < 25 ? 'canary' : weightV2 < 100 ? 'shifting' : 'draining';
+        
+        useArchStore.setState({
+          edges: updatedEdges,
+          nodes: updatedNodes,
+          deploymentState: {
+            ...s.deploymentState,
+            trafficWeightV2: weightV2,
+            phase,
+          },
+        });
+      }, delayMs);
+    });
+    
+    // Auto-complete after rollout finishes
+    setTimeout(() => {
+      const s = useArchStore.getState();
+      if (s.deploymentState.isActive) {
+        s.completeDeployment();
+      }
+    }, 11500);
+  };
+
   return (
     <div
       ref={ref}
@@ -143,6 +203,11 @@ export function ContextMenu() {
             {node.data.isDisabled ? <Power size={14} /> : <PowerOff size={14} />}
             {node.data.isDisabled ? 'Enable' : 'Disable'}
           </button>
+          {isCompute && !deploymentActive && (
+            <button className="ctx-item" onClick={handleDeployRollout} style={{ color: '#818cf8' }}>
+              <Rocket size={14} /> Simulate Rollout
+            </button>
+          )}
         </>
       )}
       <button className="ctx-item" onClick={handleDuplicate}>
@@ -244,12 +309,13 @@ const SHORTCUTS = [
   { keys: 'Ctrl + Z', desc: 'Undo' },
   { keys: 'Ctrl + Y', desc: 'Redo' },
   { keys: 'Ctrl + S', desc: 'Save project' },
+  { keys: 'Ctrl + D', desc: 'Duplicate selected nodes' },
   { keys: 'Ctrl + F', desc: 'Search components' },
   { keys: 'F11', desc: 'Fullscreen mode' },
-  { keys: 'Delete', desc: 'Remove selected node or edge' },
+  { keys: 'Delete', desc: 'Remove selected items' },
   { keys: 'Escape', desc: 'Deselect / Close panel' },
   { keys: 'Ctrl + E', desc: 'Export as PNG' },
-  { keys: 'Right Click', desc: 'Context menu (node or edge)' },
+  { keys: 'Right Click', desc: 'Context menu (incl. Rollout)' },
   { keys: '?', desc: 'Show shortcuts' },
 ];
 

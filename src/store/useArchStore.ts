@@ -533,6 +533,192 @@ export const useArchStore = create<ArchStore>((set, get) => ({
   setSecurityReport: (report) => set({ computedSecurityReport: report }),
   toggleSelectionMode: () => set({ selectionMode: !get().selectionMode }),
   
+  // ── Deployment Actions ──
+  startDeployment: (sourceNodeId) => {
+    const { nodes, edges, deploymentState } = get();
+    if (deploymentState.isActive) {
+      toastBus.emit('A deployment is already in progress', 'warning');
+      return;
+    }
+    
+    const sourceNode = nodes.find(n => n.id === sourceNodeId);
+    if (!sourceNode) return;
+    
+    get().pushHistory();
+    
+    // Create clones using the deployment engine
+    const { updatedSources, clones } = createDeploymentClones([sourceNode]);
+    
+    // Replace source nodes with updated (Blue-labelled) versions
+    const newNodes = nodes.map(n => {
+      const updated = updatedSources.find(u => u.id === n.id);
+      return updated || n;
+    });
+    
+    // Mirror edges: for every edge pointing to a source node, create a parallel edge to its clone
+    const newEdges = [...edges];
+    for (let i = 0; i < updatedSources.length; i++) {
+      const srcId = updatedSources[i].id;
+      const cloneId = clones[i].id;
+      
+      // Clone incoming edges
+      edges.filter(e => e.target === srcId).forEach(e => {
+        newEdges.push({
+          ...e,
+          id: `${e.id}_v2_${Date.now()}`,
+          target: cloneId,
+          data: {
+            ...e.data,
+            config: {
+              ...(e.data as Record<string, unknown>)?.config as Record<string, unknown> || {},
+              trafficWeight: 0,
+              edgeLabel: '0%',
+            },
+          },
+        });
+      });
+      
+      // Clone outgoing edges
+      edges.filter(e => e.source === srcId).forEach(e => {
+        newEdges.push({
+          ...e,
+          id: `${e.id}_v2out_${Date.now()}`,
+          source: cloneId,
+        });
+      });
+    }
+    
+    set({
+      nodes: [...newNodes, ...clones],
+      edges: newEdges,
+      deploymentState: {
+        isActive: true,
+        phase: 'canary',
+        trafficWeightV2: 0,
+        sourceNodeIds: updatedSources.map(n => n.id),
+        cloneNodeIds: clones.map(n => n.id),
+        startedAt: Date.now(),
+        targetNodeType: sourceNode.data.componentType,
+      },
+    });
+    
+    toastBus.emit(`🚀 Blue/Green deployment started for ${sourceNode.data.label}`, 'info');
+  },
+  
+  updateDeploymentState: (partial) => {
+    set({
+      deploymentState: { ...get().deploymentState, ...partial },
+    });
+  },
+  
+  completeDeployment: () => {
+    const { nodes, edges, deploymentState } = get();
+    if (!deploymentState.isActive) return;
+    
+    // Remove Blue (v1) nodes & their exclusive edges, rename Green to original
+    const blueIds = new Set(deploymentState.sourceNodeIds);
+    const greenIds = new Set(deploymentState.cloneNodeIds);
+    
+    const finalNodes = nodes
+      .filter(n => !blueIds.has(n.id))
+      .map(n => {
+        if (greenIds.has(n.id)) {
+          return {
+            ...n,
+            data: {
+              ...n.data,
+              appVersion: undefined,
+              isDeploymentClone: undefined,
+              label: n.data.label.replace(/ \(Green\)$/, ''),
+            },
+          };
+        }
+        return n;
+      });
+    
+    // Remove edges that target or source from deleted Blue nodes
+    const finalEdges = edges
+      .filter(e => !blueIds.has(e.source) && !blueIds.has(e.target))
+      .map(e => {
+        // Clean up traffic weight labels from edges
+        if (greenIds.has(e.target) || greenIds.has(e.source)) {
+          return {
+            ...e,
+            data: {
+              ...e.data,
+              config: {
+                ...(e.data as Record<string, unknown>)?.config as Record<string, unknown> || {},
+                trafficWeight: undefined,
+                edgeLabel: undefined,
+              },
+            },
+          };
+        }
+        return e;
+      });
+    
+    set({
+      nodes: finalNodes,
+      edges: finalEdges,
+      deploymentState: INITIAL_DEPLOYMENT_STATE,
+    });
+    
+    toastBus.emit('✅ Deployment Complete — Green is now Live!', 'success');
+    setTimeout(() => get().takeSnapshot('Deployment complete'), 100);
+  },
+  
+  cancelDeployment: () => {
+    const { nodes, edges, deploymentState } = get();
+    if (!deploymentState.isActive) return;
+    
+    // Remove Green clones, restore Blue labels
+    const greenIds = new Set(deploymentState.cloneNodeIds);
+    const blueIds = new Set(deploymentState.sourceNodeIds);
+    
+    const finalNodes = nodes
+      .filter(n => !greenIds.has(n.id))
+      .map(n => {
+        if (blueIds.has(n.id)) {
+          return {
+            ...n,
+            data: {
+              ...n.data,
+              appVersion: undefined,
+              label: n.data.label.replace(/ \(Blue\)$/, ''),
+            },
+          };
+        }
+        return n;
+      });
+    
+    const finalEdges = edges
+      .filter(e => !greenIds.has(e.source) && !greenIds.has(e.target))
+      .map(e => {
+        if (blueIds.has(e.target) || blueIds.has(e.source)) {
+          return {
+            ...e,
+            data: {
+              ...e.data,
+              config: {
+                ...(e.data as Record<string, unknown>)?.config as Record<string, unknown> || {},
+                trafficWeight: undefined,
+                edgeLabel: undefined,
+              },
+            },
+          };
+        }
+        return e;
+      });
+    
+    set({
+      nodes: finalNodes,
+      edges: finalEdges,
+      deploymentState: INITIAL_DEPLOYMENT_STATE,
+    });
+    
+    toastBus.emit('Deployment cancelled — rolled back to Blue', 'warning');
+  },
+  
   // ── Snapshots ──
   takeSnapshot: (label) => {
     const { nodes, edges, simulationConfig, snapshots } = get();
@@ -567,170 +753,7 @@ export const useArchStore = create<ArchStore>((set, get) => ({
       rightPanelOpen: false,
     });
   },
-  
-  // ── Deployment Logic ──
-  startDeployment: (sourceNodeId: string) => {
-    const state = get();
-    const sourceNode = state.nodes.find(n => n.id === sourceNodeId);
-    if (!sourceNode) return;
-    
-    // If it's a boundary node, get inner nodes if needed, or just clone the node.
-    const nodesToClone = sourceNode.type === 'groupNode' || sourceNode.data.isGroup 
-      ? state.nodes.filter(n => n.parentId === sourceNodeId || n.id === sourceNodeId)
-      : [sourceNode];
-      
-    const { updatedSources, clones } = createDeploymentClones(nodesToClone);
-    
-    // Update existing nodes with the modified sources
-    const newNodes = state.nodes.map(n => {
-      const up = updatedSources.find(u => u.id === n.id);
-      return up ? up : n;
-    });
-    
-    // Create new edges targeting clones
-    const sourceIds = nodesToClone.map(n => n.id);
-    const cloneIds = clones.map(c => c.id);
-    const newEdges = [...state.edges];
-    
-    state.edges.forEach(edge => {
-      if (sourceIds.includes(edge.target)) {
-        // incoming edge, clone it to point to green node
-        const targetIndex = sourceIds.indexOf(edge.target);
-        if (targetIndex !== -1) {
-          const greenTargetId = clones[targetIndex].id;
-          newEdges.push({
-            ...edge,
-            id: `edge_v2_${edge.id}_${Date.now()}`,
-            target: greenTargetId,
-            data: {
-              ...edge.data,
-              config: {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                ...((edge.data as Record<string, any>)?.config || {}),
-                trafficWeight: 0,
-                edgeLabel: undefined,
-              }
-            }
-          });
-        }
-      }
-    });
-    
-    set({
-      nodes: [...newNodes, ...clones],
-      edges: newEdges,
-      deploymentState: {
-        isActive: true,
-        phase: 'canary',
-        trafficWeightV2: 0,
-        sourceNodeIds: sourceIds,
-        cloneNodeIds: cloneIds,
-        startedAt: Date.now(),
-        targetNodeType: sourceNode.data.componentType
-      }
-    });
-  },
-  
-  updateDeploymentState: (partial) => {
-    set({ deploymentState: { ...get().deploymentState, ...partial } });
-  },
-  
-  completeDeployment: () => {
-    const { nodes, edges, deploymentState } = get();
-    if (!deploymentState.isActive) return;
-    
-    // Make clones permanent, remove Blue nodes
-    const finalNodes = nodes
-      .filter(n => !deploymentState.sourceNodeIds.includes(n.id))
-      .map(n => {
-        if (deploymentState.cloneNodeIds.includes(n.id)) {
-          return {
-            ...n,
-            data: {
-              ...n.data,
-              isDeploymentClone: false,
-              appVersion: undefined,
-              label: n.data.label.replace(' (Green)', ''),
-            }
-          };
-        }
-        return n;
-      });
-      
-    // Keep edges targeting clones, remove edges targeting original blue nodes
-    const finalEdges = edges.filter(e => !deploymentState.sourceNodeIds.includes(e.target));
-    
-    // Clear trafficWeight overrides
-    const cleanEdges = finalEdges.map(e => {
-      if (deploymentState.cloneNodeIds.includes(e.target)) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const config = { ...((e.data as Record<string, any>)?.config || {}) };
-        delete config.trafficWeight;
-        return {
-          ...e,
-          data: {
-            ...e.data,
-            config,
-          }
-        };
-      }
-      return e;
-    });
-    
-    set({
-      nodes: finalNodes,
-      edges: cleanEdges,
-      deploymentState: INITIAL_DEPLOYMENT_STATE,
-    });
-    
-    toastBus.emit('Deployment Successful: Cutover complete', 'success');
-  },
-  
-  cancelDeployment: () => {
-    const { nodes, edges, deploymentState } = get();
-    if (!deploymentState.isActive) return;
-    
-    // Reset to before: remove clones, restore Blue nodes label
-    const finalNodes = nodes
-      .filter(n => !deploymentState.cloneNodeIds.includes(n.id))
-      .map(n => {
-        if (deploymentState.sourceNodeIds.includes(n.id)) {
-          return {
-            ...n,
-            data: {
-              ...n.data,
-              appVersion: undefined,
-              label: n.data.label.replace(' (Blue)', ''),
-            }
-          };
-        }
-        return n;
-      });
-      
-    // remove edges targeting clones, reset traffic weights on original
-    const finalEdges = edges
-      .filter(e => !deploymentState.cloneNodeIds.includes(e.target))
-      .map(e => {
-        if (deploymentState.sourceNodeIds.includes(e.target)) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const config = { ...((e.data as Record<string, any>)?.config || {}) };
-          delete config.trafficWeight;
-          return {
-            ...e,
-            data: { ...e.data, config }
-          };
-        }
-        return e;
-      });
-      
-    set({
-      nodes: finalNodes,
-      edges: finalEdges,
-      deploymentState: INITIAL_DEPLOYMENT_STATE,
-    });
-    
-    toastBus.emit('Deployment Cancelled: Rolled back to v1', 'info');
-  },
+
 
   // ── Templates ──
   loadTemplate: (nodes, edges) => {
