@@ -40,7 +40,18 @@ export function ContextMenu() {
         }
       }
       
-      // Check for node click
+      // Check for bulk selection box click
+      const selectionEl = target.closest('.react-flow__nodesselection, .react-flow__nodesselection-rect');
+      if (selectionEl) {
+        const selectedNodes = useArchStore.getState().nodes.filter(n => n.selected);
+        if (selectedNodes.length > 0) {
+          e.preventDefault();
+          setMenu({ x: e.clientX, y: e.clientY, type: 'node', targetId: selectedNodes[0].id });
+          return;
+        }
+      }
+      
+      // Check for single node click
       const nodeEl = target.closest('[data-id]');
       if (!nodeEl) { setMenu(null); return; }
       const nodeId = nodeEl.getAttribute('data-id');
