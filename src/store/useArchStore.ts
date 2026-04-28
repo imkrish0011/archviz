@@ -661,6 +661,8 @@ export const useArchStore = create<ArchStore>((set, get) => ({
       nodes: finalNodes,
       edges: finalEdges,
       deploymentState: INITIAL_DEPLOYMENT_STATE,
+      selectedNodeId: null,
+      rightPanelOpen: false,
     });
     
     toastBus.emit('✅ Deployment Complete — Green is now Live!', 'success');
@@ -714,6 +716,8 @@ export const useArchStore = create<ArchStore>((set, get) => ({
       nodes: finalNodes,
       edges: finalEdges,
       deploymentState: INITIAL_DEPLOYMENT_STATE,
+      selectedNodeId: null,
+      rightPanelOpen: false,
     });
     
     toastBus.emit('Deployment cancelled — rolled back to Blue', 'warning');
