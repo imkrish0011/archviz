@@ -272,7 +272,7 @@ function FlowCanvas() {
 
   return (
     <div 
-      className="canvas-wrapper" 
+      className={`canvas-wrapper ${selectionMode ? 'selection-mode-active' : ''}`}
       style={{ position: 'relative' }}
       tabIndex={0}
       role="application"

@@ -127,6 +127,11 @@
   background: rgba(94, 234, 212, 0.05) !important;
 }
 
+/* Selection Mode Cursor Override */
+.selection-mode-active .react-flow__pane {
+  cursor: crosshair !important;
+}
+
 /* ─── Custom Arch Node ────────────────────────────────────── */
 .arch-node {
   background: var(--bg-elevated);
